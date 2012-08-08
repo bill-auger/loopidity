@@ -22,7 +22,7 @@ void SceneSdl::setDims(bool isFullScreen)
 	histogram0 = histogramT + (histogramH / 2) ;
 	histogramB = histogramT + histogramH ;
 	maxPeakY = sceneT + yPadding ;
-	zeroPeakY = maxPeakY + LOOP_PEAK_H ;
+	zeroPeakY = maxPeakY + LOOP_PEAK_R ;
 	minPeakY = maxPeakY + loopD ;
 }
 
@@ -41,7 +41,7 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 #if DRAW_PEAK_BARS
 	// draw scene peak bars
 	ImageDraw img(sceneW , LOOP_D) ; unsigned int hiScenePeak = scene->hiScenePeaks[PeakN] ;
-	unsigned int t = (LOOP_PEAK_H - hiScenePeak) + 1 , h = (hiScenePeak * 2) - 1 ;
+	unsigned int t = (LOOP_PEAK_R - hiScenePeak) + 1 , h = (hiScenePeak * 2) - 1 ;
 	img.Alpha().DrawRect(0 , t , sceneW , h , White) ;
 	img.DrawImage(0 , 0 , sceneW , LOOP_D , CreatePeaksBgGradientImgCached()) ;
 	d.DrawImage(sceneL , maxPeakY , img) ;
@@ -60,9 +60,9 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 // TODO: draw histogram mixing all loops in this sceneN
 // perhaps better to make this a cached image (it only changes omce per loop)
 
-		// draw histogram border
 		float currentPeak ; Sint16 histogramR = loopX + loopD , peakH , x , t , b ;
-		Uint32 borderColor , peakColorCurrent , peakColorOther , peakColor;
+		Uint32 borderColor , peakColorCurrent , peakColorOther , peakColor ;
+		// determine appropriate colors
 		bool isCurrentLoop = (loopN == scene->nLoops - 1) ;
 		if (isCurrentLoop)
 		{
@@ -76,6 +76,7 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 			peakColorCurrent = HISTOGRAM_PEAK_CURRENT_INACTIVE_COLOR ;
 			peakColorOther = HISTOGRAM_PEAK_INACTIVE_COLOR ;
 		}
+		// draw histogram border
 		rectangleColor(surface , loopX - 1 , histogramT - 1 , histogramR + 1 , histogramB + 1 , borderColor) ;
 		// draw histogram
 		for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN)
@@ -89,15 +90,13 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 
 #if DRAW_LOOP_PEAKS
 		// draw the current sample value and loudest sample value in this loop as rings
-		Vector<unsigned int> peakss ; peakss.Add(scene->hiLoopPeaks[loopN]) ; peakss.Add(scene->loops[loopN]->peaks[PeakN]) ;
-		Vector<Color> colors ; colors.Add(LOOP_PEAK_MAX_COLOR) ; colors.Add(LOOP_PEAK_CURRENT_COLOR) ;
+		float peakss[2] = {scene->hiLoopPeaks[loopN] , peaks[PeakN]} ;
+		Uint32 colors[2] = {LOOP_PEAK_MAX_COLOR , LOOP_PEAK_CURRENT_COLOR} ;
 		for (unsigned ringN = 0 ; ringN < 2 ; ++ringN)
 		{
-			unsigned int sample = peakss[ringN] ;
-			unsigned int l = loopX + LOOP_PEAK_H - sample ;
-			unsigned int t = (zeroPeakY - sample) + 1 ;
-			unsigned int w , h ; w = h = (sample * 2) - 1 ;
-			d.DrawArc(RectC(l , t , w , h) , Point(0 , 0) , Point(0 , 0) , 0 , colors[ringN]) ;
+			unsigned int peak = peakss[ringN] * LOOP_PEAK_R ;
+			Sint16 x = loopX + LOOP_PEAK_R , y = zeroPeakY , rx = peak , ry = rx ;
+			ellipseColor(surface , x , y , rx , ry, colors[ringN]) ;
 		}
 #endif
 

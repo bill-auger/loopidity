@@ -193,7 +193,7 @@
 	<jack/jack.h>
 	"loopidity.h"
 
-1344440599 /home/me/src/LoopiditySDL/loopidity.h
+1344445608 /home/me/src/LoopiditySDL/loopidity.h
 	"jack_io.h"
 	"loopidity_sdl.h"
 
@@ -211,7 +211,7 @@
 	"loopidity.h"
 	"scene_sdl.h"
 
-1344444394 /home/me/src/LoopiditySDL/scene_sdl.h
+1344446115 /home/me/src/LoopiditySDL/scene_sdl.h
 	<cstdlib>
 	<stdlib.h>
 	<SDL/SDL.h>

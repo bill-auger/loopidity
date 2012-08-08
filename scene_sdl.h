@@ -22,7 +22,7 @@ class Scene ;
 
 
 // loop magnitudes
-#define LOOP_PEAK_H 50 // lets fix this to N_PEAKS / 2 for sdl histogramWidth (loopD)
+#define LOOP_PEAK_R 50 // lets fix this to N_PEAKS / 2 for sdl histogramWidth (loopD)
 /*
 #define LOOP_IMG_RES LOOP_D // TODO: fixed to LOOP_D for now (as long as PEAK_MAX is sensible for this)
 #define LOOP_BG_IMG_RES 256 // must be 256
@@ -44,9 +44,9 @@ class Scene ;
 #define HISTOGRAM_PEAK_CURRENT_INACTIVE_COLOR 0x808000ff
 #define HISTOGRAM_PEAK_ACTIVE_COLOR 0x008000ff
 #define HISTOGRAM_PEAK_INACTIVE_COLOR 0x002000ff
+#define LOOP_PEAK_CURRENT_COLOR 0xffffffff
+#define LOOP_PEAK_MAX_COLOR 0xff0000ff
 /*
-#define LOOP_PEAK_CURRENT_COLOR White
-#define LOOP_PEAK_MAX_COLOR Red
 #define LOOP_IMG_MASK_COLOR Color(128 , 128 , 128)
 
 // string constants
@@ -70,7 +70,7 @@ class SceneSdl
 
 		SceneSdl(Scene* scene , unsigned int sceneNum , SDL_Rect winRect) :
 				// constants
-				scene(scene) , sceneN(sceneNum) , loopD(LOOP_PEAK_H * 2) , yOffset(loopD / 4) ,
+				scene(scene) , sceneN(sceneNum) , loopD(LOOP_PEAK_R * 2) , yOffset(loopD / 4) ,
 				xPadding(loopD / 8) , yPadding(loopD / 3) , histogramH(yPadding / 2) ,
 				loopW(xPadding + loopD) , sceneW(winRect.w - (xPadding * 2)) ,
 				sceneH(yPadding + loopD) , sceneX(xPadding) , sceneY(yOffset + (sceneH * sceneN)) ,
