@@ -11,11 +11,23 @@ void SceneSdl::makeMainDbgText(char* dbg)
 // DEBUG end
 
 
-/* SceneUpp class public functions and ImageMaker structs */
+/* SceneSdl class public functions */
 
-void SceneSdl::drawScene(SDL_Surface* screen)
+void SceneSdl::setDims(bool isFullScreen)
 {
-/*
+	// calculate coordinates for drawing context
+	if (isFullScreen) { sceneL = sceneX ; sceneT = sceneY ; }
+	else { sceneL = sceneT = 0 ; } // for drawing partial
+	histogramT = sceneT + histogramH ;
+	histogram0 = histogramT + (histogramH / 2) ;
+	histogramB = histogramT + histogramH ;
+	maxPeakY = sceneT + yPadding ;
+	zeroPeakY = maxPeakY + LOOP_PEAK_H ;
+	minPeakY = maxPeakY + loopD ;
+}
+
+void SceneSdl::drawScene(SDL_Surface* surface)
+{
 #if DRAW_BG_PARTIAL
 	d.DrawRect(sceneL , sceneT , sceneW , sceneH , WIN_BG_COLOR) ;
 #endif
@@ -29,7 +41,7 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 #if DRAW_PEAK_BARS
 	// draw scene peak bars
 	ImageDraw img(sceneW , LOOP_D) ; unsigned int hiScenePeak = scene->hiScenePeaks[PeakN] ;
-	unsigned int t = (PEAK_H - hiScenePeak) + 1 , h = (hiScenePeak * 2) - 1 ;
+	unsigned int t = (LOOP_PEAK_H - hiScenePeak) + 1 , h = (hiScenePeak * 2) - 1 ;
 	img.Alpha().DrawRect(0 , t , sceneW , h , White) ;
 	img.DrawImage(0 , 0 , sceneW , LOOP_D , CreatePeaksBgGradientImgCached()) ;
 	d.DrawImage(sceneL , maxPeakY , img) ;
@@ -41,30 +53,37 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 	// draw loops
 	for (unsigned int loopN = 0 ; loopN < scene->nLoops ; ++loopN)
 	{
-		unsigned int* peaks = scene->loops[loopN]->peaks ;
-		unsigned int loopX = sceneL + (loopW * loopN) ;
+		float* peaks = scene->loops[loopN]->peaks ;
+		Sint16 loopX = sceneL + (loopW * loopN) ;
 
 #if DRAW_HISTOGRAMS
 // TODO: draw histogram mixing all loops in this sceneN
 // perhaps better to make this a cached image (it only changes omce per loop)
 
 		// draw histogram border
-		Color loopColor = (loopN == scene->nLoops - 1)? LOOP_ACTIVE_COLOR : LOOP_INACTIVE_COLOR ;
-		unsigned int histogramR = loopX + LOOP_D ;
-		d.DrawLine(loopX , histogramT , histogramR , histogramT , 1 , loopColor) ;
-		d.DrawLine(loopX , histogramT , loopX , histogramB , 1 , loopColor) ;
-		d.DrawLine(loopX , histogramB , histogramR , histogramB , 1 , loopColor) ;
-		d.DrawLine(histogramR , histogramT , histogramR , histogramB , 1 , loopColor) ;
-
+		float currentPeak ; Sint16 histogramR = loopX + loopD , peakH , x , t , b ;
+		Uint32 borderColor , peakColorCurrent , peakColorOther , peakColor;
+		bool isCurrentLoop = (loopN == scene->nLoops - 1) ;
+		if (isCurrentLoop)
+		{
+			borderColor = HISTOGRAM_BORDER_ACTIVE_COLOR ;
+			peakColorCurrent = HISTOGRAM_PEAK_CURRENT_ACTIVE_COLOR ;
+			peakColorOther = HISTOGRAM_PEAK_ACTIVE_COLOR ;
+		}
+		else
+		{
+			borderColor = HISTOGRAM_BORDER_INACTIVE_COLOR ;
+			peakColorCurrent = HISTOGRAM_PEAK_CURRENT_INACTIVE_COLOR ;
+			peakColorOther = HISTOGRAM_PEAK_INACTIVE_COLOR ;
+		}
+		rectangleColor(surface , loopX - 1 , histogramT - 1 , histogramR + 1 , histogramB + 1 , borderColor) ;
 		// draw histogram
 		for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN)
 		{
-			unsigned int currentPeak = peaks[peakN] ;
-			unsigned int l = loopX + (HISTOGRAM_SAMPLE_W * peakN) ;
-			unsigned int t = histogramT + ((PEAK_H - currentPeak) * HISTOGRAM_Y_SCALE) ;
-			unsigned int r = l ;
-			unsigned int b = histogramT + ((PEAK_H + currentPeak) * HISTOGRAM_Y_SCALE) ;
-			d.DrawLine(l , t , r , b , HISTOGRAM_SAMPLE_W , (peakN == PeakN)? HISTOGRAM_PEAK_CURRENT_COLOR : loopColor) ;
+			currentPeak = peaks[peakN] ; peakH = histogramH * currentPeak ; x = loopX + peakN ;
+			if (peakN == PeakN) { t = histogramT ; b = histogramB ; peakColor = peakColorCurrent ; }
+			else { t = histogram0 - (peakH / 2) ; b = t + peakH ; peakColor = peakColorOther ; }
+			vlineColor(surface , x , t , b , peakColor) ;
 		}
 #endif
 
@@ -75,7 +94,7 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 		for (unsigned ringN = 0 ; ringN < 2 ; ++ringN)
 		{
 			unsigned int sample = peakss[ringN] ;
-			unsigned int l = loopX + PEAK_H - sample ;
+			unsigned int l = loopX + LOOP_PEAK_H - sample ;
 			unsigned int t = (zeroPeakY - sample) + 1 ;
 			unsigned int w , h ; w = h = (sample * 2) - 1 ;
 			d.DrawArc(RectC(l , t , w , h) , Point(0 , 0) , Point(0 , 0) , 0 , colors[ringN]) ;
@@ -87,27 +106,6 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 		d.DrawImage(loopX , maxPeakY , createLoopImgCached(loopN , PeakN)) ;
 #endif
 	} // for (loopN)
-*/
-}
-
-void SceneSdl::setDims(SDL_Rect winRect , bool isFullScreen)
-{
-	// calculate screen coordinates for GUI layout
-	unsigned int winWidth = winRect.w , winHeight = winRect.h ;
-
-	xPadding = (int)X_PADDING ;
-	loopW = xPadding + LOOP_D ;
-	sceneW = winWidth - (xPadding * 2) ;
-	sceneH = Y_PADDING + LOOP_D ;
-	sceneX = xPadding ;
-	sceneY = Y_OFFSET + (sceneH * sceneN) ;
-	if (isFullScreen) { sceneL = sceneX ; sceneT = sceneY ; }
-	else { sceneL = sceneT = 0 ; } // for drawing partial
-	histogramT = sceneT + HISTOGRAM_H ;
-	histogramB = histogramT + HISTOGRAM_H ;
-	maxPeakY = sceneT + Y_PADDING ;
-	zeroPeakY = maxPeakY + PEAK_H ;
-	minPeakY = maxPeakY + LOOP_D ;
 }
 
 /*

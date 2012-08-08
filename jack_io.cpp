@@ -157,7 +157,7 @@ int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 			CurrentScene->addLoop(newLoop) ;
 #endif
 
-if (DEBUG) { char dbg[255] ; sprintf(dbg , "NEW LOOP scene:%d loopN:%d" , Loopidity::GetCurrentSceneN() , CurrentScene->nLoops) ; LoopiditySdl::TempStatusL(dbg) ; }
+if (DEBUG) { char dbg[255] ; sprintf(dbg , "NEW LOOP scene:%d loopN:%d" , Loopidity::GetCurrentSceneN() , CurrentScene->nLoops) ; LoopiditySdl::SetStatusR(dbg) ; }
 		}
 
 		// switch to NextScene if necessary

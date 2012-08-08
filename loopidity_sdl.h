@@ -35,12 +35,12 @@ using namespace std ;
 // intervals
 #define GUI_UPDATE_INTERVAL_SHORT 125
 #define GUI_UPDATE_INTERVAL_LONG 1000
-
+*/
 // GUI magnitudes
-#define INIT_W 600
-#define INIT_H 400
-#define STATUS_W 300
-
+#define WIN_RECT {0 , 0 , 640 , 480}
+#define STATUS_RECT_L {0 , 460 , 0 , 0}
+#define STATUS_RECT_R {600 , 460 , 0 , 0}
+/*
 // scope magnitudes
 #define SCOPE_Y 200
 #define SCOPE_H 100
@@ -48,7 +48,7 @@ using namespace std ;
 #define SCOPE_OPTIMAL 0.8
 #define VU_SCALE 100
 
-// colors
+// fonts and colors
 #define SCOPE_BG_COLOR Black
 #define INSCOPE_QUIET_COLOR Green
 #define INSCOPE_OPTIMAL_COLOR Yellow
@@ -57,9 +57,8 @@ using namespace std ;
 #define OUTSCOPE_OPTIMAL_COLOR Yellow
 #define OUTSCOPE_LOUD_COLOR Red
 */
-#define STATUS_RECT {100 , 100 , 0 , 0}
 #define STATUS_FONT "/usr/share/fonts/truetype/tlwg/Purisa.ttf" , 12
-#define STATUS_TEXT_COLOR { 255 , 0 , 255 }
+#define STATUS_TEXT_COLOR {255 , 0 , 255}
 
 
 class LoopiditySdl
@@ -68,8 +67,10 @@ class LoopiditySdl
 
 		// main GUI
 		static SDL_Surface* Screen ;
+		static SDL_Rect WinRect ;
+		static SDL_Rect StatusRectL ;
+		static SDL_Rect StatusRectR ;
 		static TTF_Font* StatusFont ;
-		static SDL_Rect StatusRect ;
 		static SDL_Color StatusColor ;
 
 		// scenes GUI
@@ -86,22 +87,20 @@ class LoopiditySdl
 		static const Color STATUS_COLOR_IDLE ;
 */
 		// setup
-		static void SdlError(char* functionName) ;
-		static void TtfError(char* functionName) ;
+		static void SdlError(const char* functionName) ;
+		static void TtfError(const char* functionName) ;
 		static bool Init(bool isMonitorInputs) ;
 		static void Cleanup() ;
 
 		// drawing
 		static void ResetGUI() ;
 		static void DrawText(const char* text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* rect , SDL_Color fgColor) ;
-		static void TempStatusL(const char* msg) ;
 		static void SetStatusL(const char* msg) ;
 		static void SetStatusR(const char* msg) ;
 		static void SetMode() ;
 		static void Alert(const char* msg) ;
-
+		static void DrawScenes() ;
 //		void drawScopes(Draw& w , Rect winRect) ;
-//		void drawScene(Draw& d) ;
 
 		// helpers
 		static string makeTime(unsigned int seconds) ;

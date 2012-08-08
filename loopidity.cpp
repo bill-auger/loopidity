@@ -90,7 +90,7 @@ SAMPLE Loopidity::TransientPeaks[N_PORTS] = {0} ;
 
 
 /* Loop Class public functions */
-Loop::Loop(unsigned int nFrames)
+Loop::Loop(unsigned int nFrames) : peaks()
 	{ buffer1 = new SAMPLE[nFrames] ; buffer2 = new SAMPLE[nFrames] ; }
 
 Loop::~Loop() { delete buffer1 ; delete buffer2 ; }
@@ -107,7 +107,7 @@ float Scene::getTotalSeconds() { return nFrames / JackIO::GetSampleRate() ; }
 
 Scene::Scene(unsigned int nframes) :
 		// peaks cache
-		hiScenePeaks() , hiLoopPeaks(), highestScenePeak(0) ,
+		hiScenePeaks() , hiLoopPeaks(), highestScenePeak(0.0) ,
 		// buffer iteration
 		nFrames(nframes) , nFramesPerPeak(nframes / N_PEAKS) , frameN(0) , nLoops(0) ,
 		// recording state
@@ -133,15 +133,13 @@ void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 #if SCAN_PEAKS_DATA
 	if (loopN >= N_LOOPS) return ;
 
-	unsigned int* peaks = loop->peaks ;
-	unsigned int peakH = (unsigned int)PEAK_H , framen , peak ; SAMPLE peak1 , peak2 ;
+	float* peaks = loop->peaks ; unsigned int framen ; SAMPLE peak1 , peak2 ;
 	for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN)
 	{
 		framen = nFramesPerPeak * peakN ;
 		peak1 = Loopidity::GetPeak(&(loop->buffer1[framen]) , nFramesPerPeak) ;
 		peak2 = Loopidity::GetPeak(&(loop->buffer2[framen]) , nFramesPerPeak) ;
-		peak = (unsigned int)((peak1 + peak2) * PEAK_SCALE) ;
-		peaks[peakN] = (peak < peakH)? peak : peakH ;
+		peaks[peakN] = (peak1 + peak2) / N_INPUT_CHANNELS ;
 
 		// find the loudest peak for this loop
 		if (hiLoopPeaks[loopN] < peaks[peakN]) hiLoopPeaks[loopN] = peaks[peakN] ;
@@ -156,10 +154,10 @@ void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 
 void Scene::rescanPeaks()
 {
-	highestScenePeak = 0 ;
-	for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN) hiScenePeaks[peakN] = 0 ;
+	highestScenePeak = 0.0 ;
+	for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN) hiScenePeaks[peakN] = 0.0 ;
 	for (unsigned int loopN = 0 ; loopN < loops.size() ; ++loopN)
-		{ hiLoopPeaks[loopN] = 0 ; scanPeaks(loops[loopN] , loopN) ; }
+		{ hiLoopPeaks[loopN] = 0.0 ; scanPeaks(loops[loopN] , loopN) ; }
 }
 
 
@@ -219,7 +217,7 @@ void Loopidity::SetMode()
 	LoopiditySdl::SetMode() ;
 #endif
 
-if (DEBUG) { char dbg[256] ; sprintf(dbg , "Set mode: IsRecording:%d isPulseExist:%d isSaveLoop:%d" , IsRecording , GetIsPulseExist() , GetIsSaveLoop()) ; LoopiditySdl::TempStatusL(dbg) ; }
+if (DEBUG) { char dbg[256] ; sprintf(dbg , "Set mode: IsRecording:%d isPulseExist:%d isSaveLoop:%d" , IsRecording , GetIsPulseExist() , GetIsSaveLoop()) ; LoopiditySdl::SetStatusR(dbg) ; }
 }
 
 // TODO: cancel initial recording if not committed if (!nLoops) IsRecording = false ; frameN = 0 ;

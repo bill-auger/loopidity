@@ -6,7 +6,9 @@
 
 // main GUI
 SDL_Surface* LoopiditySdl::Screen = 0 ;
-SDL_Rect LoopiditySdl::StatusRect = STATUS_RECT ;
+SDL_Rect LoopiditySdl::WinRect = WIN_RECT ;
+SDL_Rect LoopiditySdl::StatusRectL = STATUS_RECT_L ;
+SDL_Rect LoopiditySdl::StatusRectR = STATUS_RECT_R ;
 TTF_Font* LoopiditySdl::StatusFont = 0 ;
 SDL_Color LoopiditySdl::StatusColor = STATUS_TEXT_COLOR ;
 
@@ -23,16 +25,16 @@ SAMPLE* LoopiditySdl::TransientPeaks = 0 ;
 
 // setup
 
-void LoopiditySdl::SdlError(char* functionName) { printf("%s(): %s\n" , functionName , SDL_GetError()) ; }
+void LoopiditySdl::SdlError(const char* functionName) { printf("%s(): %s\n" , functionName , SDL_GetError()) ; }
 
-void LoopiditySdl::TtfError(char* functionName) { printf("%s(): %s\n" , functionName , TTF_GetError()) ; }
+void LoopiditySdl::TtfError(const char* functionName) { printf("%s(): %s\n" , functionName , TTF_GetError()) ; }
 
 bool LoopiditySdl::Init(bool isMonitorInputs)
 {
 	// initialize SDL video
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) { SdlError("SDL_Init") ; return false ; }
 	atexit(SDL_Quit) ;
-	Screen = SDL_SetVideoMode(640 , 480 , 16 , SDL_HWSURFACE | SDL_DOUBLEBUF) ;
+	Screen = SDL_SetVideoMode(WinRect.w , WinRect.h , 16 , SDL_HWSURFACE | SDL_DOUBLEBUF) ;
 	if (!Screen) { SdlError("SDL_SetVideoMode") ; return false ; }
 	if (SDL_EnableKeyRepeat(0 , 0)) { LoopiditySdl::Cleanup() ; return false ; }
 	if (TTF_Init()) { TtfError("TTF_Init") ; return false ; }
@@ -41,9 +43,9 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 	// initialize Loopidity JackIO and SceneUpp classes
 	if (!Loopidity::Init(DEFAULT_BUFFER_SIZE , isMonitorInputs)) return false ;
 
-	Scene** aScenes = Loopidity::GetScenes() ;
+	Scene** scenes = Loopidity::GetScenes() ;
 	for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
-		SdlScenes[sceneN] = new SceneSdl(aScenes[sceneN] , sceneN) ;
+		SdlScenes[sceneN] = new SceneSdl(scenes[sceneN] , sceneN , WinRect) ;
 
 	// get handles to scope and VU peaks caches
 	InPeaks = Loopidity::GetInPeaksCache() ; OutPeaks = Loopidity::GetOutPeaksCache() ;
@@ -67,11 +69,9 @@ void LoopiditySdl::DrawText(const char* text , SDL_Surface* surface , TTF_Font* 
 	SDL_BlitSurface(textSurface , NULL , surface , rect) ; SDL_FreeSurface(textSurface) ;
 }
 
-void LoopiditySdl::TempStatusL(const char* msg) {}
+void LoopiditySdl::SetStatusL(const char* msg) { DrawText(msg , Screen , StatusFont , &StatusRectL , StatusColor) ; }
 
-void LoopiditySdl::SetStatusL(const char* msg) {}
-
-void LoopiditySdl::SetStatusR(const char* msg) {}
+void LoopiditySdl::SetStatusR(const char* msg) { DrawText(msg , Screen , StatusFont , &StatusRectR , StatusColor) ; }
 
 void LoopiditySdl::SetMode()
 {
@@ -99,11 +99,44 @@ void LoopiditySdl::SetMode()
 #endif
 }
 
-void LoopiditySdl::Alert(const char* msg) {}
+void LoopiditySdl::Alert(const char* msg) { printf("%s" , msg) ; }
+
+void LoopiditySdl::DrawScenes()
+{
+#if DRAW_SCENES
+	unsigned int currentSceneN = Loopidity::GetCurrentSceneN() ;
+	SceneSdl* sdlScene = SdlScenes[currentSceneN] ;
+#if ! DRAW_BG_FULL
+if (!IsBetterWayToDoThis) { wd.DrawRect(winRect , WIN_BG_COLOR) ; IsBetterWayToDoThis = true ; }
+#endif
+
+		// draw current scene
+		sdlScene->setDims(true) ; sdlScene->drawScene(Screen) ;
+#if DRAW_INACTIVE_SCENES
+		// draw inactive scenes
+		for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
+		{
+			if (sceneN == currentSceneN) continue ;
+
+			sdlScene = SdlScenes[sceneN] ; sdlScene->setDims(winRect , false) ;
+			Image img = sdlScene->createSceneImgCached(winRect.Width() , winRect.Height()) ;
+			wd.DrawImage(sdlScene->sceneX , sdlScene->sceneY , img) ;
+		}
+#endif // #if DRAW_INACTIVE_SCENES
+#endif // #if DRAW_SCENES
+
+#if DRAW_SCENES && DRAW_DEBUG_TEXT
+char dbg[255] ; SdlScenes[currentSceneN]->makeMainDbgText(dbg) ;
+DrawText(MAIN_DEBUG_TEXT_POS , winRect.Width() , winRect.Height() , WIN_BG_COLOR) ; wd.DrawText(MAIN_DEBUG_TEXT_POS , dbg , Roman(18) , White) ;
+#endif
+}
+
+//LoopiditySdl::DrawScopes() { #if DRAW_SCOPES}
 
 
 /* entry point */
 
+bool IsBetterWayToDoThis = false ;
 int main(int argc , char** argv)
 {
 	// parse command line arguments
@@ -142,13 +175,19 @@ int main(int argc , char** argv)
 			} // switch (event.type)
 		} // while (SDL_PollEvent(&event))
 
+#if DRAW_BG_FULL
 		SDL_FillRect(LoopiditySdl::Screen , 0 , SDL_MapRGB(LoopiditySdl::Screen->format , 0 , 0 , 0)) ;
+#endif
 
+/* draw a pie
 Sint16 x = 200 , y = 200 , radius = 100 , begin = 0 , end = 180 ;
 Uint8 r = 255 , g = 255 , b = 255 , a = 255 ;
 filledPieRGBA(LoopiditySdl::Screen , x , y , radius , begin , end , r , g , b , a) ;
+*/
+LoopiditySdl::SetStatusL("some text") ;
 
-LoopiditySdl::DrawText("text" , LoopiditySdl::Screen , LoopiditySdl::StatusFont , &LoopiditySdl::StatusRect , LoopiditySdl::StatusColor) ;
+		LoopiditySdl::DrawScenes() ;
+//		LoopiditySdl::DrawScopes(wd , winRect) ;
 
 		SDL_Flip(LoopiditySdl::Screen) ;
 	} // while (!done)

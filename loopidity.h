@@ -4,7 +4,7 @@
 
 
 // DEBUG
-#define DEBUG 0
+#define DEBUG 1
 #define MEMORY_CHECK 1 // if 0 choose DEFAULT_BUFFER_SIZE wisely
 #define INIT_LOOPIDITY 1
 #define INIT_JACK 1
@@ -17,14 +17,13 @@
 
 // GUI DEBUG
 #define BACKPAINT 0
-#define SHOW_REPAINT 0
 #define DRAW_BG_FULL 1
 #define DRAW_BG_PARTIAL (! DRAW_BG_FULL) && 1
 #define DRAW_STATUS 0
 #define DRAW_SCENES 1
 #define DRAW_SCOPES 0
 
-#if DRAW_WIDGETS
+#if DRAW_STATUS
 #define UPDATE_MEMORY 0
 #define UPDATE_LOOP_PROGRESS 0
 #define UPDATE_VU 0
@@ -65,8 +64,6 @@
 #define N_SCENES 3
 #define N_LOOPS 9 // N_LOOPS_PER_SCENE
 #define N_PEAKS 100 // should be divisible into 3600
-#define PEAK_H 50
-#define PEAK_SCALE 100.0 // TODO: likely this , SCOPE_SCALE , and VU_SCALE will all be 100.0
 
 // string constants
 //#define CONNECT_ARG "--connect"
@@ -97,7 +94,7 @@ class Loop
 
 		SAMPLE* buffer1 ;
 		SAMPLE* buffer2 ;
-		unsigned int peaks[N_PEAKS] ;
+		float peaks[N_PEAKS] ;
 } ;
 
 
@@ -126,9 +123,9 @@ class Scene
 // hiCurrentSample = the loudest of the currently playing samples in the current scene
 // hiLoopSamples[] = the loudest of all samples for each loop of the current scene (nyi)
 // highestLoopSample = the loudest of all samples in all loops of the current scene (nyi)
-		unsigned int hiScenePeaks[N_PEAKS] ;
-		unsigned int hiLoopPeaks[N_LOOPS] ;
-		unsigned int highestScenePeak ;
+		float hiScenePeaks[N_PEAKS] ;
+		float hiLoopPeaks[N_LOOPS] ;
+		float highestScenePeak ;
 
 		// buffer iteration
 		unsigned int nFrames ;
