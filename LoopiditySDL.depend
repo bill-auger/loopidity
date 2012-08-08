@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1344443545 source:/home/me/src/LoopiditySDL/main.cpp
+1344462047 source:/home/me/src/LoopiditySDL/main.cpp
 	"loopidity_sdl.h"
 
 1327664837 /usr/include/SDL/SDL.h
@@ -193,11 +193,11 @@
 	<jack/jack.h>
 	"loopidity.h"
 
-1344445608 /home/me/src/LoopiditySDL/loopidity.h
+1344459673 /home/me/src/LoopiditySDL/loopidity.h
 	"jack_io.h"
 	"loopidity_sdl.h"
 
-1344435343 /home/me/src/LoopiditySDL/loopidity_sdl.h
+1344461891 /home/me/src/LoopiditySDL/loopidity_sdl.h
 	<cstdlib>
 	<vector>
 	<string>
@@ -207,11 +207,12 @@
 	<SDL/SDL.h>
 	<SDL.h>
 	<SDL_gfxPrimitives.h>
+	<SDL_image.h>
 	<SDL_ttf.h>
 	"loopidity.h"
 	"scene_sdl.h"
 
-1344446115 /home/me/src/LoopiditySDL/scene_sdl.h
+1344460062 /home/me/src/LoopiditySDL/scene_sdl.h
 	<cstdlib>
 	<stdlib.h>
 	<SDL/SDL.h>
@@ -225,11 +226,17 @@
 
 1344418423 /home/me/src/LoopiditySDL/debug.h
 
-1344443546 source:/home/me/src/LoopiditySDL/scene_sdl.cpp
+1344464735 source:/home/me/src/LoopiditySDL/scene_sdl.cpp
 	"scene_sdl.h"
 
 1325205476 /usr/include/SDL/SDL_ttf.h
 	"SDL.h"
+	"begin_code.h"
+	"close_code.h"
+
+1325206101 /usr/include/SDL/SDL_image.h
+	"SDL.h"
+	"SDL_version.h"
 	"begin_code.h"
 	"close_code.h"
 

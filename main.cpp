@@ -14,6 +14,8 @@ SDL_Color LoopiditySdl::StatusColor = STATUS_TEXT_COLOR ;
 
 // scenes GUI
 SceneSdl* LoopiditySdl::SdlScenes[N_SCENES] = {0} ;
+SDL_Surface* LoopiditySdl::SceneBgGradient = 0 ;
+SDL_Surface* LoopiditySdl::LoopBgGradient = 0 ;
 
 // scope peaks cache
 vector<SAMPLE>* LoopiditySdl::InPeaks ;
@@ -31,14 +33,20 @@ void LoopiditySdl::TtfError(const char* functionName) { printf("%s(): %s\n" , fu
 
 bool LoopiditySdl::Init(bool isMonitorInputs)
 {
-	// initialize SDL video
+	// initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) { SdlError("SDL_Init") ; return false ; }
 	atexit(SDL_Quit) ;
-	Screen = SDL_SetVideoMode(WinRect.w , WinRect.h , 16 , SDL_HWSURFACE | SDL_DOUBLEBUF) ;
+	Screen = SDL_SetVideoMode(WinRect.w , WinRect.h , PIXEL_DEPTH , SDL_HWSURFACE | SDL_DOUBLEBUF) ;
 	if (!Screen) { SdlError("SDL_SetVideoMode") ; return false ; }
 	if (SDL_EnableKeyRepeat(0 , 0)) { LoopiditySdl::Cleanup() ; return false ; }
+
+	// load fonts
 	if (TTF_Init()) { TtfError("TTF_Init") ; return false ; }
 	if(!(StatusFont = TTF_OpenFont(STATUS_FONT))) { TtfError("TTF_OpenFont") ; return false ; }
+
+	// load images
+	if (!(SceneBgGradient = SDL_LoadBMP(SCENE_BG_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
+	if (!(LoopBgGradient = IMG_Load(LOOP_BG_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
 
 	// initialize Loopidity JackIO and SceneUpp classes
 	if (!Loopidity::Init(DEFAULT_BUFFER_SIZE , isMonitorInputs)) return false ;
@@ -54,7 +62,11 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 	return true ;
 }
 
-void LoopiditySdl::Cleanup() { TTF_CloseFont(StatusFont) ; SDL_FreeSurface(Screen) ; }
+void LoopiditySdl::Cleanup()
+{
+	TTF_CloseFont(StatusFont) ; SDL_FreeSurface(SceneBgGradient) ;
+	SDL_FreeSurface(LoopBgGradient) ; SDL_FreeSurface(Screen) ;
+}
 
 
 // drawing
@@ -118,9 +130,10 @@ if (!IsBetterWayToDoThis) { wd.DrawRect(winRect , WIN_BG_COLOR) ; IsBetterWayToD
 		{
 			if (sceneN == currentSceneN) continue ;
 
-			sdlScene = SdlScenes[sceneN] ; sdlScene->setDims(winRect , false) ;
-			Image img = sdlScene->createSceneImgCached(winRect.Width() , winRect.Height()) ;
-			wd.DrawImage(sdlScene->sceneX , sdlScene->sceneY , img) ;
+			sdlScene = SdlScenes[sceneN] ; sdlScene->setDims(false) ;
+//			SDL_Surface* img = sdlScene->createSceneImgCached() ;
+			SDL_Rect sceneRect ; sceneRect.x = sdlScene->sceneX ; sceneRect.y = sdlScene->sceneY ;
+			SDL_BlitSurface(LoopiditySdl::SceneBgGradient , 0 , Screen , &sceneRect) ;
 		}
 #endif // #if DRAW_INACTIVE_SCENES
 #endif // #if DRAW_SCENES

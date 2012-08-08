@@ -18,6 +18,7 @@
 #else
 #include <SDL.h>
 #include <SDL_gfxPrimitives.h>
+#include <SDL_image.h>
 #include <SDL_ttf.h>
 #endif
 
@@ -37,7 +38,8 @@ using namespace std ;
 #define GUI_UPDATE_INTERVAL_LONG 1000
 */
 // GUI magnitudes
-#define WIN_RECT {0 , 0 , 640 , 480}
+#define WIN_RECT {0 , 0 , 1024 , 768}
+#define PIXEL_DEPTH 16
 #define STATUS_RECT_L {0 , 460 , 0 , 0}
 #define STATUS_RECT_R {600 , 460 , 0 , 0}
 /*
@@ -60,6 +62,9 @@ using namespace std ;
 #define STATUS_FONT "/usr/share/fonts/truetype/tlwg/Purisa.ttf" , 12
 #define STATUS_TEXT_COLOR {255 , 0 , 255}
 
+#define SCENE_BG_IMG "scene_bg_gradient.bmp"
+#define LOOP_BG_IMG "loop_bg_gradient.alpha.bmp"
+
 
 class LoopiditySdl
 {
@@ -75,6 +80,8 @@ class LoopiditySdl
 
 		// scenes GUI
 		static SceneSdl* SdlScenes[N_SCENES] ;
+		static SDL_Surface* SceneBgGradient ;
+		static SDL_Surface* LoopBgGradient ;
 
 		// scope peaks cache
 		static vector<SAMPLE>* InPeaks ;

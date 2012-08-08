@@ -31,13 +31,13 @@ class Scene ;
 #define PIE_SLICE_DEGREES 3600 / N_PEAKS
 #define PIE_12_OCLOCK -900
 */
-/*
+
 // colors
-#define WIN_BG_COLOR Black
+// TODO: perhaps it maybe more efficient to SDL_MapRGB(LoopiditySdl::Screen->format , 0 , 0 , 0)
+#define WIN_BG_COLOR 0x000000ff
 #define SCENE_BG_COLOR WIN_BG_COLOR
-#define SCENE_PEAK_MAX_COLOR Red
-#define SCENE_PEAK_ZERO_COLOR Color(128 , 128 , 128)
-*/
+#define SCENE_PEAK_MAX_COLOR 0xff0000ff
+#define SCENE_PEAK_ZERO_COLOR 0x808080ff
 #define HISTOGRAM_BORDER_ACTIVE_COLOR 0x00ff00ff
 #define HISTOGRAM_BORDER_INACTIVE_COLOR 0x004000ff
 #define HISTOGRAM_PEAK_CURRENT_ACTIVE_COLOR 0xffff00ff
@@ -75,8 +75,9 @@ class SceneSdl
 				loopW(xPadding + loopD) , sceneW(winRect.w - (xPadding * 2)) ,
 				sceneH(yPadding + loopD) , sceneX(xPadding) , sceneY(yOffset + (sceneH * sceneN)) ,
 				// variables
-				sceneL(0) , sceneT(0) , histogramT(0) , histogram0(0) , histogramB(0) ,
-				maxPeakY(0) , zeroPeakY(0) , minPeakY(0) {}
+				sceneL(0) , sceneT(0) , sceneR(0) ,
+				histogramT(0) , histogram0(0) , histogramB(0) ,
+				maxPeakY(0) , zeroPeakY(0) , minPeakY(0) { setDims(true) ; }
 
 		// audio/peaks data
 		const Scene* scene ;
@@ -89,14 +90,15 @@ class SceneSdl
 		const unsigned int yPadding ;
 		const unsigned int histogramH ;
 		const unsigned int loopW ;
-		const unsigned int sceneW ;
-		const unsigned int sceneH ;
+		const Uint16 sceneW ; // TODO: for imagemakers may not need
+		const Uint16 sceneH ; // TODO: for imagemakers may not need
 		const unsigned int sceneX ;
 		const unsigned int sceneY ;
 
 		// drawing dimensions
-		unsigned int sceneL ;
-		unsigned int sceneT ;
+		Sint16 sceneL ;
+		Sint16 sceneT ;
+		unsigned int sceneR ;
 		Sint16 histogramT ;
 		Sint16 histogram0 ;
 		Sint16 histogramB ;

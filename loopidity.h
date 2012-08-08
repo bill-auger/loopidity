@@ -31,7 +31,7 @@
 #endif
 
 #if DRAW_SCENES
-#define DRAW_PEAK_BARS 0
+#define DRAW_PEAK_BARS 1
 #define DRAW_HISTOGRAMS 1
 #define DRAW_LOOP_PEAKS 1
 #define DRAW_LOOPS 0

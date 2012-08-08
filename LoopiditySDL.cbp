@@ -29,14 +29,24 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="`sdl-config --cflags`" />
 			<Add option="-Wall" />
+			<Add option="`sdl-config --cflags`" />
 		</Compiler>
 		<Linker>
 			<Add option="`sdl-config --libs`" />
+			<Add library="/usr/lib/i386-linux-gnu/libSDL_gfx.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libSDL_ttf.so" />
+			<Add library="/usr/lib/i386-linux-gnu/libjack.so" />
 		</Linker>
-		<Unit filename="cb.bmp" />
+		<Unit filename="debug.h" />
+		<Unit filename="jack_io.cpp" />
+		<Unit filename="jack_io.h" />
+		<Unit filename="loopidity.cpp" />
+		<Unit filename="loopidity.h" />
+		<Unit filename="loopidity_sdl.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="scene_sdl.cpp" />
+		<Unit filename="scene_sdl.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

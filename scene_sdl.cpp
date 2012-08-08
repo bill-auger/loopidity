@@ -18,6 +18,7 @@ void SceneSdl::setDims(bool isFullScreen)
 	// calculate coordinates for drawing context
 	if (isFullScreen) { sceneL = sceneX ; sceneT = sceneY ; }
 	else { sceneL = sceneT = 0 ; } // for drawing partial
+	sceneR = sceneL + sceneW - 1 ;
 	histogramT = sceneT + histogramH ;
 	histogram0 = histogramT + (histogramH / 2) ;
 	histogramB = histogramT + histogramH ;
@@ -33,37 +34,39 @@ void SceneSdl::drawScene(SDL_Surface* surface)
 #endif
 
 	unsigned int PeakN = ((float)scene->frameN / (float)scene->nFrames) * (float)N_PEAKS ;
+	unsigned int loopN , peakN ; float* peaks ; float currentPeak ;
+	Sint16 loopX , peakH , x , t , b , r ; bool isCurrentLoop ;
+	Uint32 borderColor , peakColorCurrent , peakColorOther , peakColor ;
 
 #if DRAW_DEBUG_TEXT
 char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.DrawText(SCENE_DEBUG_TEXT_POS , dbg , Roman(12) , White) ;
 #endif
 
-#if DRAW_PEAK_BARS
-	// draw scene peak bars
-	ImageDraw img(sceneW , LOOP_D) ; unsigned int hiScenePeak = scene->hiScenePeaks[PeakN] ;
-	unsigned int t = (LOOP_PEAK_R - hiScenePeak) + 1 , h = (hiScenePeak * 2) - 1 ;
-	img.Alpha().DrawRect(0 , t , sceneW , h , White) ;
-	img.DrawImage(0 , 0 , sceneW , LOOP_D , CreatePeaksBgGradientImgCached()) ;
-	d.DrawImage(sceneL , maxPeakY , img) ;
-	d.DrawLine(sceneL , maxPeakY , sceneW , maxPeakY , 1 , SCENE_PEAK_MAX_COLOR) ;
-	d.DrawLine(sceneL , zeroPeakY , sceneW , zeroPeakY , 1 , SCENE_PEAK_ZERO_COLOR) ;
-	d.DrawLine(sceneL , minPeakY , sceneW , minPeakY , 1 , SCENE_PEAK_MAX_COLOR) ;
+#if DRAW_PEAK_BARS // TODO: perhaps this should be the output scope
+	// draw peak gradient mask
+	Uint16 hiScenePeak = (Uint16)(scene->hiScenePeaks[PeakN] * (float)LOOP_PEAK_R) ;
+	SDL_Rect maskRect ; maskRect.x = 0 ; maskRect.y = LOOP_PEAK_R - hiScenePeak ;
+	maskRect.w = sceneW ; maskRect.h = (hiScenePeak * 2) ;
+	SDL_Rect sceneRect ; sceneRect.x = sceneL ; sceneRect.y = maxPeakY + maskRect.y ;
+	SDL_BlitSurface(LoopiditySdl::SceneBgGradient , &maskRect , surface , &sceneRect) ;
+
+	// draw scene max , zero , and , min peak lines
+	hlineColor(surface , sceneL , sceneR , maxPeakY , SCENE_PEAK_MAX_COLOR) ;
+	hlineColor(surface , sceneL , sceneR , zeroPeakY , SCENE_PEAK_ZERO_COLOR) ;
+	hlineColor(surface , sceneL , sceneR , minPeakY , SCENE_PEAK_MAX_COLOR) ;
 #endif
 
 	// draw loops
-	for (unsigned int loopN = 0 ; loopN < scene->nLoops ; ++loopN)
+	for (loopN = 0 ; loopN < scene->nLoops ; ++loopN)
 	{
-		float* peaks = scene->loops[loopN]->peaks ;
-		Sint16 loopX = sceneL + (loopW * loopN) ;
+		peaks = scene->loops[loopN]->peaks ; loopX = sceneL + (loopW * loopN) ;
 
 #if DRAW_HISTOGRAMS
 // TODO: draw histogram mixing all loops in this sceneN
 // perhaps better to make this a cached image (it only changes omce per loop)
 
-		float currentPeak ; Sint16 histogramR = loopX + loopD , peakH , x , t , b ;
-		Uint32 borderColor , peakColorCurrent , peakColorOther , peakColor ;
 		// determine appropriate colors
-		bool isCurrentLoop = (loopN == scene->nLoops - 1) ;
+		isCurrentLoop = (loopN == scene->nLoops - 1) ;
 		if (isCurrentLoop)
 		{
 			borderColor = HISTOGRAM_BORDER_ACTIVE_COLOR ;
@@ -77,9 +80,9 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 			peakColorOther = HISTOGRAM_PEAK_INACTIVE_COLOR ;
 		}
 		// draw histogram border
-		rectangleColor(surface , loopX - 1 , histogramT - 1 , histogramR + 1 , histogramB + 1 , borderColor) ;
+		roundedRectangleColor(surface , loopX - 1 , histogramT - 1 , loopX + loopD + 1 , histogramB + 1 , 5 , borderColor) ;
 		// draw histogram
-		for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN)
+		for (peakN = 0 ; peakN < N_PEAKS ; ++peakN)
 		{
 			currentPeak = peaks[peakN] ; peakH = histogramH * currentPeak ; x = loopX + peakN ;
 			if (peakN == PeakN) { t = histogramT ; b = histogramB ; peakColor = peakColorCurrent ; }
@@ -90,14 +93,11 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 
 #if DRAW_LOOP_PEAKS
 		// draw the current sample value and loudest sample value in this loop as rings
-		float peakss[2] = {scene->hiLoopPeaks[loopN] , peaks[PeakN]} ;
-		Uint32 colors[2] = {LOOP_PEAK_MAX_COLOR , LOOP_PEAK_CURRENT_COLOR} ;
-		for (unsigned ringN = 0 ; ringN < 2 ; ++ringN)
-		{
-			unsigned int peak = peakss[ringN] * LOOP_PEAK_R ;
-			Sint16 x = loopX + LOOP_PEAK_R , y = zeroPeakY , rx = peak , ry = rx ;
-			ellipseColor(surface , x , y , rx , ry, colors[ringN]) ;
-		}
+		x = loopX + LOOP_PEAK_R ;
+		r = scene->hiLoopPeaks[loopN] * LOOP_PEAK_R ;
+		circleColor(surface , x , zeroPeakY , r, LOOP_PEAK_MAX_COLOR) ;
+		r = peaks[PeakN] * LOOP_PEAK_R ;
+		circleColor(surface , x , zeroPeakY , r, LOOP_PEAK_CURRENT_COLOR) ;
 #endif
 
 #if DRAW_LOOPS
