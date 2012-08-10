@@ -11,35 +11,48 @@ void SceneSdl::makeMainDbgText(char* dbg)
 // DEBUG end
 
 
-/* SceneSdl class public functions */
+/* SceneSdl class private constants */
 
-void SceneSdl::setDims(bool isFullScreen)
+Uint16 const SceneSdl::XPadding(LOOP_PEAK_R / 4) ;
+Uint16 const SceneSdl::YPadding(LOOP_PEAK_R / 3) ;
+Uint16 const SceneSdl::HistogramH(YPadding) ;
+Sint16 const SceneSdl::HistogramT(HistogramH - 2) ;
+Sint16 const SceneSdl::HistogramY(HistogramT + (HistogramH / 2)) ;
+Sint16 const SceneSdl::HistogramB(HistogramT + HistogramH) ;
+Uint16 const SceneSdl::LoopD(LOOP_PEAK_R * 2) ;
+Uint16 const SceneSdl::LoopW(XPadding + LoopD) ;
+Uint16 const SceneSdl::LoopT(YPadding + HistogramH) ;
+Uint16 const SceneSdl::LoopY(LoopT + LOOP_PEAK_R) ;
+Uint16 const SceneSdl::LoopB(LoopT + LoopD - 1) ;
+Uint16 const SceneSdl::SceneH((YPadding * 3) + HistogramH + LoopD) ;
+Uint16 const SceneSdl::SceneL(XPadding) ;
+
+
+/* SceneSdl class private functions */
+
+SceneSdl::SceneSdl(Scene* scene , Uint16 sceneNum) :
+		// constants
+		scene(scene) , sceneN(sceneNum) , sceneY(HEADER_H + (SceneH * sceneN)) ,
+		sceneW(LoopiditySdl::WinRect.w - (XPadding * 2)) , sceneR(SceneL + sceneW - 1)
 {
-	// calculate coordinates for drawing context
-	if (isFullScreen) { sceneL = sceneX ; sceneT = sceneY ; }
-	else { sceneL = sceneT = 0 ; } // for drawing partial
-	sceneR = sceneL + sceneW - 1 ;
-	histogramT = sceneT + histogramH ;
-	histogram0 = histogramT + (histogramH / 2) ;
-	histogramB = histogramT + histogramH ;
-	maxPeakY = sceneT + yPadding ;
-	zeroPeakY = maxPeakY + LOOP_PEAK_R ;
-	minPeakY = maxPeakY + loopD ;
+	// variables
+	sceneRect = {0 , sceneY , LoopiditySdl::WinRect.w , SceneH} ;
+	activeSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneW , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
+	inactiveSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneW , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
+	SDL_SetAlpha(inactiveSceneSurface , SDL_SRCALPHA | SDL_RLEACCEL , 128) ;
+	drawScene(inactiveSceneSurface) ;
 }
 
 void SceneSdl::drawScene(SDL_Surface* surface)
 {
-#if DRAW_BG_PARTIAL
-	d.DrawRect(sceneL , sceneT , sceneW , sceneH , WIN_BG_COLOR) ;
-#endif
-
 	unsigned int PeakN = ((float)scene->frameN / (float)scene->nFrames) * (float)N_PEAKS ;
 	unsigned int loopN , peakN ; float* peaks ; float currentPeak ;
 	Sint16 loopX , peakH , x , t , b , r ; bool isCurrentLoop ;
 	Uint32 borderColor , peakColorCurrent , peakColorOther , peakColor ;
 
+	SDL_FillRect(surface , 0 , LoopiditySdl::WinBgColor) ;
 #if DRAW_DEBUG_TEXT
-char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.DrawText(SCENE_DEBUG_TEXT_POS , dbg , Roman(12) , White) ;
+char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; LoopiditySdl::SetStatusL(dbg) ;
 #endif
 
 #if DRAW_PEAK_BARS // TODO: perhaps this should be the output scope
@@ -47,19 +60,19 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 	Uint16 hiScenePeak = (Uint16)(scene->hiScenePeaks[PeakN] * (float)LOOP_PEAK_R) ;
 	SDL_Rect maskRect ; maskRect.x = 0 ; maskRect.y = LOOP_PEAK_R - hiScenePeak ;
 	maskRect.w = sceneW ; maskRect.h = (hiScenePeak * 2) ;
-	SDL_Rect sceneRect ; sceneRect.x = sceneL ; sceneRect.y = maxPeakY + maskRect.y ;
-	SDL_BlitSurface(LoopiditySdl::SceneBgGradient , &maskRect , surface , &sceneRect) ;
+	SDL_Rect gradientRect ; gradientRect.x = SceneL ; gradientRect.y = LoopT + maskRect.y ;
+	SDL_BlitSurface(LoopiditySdl::SceneBgGradient , &maskRect , surface , &gradientRect) ;
 
 	// draw scene max , zero , and , min peak lines
-	hlineColor(surface , sceneL , sceneR , maxPeakY , SCENE_PEAK_MAX_COLOR) ;
-	hlineColor(surface , sceneL , sceneR , zeroPeakY , SCENE_PEAK_ZERO_COLOR) ;
-	hlineColor(surface , sceneL , sceneR , minPeakY , SCENE_PEAK_MAX_COLOR) ;
-#endif
+	hlineColor(surface , SceneL , sceneR , LoopT , SCENE_PEAK_MAX_COLOR) ;
+	hlineColor(surface , SceneL , sceneR , LoopY , SCENE_PEAK_ZERO_COLOR) ;
+	hlineColor(surface , SceneL , sceneR , LoopB , SCENE_PEAK_MAX_COLOR) ;
+#endif // #if DRAW_PEAK_BARS
 
 	// draw loops
 	for (loopN = 0 ; loopN < scene->nLoops ; ++loopN)
 	{
-		peaks = scene->loops[loopN]->peaks ; loopX = sceneL + (loopW * loopN) ;
+		peaks = scene->loops[loopN]->peaks ; loopX = SceneL + (LoopW * loopN) ;
 
 #if DRAW_HISTOGRAMS
 // TODO: draw histogram mixing all loops in this sceneN
@@ -80,32 +93,33 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; d.Dra
 			peakColorOther = HISTOGRAM_PEAK_INACTIVE_COLOR ;
 		}
 		// draw histogram border
-		roundedRectangleColor(surface , loopX - 1 , histogramT - 1 , loopX + loopD + 1 , histogramB + 1 , 5 , borderColor) ;
+		roundedRectangleColor(surface , loopX - 1 , HistogramT - 1 , loopX + LoopD + 1 , HistogramB + 1 , 5 , borderColor) ;
 		// draw histogram
 		for (peakN = 0 ; peakN < N_PEAKS ; ++peakN)
 		{
-			currentPeak = peaks[peakN] ; peakH = histogramH * currentPeak ; x = loopX + peakN ;
-			if (peakN == PeakN) { t = histogramT ; b = histogramB ; peakColor = peakColorCurrent ; }
-			else { t = histogram0 - (peakH / 2) ; b = t + peakH ; peakColor = peakColorOther ; }
+			currentPeak = peaks[peakN] ; peakH = HistogramH * currentPeak ; x = loopX + peakN ;
+			if (peakN == PeakN) { t = HistogramT ; b = HistogramB ; peakColor = peakColorCurrent ; }
+			else { t = HistogramY - (peakH / 2) ; b = t + peakH ; peakColor = peakColorOther ; }
 			vlineColor(surface , x , t , b , peakColor) ;
 		}
-#endif
+#endif // #if DRAW_HISTOGRAMS
 
 #if DRAW_LOOP_PEAKS
 		// draw the current sample value and loudest sample value in this loop as rings
 		x = loopX + LOOP_PEAK_R ;
 		r = scene->hiLoopPeaks[loopN] * LOOP_PEAK_R ;
-		circleColor(surface , x , zeroPeakY , r, LOOP_PEAK_MAX_COLOR) ;
+		circleColor(surface , x , LoopY , r, LOOP_PEAK_MAX_COLOR) ;
 		r = peaks[PeakN] * LOOP_PEAK_R ;
-		circleColor(surface , x , zeroPeakY , r, LOOP_PEAK_CURRENT_COLOR) ;
-#endif
+		circleColor(surface , x , LoopY , r, LOOP_PEAK_CURRENT_COLOR) ;
+#endif // #if DRAW_LOOP_PEAKS
 
 #if DRAW_LOOPS
 		// draw loop peaks
 		d.DrawImage(loopX , maxPeakY , createLoopImgCached(loopN , PeakN)) ;
-#endif
+#endif // #if DRAW_LOOPS
 	} // for (loopN)
 }
+
 
 /*
 Image SceneUpp::createLoopPeaksMask(unsigned int loopN , unsigned int peakN)
@@ -232,46 +246,4 @@ String PeaksBgGradientImgMaker::Key() const { return String(LOOP_BG_GRADIENT_IMA
 Image PeaksBgGradientImgMaker::Make() const { return SceneUpp::CreatePeaksBgGradientImg() ; }
 
 Image SceneUpp::CreatePeaksBgGradientImgCached() { PeaksBgGradientImgMaker im ; return MakeImage(im) ; }
-
-
-Image SceneUpp::createSceneImg()
-{
-	ImageDraw id(sceneW , sceneH) ; drawScene(id) ;
-
-#if ! DRAW_SCENE_FADE
-	return id ;
-#else
-	ImageBuffer ib(id) ; ib.SetKind(IMAGE_OPAQUE) ;
-	unsigned int fadeB = sceneT + sceneH , y , x ; float lum = 0.5 ;
-	for (y = sceneT ; y < fadeB ; ++y) for (x = 0 ; x < sceneW ; ++x)
-		{ RGBA& px = ib[y][x] ; px.r *= lum ; px.g *= lum ; px.b *= lum ; }
-	Premultiply(ib) ; return ib ;
-#endif
-}
-
-struct SceneImgMaker : ImageMaker
-{
-	// TODO: we only really need to keep one of these around
-	// once the scene changes the prev can be disposed (perhaps just store it in a var)
-	unsigned int sceneN ;
-	unsigned int checksum ;
-	unsigned int w ;
-	unsigned int h ;
-	SceneUpp* scene ;
-	virtual String Key() const ; virtual Image Make() const ;
-} ;
-
-String SceneImgMaker::Key() const
-	{ return String(AsString(sceneN) + '_' + AsString(checksum) + '_' + AsString(w) + '_' + AsString(h)) ;}
-
-Image SceneImgMaker::Make() const { return scene->createSceneImg() ; }
-
-Image SceneUpp::createSceneImgCached(unsigned int w , unsigned int h)
-{
-	SceneImgMaker im ; im.sceneN = sceneN ; im.w = w ; im.h = h ; im.scene = this ;
-	unsigned int checksum = 0 ;
-	for (unsigned int loopN = 0 ; loopN < scene->nLoops ; ++loopN)
-		im.checksum += scene->loops[loopN]->peaks[0] ;
-	return MakeImage(im) ;
-}
 */

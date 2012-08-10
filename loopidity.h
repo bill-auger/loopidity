@@ -16,9 +16,6 @@
 // DEBUG end
 
 // GUI DEBUG
-#define BACKPAINT 0
-#define DRAW_BG_FULL 1
-#define DRAW_BG_PARTIAL (! DRAW_BG_FULL) && 1
 #define DRAW_STATUS 0
 #define DRAW_SCENES 1
 #define DRAW_SCOPES 0
@@ -37,16 +34,34 @@
 #define DRAW_LOOPS 0
 #define DRAW_LOOP_MASKS DRAW_LOOPS && 1
 #define DRAW_LOOP_GRADIENTS DRAW_LOOPS && 1
-#define DRAW_INACTIVE_SCENES 0
+#define DRAW_INACTIVE_SCENES 1
 #define DRAW_SCENE_FADE DRAW_INACTIVE_SCENES && 1
-#define DRAW_DEBUG_TEXT 0
-#define MAIN_DEBUG_TEXT_POS 0 , winRect.Height() - 20
-#define SCENE_DEBUG_TEXT_POS sceneL , sceneT
+#define DRAW_DEBUG_TEXT 1
 #endif
 
 #define SCAN_PEAKS_DATA 1
 #define SCAN_TRANSIENT_PEAKS_DATA 0
 // GUI DEBUG end
+
+
+#ifdef __cplusplus
+#include <cstdlib>
+#include <vector>
+#include <string>
+#else
+#include <stdlib.h>
+#include <vector.h>
+#include <string.h>
+#endif
+
+#ifdef __APPLE__
+#include <SDL/SDL.h>
+#else
+#include <SDL.h>
+#include <SDL_gfxPrimitives.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#endif
 
 
 // quantities
@@ -67,7 +82,7 @@
 
 // string constants
 //#define CONNECT_ARG "--connect"
-#define JACK_CLIENT_NAME "Loopidity"
+#define APP_NAME "Loopidity"
 #define MONITOR_ARG "--nomon"
 #define JACK_FAIL_MSG "ERROR: Could not register JACK client - quitting"
 #define FREEMEM_FAIL_MSG "ERROR: Could not determine available memory - quitting"
@@ -113,8 +128,11 @@ class Scene
 	private:
 
 		typedef Scene CLASSNAME ;
-		Scene(unsigned int initBufferSize) ;
+		Scene(unsigned int sceneN , unsigned int initBufferSize) ;
 		virtual ~Scene() {}
+
+		// identity
+		unsigned int sceneN ;
 
 		// audio data
 		vector<Loop*> loops ;

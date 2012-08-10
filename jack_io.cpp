@@ -41,7 +41,7 @@ if (! INIT_JACK) return true ;
 	Reset(currentScene) ; IsMonitorInputs = isMonitorInputs ;
 
 	// initialize JACK client
-	const char* client_name = JACK_CLIENT_NAME ;
+	const char* client_name = APP_NAME ;
 	jack_options_t options = JackNullOption ;
 	jack_status_t status ;
 	const char* server_name = NULL ;
@@ -161,7 +161,7 @@ if (DEBUG) { char dbg[255] ; sprintf(dbg , "NEW LOOP scene:%d loopN:%d" , Loopid
 		}
 
 		// switch to NextScene if necessary
-		CurrentScene = NextScene ; LoopiditySdl::SetMode() ;
+		if (CurrentScene != NextScene) { LoopiditySdl::SceneChanged(CurrentScene->sceneN) ; CurrentScene = NextScene ; }
 	}
 #endif
 

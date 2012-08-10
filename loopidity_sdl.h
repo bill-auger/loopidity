@@ -3,26 +3,6 @@
 #define _LOOPIDITY_SDL_H_
 
 
-#ifdef __cplusplus
-#include <cstdlib>
-#include <vector>
-#include <string>
-#else
-#include <stdlib.h>
-#include <vector.h>
-#include <string.h>
-#endif
-
-#ifdef __APPLE__
-#include <SDL/SDL.h>
-#else
-#include <SDL.h>
-#include <SDL_gfxPrimitives.h>
-#include <SDL_image.h>
-#include <SDL_ttf.h>
-#endif
-
-
 #include "loopidity.h"
 class Scene ;
 #include "scene_sdl.h"
@@ -32,16 +12,30 @@ class SceneSdl ;
 using namespace std ;
 
 
-/*
 // intervals
 #define GUI_UPDATE_INTERVAL_SHORT 125
-#define GUI_UPDATE_INTERVAL_LONG 1000
-*/
+#define GUI_LONGCOUNT 8
+
 // GUI magnitudes
-#define WIN_RECT {0 , 0 , 1024 , 768}
+#define SCREEN_W 1024 // minimum screen resolution
+#define SCREEN_H 768 // minimum screen resolution
+#define WIN_TITLE_H 20 // approximate window decoration size
+#define WIN_BORDER_W 2 // approximate window decoration size
+#define WIN_BORDER_H 2 // approximate window decoration size
 #define PIXEL_DEPTH 16
-#define STATUS_RECT_L {0 , 460 , 0 , 0}
-#define STATUS_RECT_R {600 , 460 , 0 , 0}
+#define HEADER_FONT_SIZE 36
+//#define HEADER_W 200 // approx 10 chars @ STATUS_FONT_SIZE 36
+#define HEADER_W 360 // approx 18 chars @ STATUS_FONT_SIZE 36
+#define HEADER_H 48 // HEADER_FONT_SIZE 36
+#define STATUS_FONT_SIZE 12
+#define STATUS_H 20 // STATUS_FONT_SIZE 12
+#define STATUS_W 256 // approx 36 chars @ STATUS_FONT_SIZE 12
+#define WIN_RECT {0 , 0 , SCREEN_W - (WIN_BORDER_W * 2) , SCREEN_H - WIN_TITLE_H - WIN_BORDER_H}
+#define HEADER_RECT_DIM {0 , 0 , HEADER_W , HEADER_H}
+#define HEADER_RECT_C {(WinRect.w / 2) - (HEADER_W / 2) , 0 , 0 , 0}
+#define STATUS_RECT_DIM {0 , 0 , STATUS_W , STATUS_H}
+#define STATUS_RECT_L {0 , WinRect.h - STATUS_H , 0 , 0}
+#define STATUS_RECT_R {WinRect.w - STATUS_W , WinRect.h - STATUS_H , 0 , 0}
 /*
 // scope magnitudes
 #define SCOPE_Y 200
@@ -59,11 +53,16 @@ using namespace std ;
 #define OUTSCOPE_OPTIMAL_COLOR Yellow
 #define OUTSCOPE_LOUD_COLOR Red
 */
-#define STATUS_FONT "/usr/share/fonts/truetype/tlwg/Purisa.ttf" , 12
+#define HEADER_FONT "/usr/share/fonts/truetype/tlwg/Purisa.ttf" , HEADER_FONT_SIZE
+#define HEADER_TEXT_COLOR {255 , 0 , 255}
+#define STATUS_FONT "/usr/share/fonts/truetype/tlwg/Purisa.ttf" , STATUS_FONT_SIZE
 #define STATUS_TEXT_COLOR {255 , 0 , 255}
 
 #define SCENE_BG_IMG "scene_bg_gradient.bmp"
 #define LOOP_BG_IMG "loop_bg_gradient.alpha.bmp"
+
+// string constants
+#define HEADER_TEXT "This is "APP_NAME
 
 
 class LoopiditySdl
@@ -73,10 +72,19 @@ class LoopiditySdl
 		// main GUI
 		static SDL_Surface* Screen ;
 		static SDL_Rect WinRect ;
+		static Uint32 WinBgColor ;
+		static SDL_Rect HeaderRectDim ;
+		static SDL_Rect HeaderRectC ;
+		static TTF_Font* HeaderFont ;
+		static SDL_Color HeaderColor ;
+		static SDL_Rect StatusRectDim ;
 		static SDL_Rect StatusRectL ;
 		static SDL_Rect StatusRectR ;
 		static TTF_Font* StatusFont ;
 		static SDL_Color StatusColor ;
+		static string StatusTextL ;
+		static string StatusTextR ;
+		static Uint16 GuiLongCount ;
 
 		// scenes GUI
 		static SceneSdl* SdlScenes[N_SCENES] ;
@@ -100,18 +108,24 @@ class LoopiditySdl
 		static void Cleanup() ;
 
 		// drawing
-		static void ResetGUI() ;
-		static void DrawText(const char* text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* rect , SDL_Color fgColor) ;
-		static void SetStatusL(const char* msg) ;
-		static void SetStatusR(const char* msg) ;
-		static void SetMode() ;
-		static void Alert(const char* msg) ;
 		static void DrawScenes() ;
-//		void drawScopes(Draw& w , Rect winRect) ;
+//		static void drawScopes(Draw& w , Rect winRect) ;
+		static void DrawMode() ;
+		static void DrawText(string text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* screenRect , SDL_Rect* cropRect , SDL_Color fgColor) ;
+		static void DrawHeader() ;
+		static void DrawStatusTextL() ;
+		static void DrawStatusTextR() ;
+		static void Alert(const char* msg) ;
 
 		// helpers
+		static void SceneChanged(Uint16 sceneN) ;
+		static void SetStatusL(string msg) ;
+		static void SetStatusR(string msg) ;
+/*
 		static string makeTime(unsigned int seconds) ;
 		static unsigned int getAvailableMemory() ;
+*/
+		static void ResetGUI() ;
 /*
 		void updateMemory() ;
 		void updateLoopProgress() ;

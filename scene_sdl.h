@@ -3,20 +3,6 @@
 #define _SCENE_SDL_H_
 
 
-#ifdef __cplusplus
-    #include <cstdlib>
-#else
-    #include <stdlib.h>
-#endif
-
-#ifdef __APPLE__
-#include <SDL/SDL.h>
-#else
-#include <SDL.h>
-#include <SDL_gfxPrimitives.h>
-#endif
-
-
 #include "loopidity.h"
 class Scene ;
 
@@ -34,16 +20,15 @@ class Scene ;
 
 // colors
 // TODO: perhaps it maybe more efficient to SDL_MapRGB(LoopiditySdl::Screen->format , 0 , 0 , 0)
-#define WIN_BG_COLOR 0x000000ff
 #define SCENE_BG_COLOR WIN_BG_COLOR
 #define SCENE_PEAK_MAX_COLOR 0xff0000ff
 #define SCENE_PEAK_ZERO_COLOR 0x808080ff
 #define HISTOGRAM_BORDER_ACTIVE_COLOR 0x00ff00ff
-#define HISTOGRAM_BORDER_INACTIVE_COLOR 0x004000ff
+#define HISTOGRAM_BORDER_INACTIVE_COLOR 0x008000ff
 #define HISTOGRAM_PEAK_CURRENT_ACTIVE_COLOR 0xffff00ff
 #define HISTOGRAM_PEAK_CURRENT_INACTIVE_COLOR 0x808000ff
 #define HISTOGRAM_PEAK_ACTIVE_COLOR 0x008000ff
-#define HISTOGRAM_PEAK_INACTIVE_COLOR 0x002000ff
+#define HISTOGRAM_PEAK_INACTIVE_COLOR 0x004000ff
 #define LOOP_PEAK_CURRENT_COLOR 0xffffffff
 #define LOOP_PEAK_MAX_COLOR 0xff0000ff
 /*
@@ -68,60 +53,51 @@ class SceneSdl
 
 	private:
 
-		SceneSdl(Scene* scene , unsigned int sceneNum , SDL_Rect winRect) :
-				// constants
-				scene(scene) , sceneN(sceneNum) , loopD(LOOP_PEAK_R * 2) , yOffset(loopD / 4) ,
-				xPadding(loopD / 8) , yPadding(loopD / 3) , histogramH(yPadding / 2) ,
-				loopW(xPadding + loopD) , sceneW(winRect.w - (xPadding * 2)) ,
-				sceneH(yPadding + loopD) , sceneX(xPadding) , sceneY(yOffset + (sceneH * sceneN)) ,
-				// variables
-				sceneL(0) , sceneT(0) , sceneR(0) ,
-				histogramT(0) , histogram0(0) , histogramB(0) ,
-				maxPeakY(0) , zeroPeakY(0) , minPeakY(0) { setDims(true) ; }
+		SceneSdl(Scene* scene , Uint16 sceneNum) ;
 
 		// audio/peaks data
 		const Scene* scene ;
-		const unsigned int sceneN ;
+		const Uint16 sceneN ;
 
 		// drawing constants
-		const unsigned int loopD ;
-		const unsigned int yOffset ;
-		const unsigned int xPadding ;
-		const unsigned int yPadding ;
-		const unsigned int histogramH ;
-		const unsigned int loopW ;
-		const Uint16 sceneW ; // TODO: for imagemakers may not need
-		const Uint16 sceneH ; // TODO: for imagemakers may not need
-		const unsigned int sceneX ;
-		const unsigned int sceneY ;
+		static const Uint16 XPadding ;
+		static const Uint16 YPadding ;
+		static const Uint16 HistogramH ;
+		static const Sint16 HistogramT ;
+		static const Sint16 HistogramY ;
+		static const Sint16 HistogramB ;
+		static const Sint16 HistogramBorderL ;
+		static const Sint16 HistogramBorderR ;
+		static const Uint16 LoopD ;
+		static const Uint16 LoopW ;
+		static const Uint16 LoopT ;
+		static const Uint16 LoopY ;
+		static const Uint16 LoopB ;
+		static const Uint16 SceneH ;
+		static const Uint16 SceneL ;
+		const Uint16 sceneY ;
+		const Uint16 sceneW ;
+		const Uint16 sceneR ;
+		SDL_Rect sceneRect ; // will not change but cannot be const
 
-		// drawing dimensions
-		Sint16 sceneL ;
-		Sint16 sceneT ;
-		unsigned int sceneR ;
-		Sint16 histogramT ;
-		Sint16 histogram0 ;
-		Sint16 histogramB ;
-		unsigned int maxPeakY ;
-		unsigned int zeroPeakY ;
-		unsigned int minPeakY ;
+		// scene drawing backbuffers
+		SDL_Surface* activeSceneSurface ;
+		SDL_Surface* inactiveSceneSurface ;
 
 		// drawing helpers
-		void setDims(bool isFullScreen) ;
 /*
-		Image createLoopPeaksMask(unsigned int loopN , unsigned int peakN) ;
+		Image createLoopPeaksMask(Uint16 loopN , Uint16 peakN) ;
 		static Image CreateLoopGradientImg() ;
 		static Image CreateLoopGradientImgCached() ;
-		Image createLoopImg(unsigned int loopN , unsigned int peakN) ;
-		Image createLoopImgCached(unsigned int loopN , unsigned int peakN) ;
+		Image createLoopImg(Uint16 loopN , Uint16 peakN) ;
+		Image createLoopImgCached(Uint16 loopN , Uint16 peakN) ;
 		static Image CreatePeaksBgGradientImg() ;
 		static Image CreatePeaksBgGradientImgCached() ;
-		Image createSceneImg() ;
-		Image createSceneImgCached(unsigned int w , unsigned int h) ;
 */
 
 		// drawing
 		void drawScene(SDL_Surface* screen) ;
+
 // DEBUG
 void makeMainDbgText(char* dbg) ;
 // DEBUG end

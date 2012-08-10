@@ -105,7 +105,9 @@ float Scene::getTotalSeconds() { return nFrames / JackIO::GetSampleRate() ; }
 
 /* Scene Class private functions */
 
-Scene::Scene(unsigned int nframes) :
+Scene::Scene(unsigned int scenen , unsigned int nframes) :
+		// identity
+		sceneN(scenen) ,
 		// peaks cache
 		hiScenePeaks() , hiLoopPeaks(), highestScenePeak(0.0) ,
 		// buffer iteration
@@ -186,7 +188,8 @@ bool Loopidity::Init(unsigned int recordBufferSize , bool isMonitorInputs)
 	if (!recordBufferSize) { LoopiditySdl::Alert(ZERO_BUFFER_SIZE_MSG) ; return false ; }
 
 	unsigned int nFrames = recordBufferSize / JackIO::GetFrameSize() ;
-	unsigned int sceneN = N_SCENES ; while (sceneN--) Scenes[sceneN] = new Scene(nFrames) ;
+	for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
+		Scenes[sceneN] = new Scene(sceneN , nFrames) ;
 	if (!JackIO::Init(nFrames , Scenes[0] , isMonitorInputs))
 		{ LoopiditySdl::Alert(JACK_FAIL_MSG) ; return false ; }
 
@@ -205,17 +208,14 @@ bool Loopidity::Init(unsigned int recordBufferSize , bool isMonitorInputs)
 void Loopidity::ToggleScene()
 {
 	JackIO::SetNextScene(Scenes[NextSceneN = (NextSceneN + 1) % N_SCENES]) ;
-	LoopiditySdl::SetMode() ;
+	LoopiditySdl::DrawMode() ;
 }
 
 void Loopidity::SetMode()
 {
 	if (!IsRecording) IsRecording = true ;
 	else JackIO::GetCurrentScene()->setMode() ;
-
-#if DRAW_STATUS
-	LoopiditySdl::SetMode() ;
-#endif
+	LoopiditySdl::DrawMode() ;
 
 if (DEBUG) { char dbg[256] ; sprintf(dbg , "Set mode: IsRecording:%d isPulseExist:%d isSaveLoop:%d" , IsRecording , GetIsPulseExist() , GetIsSaveLoop()) ; LoopiditySdl::SetStatusR(dbg) ; }
 }
