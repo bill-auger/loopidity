@@ -78,6 +78,7 @@ unsigned int Loopidity::NextSceneN = 0 ;
 // audio data
 Scene* Loopidity::Scenes[N_SCENES] = {0} ;
 unsigned int Loopidity::NFramesPerPeriod = 0 ;
+unsigned int Loopidity::NFramesPerScopeInterval = 0 ;
 jack_port_t* Loopidity::InPort1 = 0 ;
 jack_port_t* Loopidity::InPort2 = 0 ;
 jack_port_t* Loopidity::OutPort1 = 0 ;
@@ -111,7 +112,7 @@ Scene::Scene(unsigned int scenen , unsigned int nframes) :
 		// peaks cache
 		hiScenePeaks() , hiLoopPeaks(), highestScenePeak(0.0) ,
 		// buffer iteration
-		nFrames(nframes) , nFramesPerPeak(nframes / N_PEAKS) , frameN(0) , nLoops(0) ,
+		nFrames(nframes) , nFramesPerPeak(nframes / N_LOOP_PEAKS) , frameN(0) , nLoops(0) ,
 		// recording state
 		isSaveLoop(true) , isPulseExist(false) {}
 
@@ -120,8 +121,7 @@ void Scene::addLoop(Loop* newLoop)
 	{ if (nLoops < N_LOOPS) loops.push_back(newLoop) ; scanPeaks(newLoop , nLoops++) ; }
 
 void Scene::deleteLoop()
-{}
-//	{ if (loops.size() && nLoops) delete loops.pop_back() ; --nLoops ; rescanPeaks() ; }
+	{ if (loops.size() && nLoops) { loops.pop_back() ; --nLoops ; rescanPeaks() ; } }
 
 void Scene::reset()
 {
@@ -132,11 +132,11 @@ void Scene::reset()
 // peaks cache
 void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 {
-#if SCAN_PEAKS_DATA
+#if SCAN_LOOP_PEAKS_DATA
 	if (loopN >= N_LOOPS) return ;
 
 	float* peaks = loop->peaks ; unsigned int framen ; SAMPLE peak1 , peak2 ;
-	for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN)
+	for (unsigned int peakN = 0 ; peakN < N_LOOP_PEAKS ; ++peakN)
 	{
 		framen = nFramesPerPeak * peakN ;
 		peak1 = Loopidity::GetPeak(&(loop->buffer1[framen]) , nFramesPerPeak) ;
@@ -157,7 +157,7 @@ void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 void Scene::rescanPeaks()
 {
 	highestScenePeak = 0.0 ;
-	for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN) hiScenePeaks[peakN] = 0.0 ;
+	for (unsigned int peakN = 0 ; peakN < N_LOOP_PEAKS ; ++peakN) hiScenePeaks[peakN] = 0.0 ;
 	for (unsigned int loopN = 0 ; loopN < loops.size() ; ++loopN)
 		{ hiLoopPeaks[loopN] = 0.0 ; scanPeaks(loops[loopN] , loopN) ; }
 }
@@ -169,7 +169,7 @@ void Scene::setMode()
 {
 	if (isPulseExist) { isSaveLoop = !isSaveLoop ; return ; }
 
-	nFramesPerPeak = (nFrames = frameN + JackIO::GetNFramesPerPeriod()) / N_PEAKS ;
+	nFramesPerPeak = (nFrames = frameN + JackIO::GetNFramesPerPeriod()) / N_LOOP_PEAKS ;
 	isPulseExist = true ;
 }
 
@@ -194,7 +194,10 @@ bool Loopidity::Init(unsigned int recordBufferSize , bool isMonitorInputs)
 		{ LoopiditySdl::Alert(JACK_FAIL_MSG) ; return false ; }
 
 	// initialize scope peaks cache
-	for (unsigned int peakN = 0 ; peakN < N_PEAKS ; ++peakN)
+	float interval = GUI_UPDATE_INTERVAL_SHORT * 0.001 ;
+	float sampleRate = (float)JackIO::GetSampleRate() ;
+	NFramesPerScopeInterval = (unsigned int)(sampleRate * interval) ;
+	for (unsigned int peakN = 0 ; peakN < N_LOOP_PEAKS ; ++peakN)
 		{ InPeaks.push_back(0.0) ; OutPeaks.push_back(0.0) ; }
 
 	// get handles on JACK ports and buffers for scope and VU peaks
@@ -266,30 +269,39 @@ SAMPLE* Loopidity::GetTransientPeaksCache() { return TransientPeaks ; }
 SAMPLE Loopidity::GetPeak(SAMPLE* buffer , unsigned int nFrames)
 {
 	SAMPLE peak = 0.0 ;
-	for (unsigned int frameN = 0 ; frameN < nFrames ; ++frameN)
-		{ float sample = fabs(buffer[frameN]) ; if (peak < sample) peak = sample ; }
+	try
+	{
+		for (unsigned int frameN = 0 ; frameN < nFrames ; ++frameN)
+			{ SAMPLE sample = fabs(buffer[frameN]) ; if (peak < sample) peak = sample ; }
+	}
+	catch(int ex)
+		{
+			int i=0;
+		printf("Loopidity::GetPeak(): subscript out of range\n") ;
+		}
 	return peak ;
 }
 
 void Loopidity::ScanTransientPeaks()
 {
 #if SCAN_TRANSIENT_PEAKS_DATA
-// TODO: BUGZ be here
-	float interval = GUI_UPDATE_INTERVAL_SHORT * 0.001 ;
-	Scene* currentScene = JackIO::GetCurrentScene() ;
-	unsigned int nFrames = (unsigned int)((float)JackIO::GetSampleRate() * interval) ;
-	unsigned int currentFrameN = currentScene->frameN - nFrames ;
-	if (currentFrameN < 0) currentScene->nFrames - nFrames ;
-	SAMPLE inPeak1 = GetPeak(&(RecordBuffer1[currentFrameN]) , nFrames) , outPeak1 = 0.0 ;
-	SAMPLE inPeak2 = GetPeak(&(RecordBuffer2[currentFrameN]) , nFrames) , outPeak2 = 0.0 ;
-	for (unsigned int loopN = 0 ; loopN < currentScene->nLoops ; ++loopN)
+	Scene* currentScene = JackIO::GetCurrentScene() ; unsigned int frameN = currentScene->frameN ;
+	unsigned int currentFrameN = (frameN < NFramesPerScopeInterval)? 0 : frameN - NFramesPerScopeInterval ;
+	SAMPLE inPeak1 = GetPeak(&(RecordBuffer1[currentFrameN]) , NFramesPerScopeInterval) ;
+	SAMPLE inPeak2 = GetPeak(&(RecordBuffer2[currentFrameN]) , NFramesPerScopeInterval) ;
+	SAMPLE outPeak1 = 0.0 , outPeak2 = 0.0 ; int nLoops = currentScene->nLoops ;
+	for (unsigned int loopN = 0 ; loopN < nLoops ; ++loopN)
 	{
-		outPeak1 += GetPeak(&(currentScene->loopBuffers1[loopN][currentFrameN]) , nFrames) ;
-		outPeak2 += GetPeak(&(currentScene->loopBuffers2[loopN][currentFrameN]) , nFrames) ;
+		Loop* loop = currentScene->loops[loopN] ;
+		outPeak1 += GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerScopeInterval) ;
+		outPeak2 += GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerScopeInterval) ;
 	}
 	// load scope peaks (mono mix)
-	InPeaks.Pop() ; InPeaks.Insert(0 , inPeak1 + inPeak2) ;
-	OutPeaks.Pop() ; OutPeaks.Insert(0 , outPeak1 + outPeak2) ;
+	SAMPLE inPeak = (inPeak1 + inPeak2) / N_INPUT_CHANNELS ;
+	SAMPLE outPeak = (outPeak1 + outPeak2) / N_OUTPUT_CHANNELS ;
+	if (outPeak > SCOPE_H) outPeak = SCOPE_H ;
+	InPeaks.pop_back() ; InPeaks.insert(InPeaks.begin() , inPeak) ;
+	OutPeaks.pop_back() ; OutPeaks.insert(OutPeaks.begin() , outPeak) ;
 	// load VU peaks (per channel)
 	TransientPeaks[0] = inPeak1 ; TransientPeaks[1] = inPeak2 ;
 	TransientPeaks[2] = outPeak1 ; TransientPeaks[3] = outPeak2 ;

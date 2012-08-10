@@ -8,13 +8,13 @@ class Scene ;
 
 
 // loop magnitudes
-#define LOOP_PEAK_R 50 // lets fix this to N_PEAKS / 2 for sdl histogramWidth (loopD)
+#define LOOP_PEAK_R 50 // lets fix this to N_LOOP_PEAKS / 2 for sdl histogramWidth (loopD)
 /*
 #define LOOP_IMG_RES LOOP_D // TODO: fixed to LOOP_D for now (as long as PEAK_MAX is sensible for this)
 #define LOOP_BG_IMG_RES 256 // must be 256
 */
 /*
-#define PIE_SLICE_DEGREES 3600 / N_PEAKS
+#define PIE_SLICE_DEGREES 3600 / N_LOOP_PEAKS
 #define PIE_12_OCLOCK -900
 */
 
@@ -41,7 +41,7 @@ class Scene ;
 
 
 // testing
-//#define N_PEAKS 1000 / GUI_UPDATE_INTERVAL_SHORT * 10
+//#define N_LOOP_PEAKS 1000 / GUI_UPDATE_INTERVAL_SHORT * 10
 #define HISTOGRAM_Y_SCALE (HISTOGRAM_H) / (float)(LOOP_D)
 #define HISTOGRAM_SAMPLE_W 1
 */

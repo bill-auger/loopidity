@@ -16,15 +16,18 @@
 // DEBUG end
 
 // GUI DEBUG
-#define DRAW_STATUS 0
+#define DRAW_STATUS 1
 #define DRAW_SCENES 1
-#define DRAW_SCOPES 0
+#define DRAW_SCOPES 1
 
 #if DRAW_STATUS
+#define DRAW_MODE 0
+/*
 #define UPDATE_MEMORY 0
 #define UPDATE_LOOP_PROGRESS 0
 #define UPDATE_VU 0
 #define VARDUMP DEBUG && 0
+*/
 #endif
 
 #if DRAW_SCENES
@@ -35,12 +38,11 @@
 #define DRAW_LOOP_MASKS DRAW_LOOPS && 1
 #define DRAW_LOOP_GRADIENTS DRAW_LOOPS && 1
 #define DRAW_INACTIVE_SCENES 1
-#define DRAW_SCENE_FADE DRAW_INACTIVE_SCENES && 1
 #define DRAW_DEBUG_TEXT 1
 #endif
 
-#define SCAN_PEAKS_DATA 1
-#define SCAN_TRANSIENT_PEAKS_DATA 0
+#define SCAN_LOOP_PEAKS_DATA 1
+#define SCAN_TRANSIENT_PEAKS_DATA 1
 // GUI DEBUG end
 
 
@@ -68,9 +70,9 @@
 //#define DEFAULT_BUFFER_SIZE 33554432 // 2^25 (approx 3 min @ 48k)
 //#define DEFAULT_BUFFER_SIZE 25165824 // 1024 * 1024 * 24 (approx 135 sec @ 48k)
 //#define DEFAULT_BUFFER_SIZE 16777216 // 2^24 (approx 90 sec @ 48k)
-#define DEFAULT_BUFFER_SIZE 8388608 // 2^23 (approx 45 sec @ 48k)
+//#define DEFAULT_BUFFER_SIZE 8388608 // 2^23 (approx 45 sec @ 48k)
 //#define DEFAULT_BUFFER_SIZE 2097152 // 2^21 (approx 10 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 1048576 // 2^20 (approx 5 sec @ 48k)
+#define DEFAULT_BUFFER_SIZE 1048576 // 2^20 (approx 5 sec @ 48k)
 
 // TODO: implement setting N_CHANNELS via cmd line arg - GetTransientPeaks and updateVUMeters are especially brittle now
 #define N_INPUT_CHANNELS 2 // TODO: nyi - only used for memory check and scope cache
@@ -78,7 +80,7 @@
 #define N_PORTS N_INPUT_CHANNELS + N_OUTPUT_CHANNELS // TODO: nyi - only used for scope cache
 #define N_SCENES 3
 #define N_LOOPS 9 // N_LOOPS_PER_SCENE
-#define N_PEAKS 100 // should be divisible into 3600
+#define N_LOOP_PEAKS 100 // should be divisible into 3600
 
 // string constants
 //#define CONNECT_ARG "--connect"
@@ -109,7 +111,7 @@ class Loop
 
 		SAMPLE* buffer1 ;
 		SAMPLE* buffer2 ;
-		float peaks[N_PEAKS] ;
+		float peaks[N_LOOP_PEAKS] ;
 } ;
 
 
@@ -141,7 +143,7 @@ class Scene
 // hiCurrentSample = the loudest of the currently playing samples in the current scene
 // hiLoopSamples[] = the loudest of all samples for each loop of the current scene (nyi)
 // highestLoopSample = the loudest of all samples in all loops of the current scene (nyi)
-		float hiScenePeaks[N_PEAKS] ;
+		float hiScenePeaks[N_LOOP_PEAKS] ;
 		float hiLoopPeaks[N_LOOPS] ;
 		float highestScenePeak ;
 
@@ -210,6 +212,7 @@ class Loopidity
 		// audio data
 		static Scene* Scenes[N_SCENES] ;
 		static unsigned int NFramesPerPeriod ;
+		static unsigned int NFramesPerScopeInterval ;
 
 		// transient sample data
 		static jack_port_t* InPort1 ;

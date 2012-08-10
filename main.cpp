@@ -4,14 +4,18 @@
 
 /* LoopiditySdl class public variables */
 
-// main GUI
+// window
+Uint16 LoopiditySdl::GuiLongCount = 0 ;
 SDL_Surface* LoopiditySdl::Screen = 0 ;
 SDL_Rect LoopiditySdl::WinRect = WIN_RECT ;
 Uint32 LoopiditySdl::WinBgColor = 0 ;
+Uint16 LoopiditySdl::WinCenter = WIN_CENTER ;
+// header
 SDL_Rect LoopiditySdl::HeaderRectDim = HEADER_RECT_DIM ;
 SDL_Rect LoopiditySdl::HeaderRectC = HEADER_RECT_C ;
 TTF_Font* LoopiditySdl::HeaderFont = 0 ;
 SDL_Color LoopiditySdl::HeaderColor = HEADER_TEXT_COLOR ;
+// status
 SDL_Rect LoopiditySdl::StatusRectDim = STATUS_RECT_DIM ;
 SDL_Rect LoopiditySdl::StatusRectL = STATUS_RECT_L ;
 SDL_Rect LoopiditySdl::StatusRectR = STATUS_RECT_R ;
@@ -19,14 +23,14 @@ TTF_Font* LoopiditySdl::StatusFont = 0 ;
 SDL_Color LoopiditySdl::StatusColor = STATUS_TEXT_COLOR ;
 string LoopiditySdl::StatusTextL = "StatusTextL" ;
 string LoopiditySdl::StatusTextR = "StatusTextR" ;
-Uint16 LoopiditySdl::GuiLongCount = 0 ;
-
-// scenes GUI
+// scenes
 SceneSdl* LoopiditySdl::SdlScenes[N_SCENES] = {0} ;
 SDL_Surface* LoopiditySdl::SceneBgGradient = 0 ;
 SDL_Surface* LoopiditySdl::LoopBgGradient = 0 ;
-
-// scope peaks cache
+// scopes
+SDL_Rect LoopiditySdl::ScopeRect = SCOPE_RECT ;
+Sint16 LoopiditySdl::ScopeY = ScopeRect.y + (SCOPE_H / 2) ;
+float LoopiditySdl::ScopePeakH = (float)SCOPE_H / 2.0 ;
 vector<SAMPLE>* LoopiditySdl::InPeaks ;
 vector<SAMPLE>* LoopiditySdl::OutPeaks ;
 SAMPLE* LoopiditySdl::TransientPeaks = 0 ;
@@ -67,7 +71,7 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 
 	// instantiate SdlScenes
 	Scene** scenes = Loopidity::GetScenes() ;
-	for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
+	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
 		SdlScenes[sceneN] = new SceneSdl(scenes[sceneN] , sceneN) ;
 
 	// get handles to scope and VU peaks caches
@@ -79,8 +83,11 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 
 void LoopiditySdl::Cleanup()
 {
-	TTF_CloseFont(StatusFont) ; SDL_FreeSurface(SceneBgGradient) ;
-	SDL_FreeSurface(LoopBgGradient) ; SDL_FreeSurface(Screen) ;
+	TTF_CloseFont(HeaderFont) ; TTF_CloseFont(StatusFont) ;
+	SDL_FreeSurface(SceneBgGradient) ; SDL_FreeSurface(LoopBgGradient) ;
+	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
+		{ SceneSdl* sdlScene = SdlScenes[sceneN] ; SDL_FreeSurface(sdlScene->activeSceneSurface) ; }
+	SDL_FreeSurface(Screen) ;
 }
 
 
@@ -89,8 +96,8 @@ void LoopiditySdl::Cleanup()
 void LoopiditySdl::DrawScenes()
 {
 #if DRAW_SCENES
-	unsigned int currentSceneN = Loopidity::GetCurrentSceneN() ; SceneSdl* sdlScene ;
-	for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
+	Uint16 currentSceneN = Loopidity::GetCurrentSceneN() ; SceneSdl* sdlScene ;
+	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
 	{
 		sdlScene = SdlScenes[sceneN] ;
 		SDL_FillRect(LoopiditySdl::Screen , &sdlScene->sceneRect , WinBgColor) ;
@@ -110,13 +117,39 @@ char dbg[255] ; SdlScenes[Loopidity::GetCurrentSceneN()]->makeMainDbgText(dbg) ;
 #endif // #if DRAW_SCENES
 } // void LoopiditySdl::DrawScenes()
 
-//LoopiditySdl::DrawScopes() { #if DRAW_SCOPES}
+void LoopiditySdl::DrawScopes()
+{
+#if DRAW_SCOPES
+	SDL_FillRect(Screen , &ScopeRect , WinBgColor) ;
+	for (Uint16 peakN = 0 ; peakN < N_SCOPE_PEAKS ; ++peakN)
+	{
+		Sint16 inX = WinCenter + N_SCOPE_PEAKS - peakN , outX = WinCenter - peakN ;
+		Sint16 inH = (Uint16)((*InPeaks)[peakN] * ScopePeakH) ;
+		Sint16 outH = (Uint16)((*OutPeaks)[peakN] * ScopePeakH) ;
+		Uint32 inColor , outColor ;
+		if (inH > ScopePeakH * SCOPE_LOUD) inColor = INSCOPE_LOUD_COLOR ;
+		else if (inH > ScopePeakH * SCOPE_OPTIMAL) inColor = INSCOPE_OPTIMAL_COLOR ;
+		else inColor = INSCOPE_QUIET_COLOR ;
+		if (outH > ScopePeakH * SCOPE_LOUD) outColor = OUTSCOPE_LOUD_COLOR ;
+		else if (outH > ScopePeakH * SCOPE_OPTIMAL) outColor = OUTSCOPE_OPTIMAL_COLOR ;
+		else outColor = OUTSCOPE_QUIET_COLOR ;
+		vlineColor(Screen , outX , ScopeY - outH , ScopeY + outH  , outColor) ;
+		vlineColor(Screen , inX , ScopeY - inH , ScopeY + inH  , inColor) ;
+	}
+#endif
+
+/* draw a pie
+Sint16 x = 200 , y = 200 , radius = 100 , begin = 0 , end = 180 ;
+Uint8 r = 255 , g = 255 , b = 255 , a = 255 ;
+filledPieRGBA(LoopiditySdl::Screen , x , y , radius , begin , end , r , g , b , a) ;
+*/
+}
 
 void LoopiditySdl::DrawMode()
 {
-#if DRAW_STATUS
-	unsigned int currentSceneN = Loopidity::GetCurrentSceneN() ;
-	unsigned int nextSceneN = Loopidity::GetNextSceneN() ;
+#if DRAW_MODE
+	Uint16 currentSceneN = Loopidity::GetCurrentSceneN() ;
+	Uint16 nextSceneN = Loopidity::GetNextSceneN() ;
 	bool isSaveLoop = Loopidity::GetIsSaveLoop() ;
 	bool isRecording = Loopidity::GetIsRecording() ;
 	bool isPulseExist = Loopidity::GetIsPulseExist() ;
@@ -135,8 +168,9 @@ void LoopiditySdl::DrawMode()
 	// progress bar
 	if (isRecording && !isPulseExist) loopProgress.SetColor(STATUS_COLOR_RECORDING) ;
 	else loopProgress.SetColor(STATUS_COLOR_IDLE) ;
-#endif // void LoopiditySdl::SetMode()
-}
+#endif // #if DRAW_MODE
+} // void LoopiditySdl::SetMode()
+
 
 void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* screenRect , SDL_Rect* cropRect , SDL_Color fgColor)
 {
@@ -229,17 +263,14 @@ int main(int argc , char** argv)
 //		else { SDL_Delay(5) ; continue ; }
 		else { SDL_Delay(GUI_UPDATE_INTERVAL_SHORT - elapsed) ; continue ; }
 
+#if DRAW_STATUS
 		if (!(LoopiditySdl::GuiLongCount = (LoopiditySdl::GuiLongCount + 1) % GUI_LONGCOUNT))
-			{ LoopiditySdl::DrawStatusTextL() ; LoopiditySdl::DrawStatusTextR() ; }
+			{ /*updateMemory() ;*/ LoopiditySdl::DrawStatusTextL() ; LoopiditySdl::DrawStatusTextR() ; }
+#endif // #if DRAW_STATUS
 
-/* draw a pie
-Sint16 x = 200 , y = 200 , radius = 100 , begin = 0 , end = 180 ;
-Uint8 r = 255 , g = 255 , b = 255 , a = 255 ;
-filledPieRGBA(LoopiditySdl::Screen , x , y , radius , begin , end , r , g , b , a) ;
-*/
-
+		Loopidity::ScanTransientPeaks() ; //updateVUMeters() ;
 		LoopiditySdl::DrawScenes() ;
-//		LoopiditySdl::DrawScopes(wd , winRect) ;
+		LoopiditySdl::DrawScopes() ;
 
 		SDL_Flip(LoopiditySdl::Screen) ;
 	} // while (!done)

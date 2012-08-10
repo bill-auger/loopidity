@@ -5,7 +5,7 @@
 // DEBUG
 void SceneSdl::makeMainDbgText(char* dbg)
 {
-	unsigned int peakN = ((float)scene->frameN / (float)scene->nFrames) * (float)N_PEAKS ;
+	Uint16 peakN = ((float)scene->frameN / (float)scene->nFrames) * (float)N_LOOP_PEAKS ;
 	sprintf(dbg , "Paint() SceneN=%d nLoops=%d PeakN=%d" , sceneN , scene->nLoops , peakN) ;
 }
 // DEBUG end
@@ -45,8 +45,8 @@ SceneSdl::SceneSdl(Scene* scene , Uint16 sceneNum) :
 
 void SceneSdl::drawScene(SDL_Surface* surface)
 {
-	unsigned int PeakN = ((float)scene->frameN / (float)scene->nFrames) * (float)N_PEAKS ;
-	unsigned int loopN , peakN ; float* peaks ; float currentPeak ;
+	Uint16 PeakN = ((float)scene->frameN / (float)scene->nFrames) * (float)N_LOOP_PEAKS ;
+	Uint16 loopN , peakN ; float* peaks ; float currentPeak ;
 	Sint16 loopX , peakH , x , t , b , r ; bool isCurrentLoop ;
 	Uint32 borderColor , peakColorCurrent , peakColorOther , peakColor ;
 
@@ -95,7 +95,7 @@ char dbg[255] ; sprintf(dbg , "drawScene(%d) PeakN=%d" , sceneN , PeakN) ; Loopi
 		// draw histogram border
 		roundedRectangleColor(surface , loopX - 1 , HistogramT - 1 , loopX + LoopD + 1 , HistogramB + 1 , 5 , borderColor) ;
 		// draw histogram
-		for (peakN = 0 ; peakN < N_PEAKS ; ++peakN)
+		for (peakN = 0 ; peakN < N_LOOP_PEAKS ; ++peakN)
 		{
 			currentPeak = peaks[peakN] ; peakH = HistogramH * currentPeak ; x = loopX + peakN ;
 			if (peakN == PeakN) { t = HistogramT ; b = HistogramB ; peakColor = peakColorCurrent ; }
@@ -127,7 +127,7 @@ Image SceneUpp::createLoopPeaksMask(unsigned int loopN , unsigned int peakN)
 	unsigned int* peaks = scene->loops[loopN]->peaks ;
 	unsigned int rr = LOOP_IMG_RES , c = rr / 2 ; Point focus(c , c) , p , loopSeamPoint ;
 	ImageDraw id(rr , rr) ; id.DrawRect(0 , 0 , rr , rr , Black) ;
-	for (unsigned int sliceN = 0 ; sliceN < N_PEAKS ; ++sliceN)
+	for (unsigned int sliceN = 0 ; sliceN < N_LOOP_PEAKS ; ++sliceN)
 	{
 		int start = PIE_12_OCLOCK + (PIE_SLICE_DEGREES * sliceN) , intX , intY ;
 		double x , y , dxy ;  Vector<Point> vertices ; vertices << focus ;
@@ -141,7 +141,7 @@ Image SceneUpp::createLoopPeaksMask(unsigned int loopN , unsigned int peakN)
 		vertices << focus ;
 		id.DrawPolygon(vertices , LOOP_IMG_MASK_COLOR , 0 , LOOP_IMG_MASK_COLOR , 0 , Null) ;
 
-		if (!peakN) loopSeamPoint = vertices[1] ; peakN = (++peakN) % N_PEAKS ;
+		if (!peakN) loopSeamPoint = vertices[1] ; peakN = (++peakN) % N_LOOP_PEAKS ;
 	}
 
 	id.DrawLine(focus , loopSeamPoint , 0 , LOOP_PEAK_CURRENT_COLOR) ;
