@@ -37,8 +37,8 @@ SDL_Rect LoopiditySdl::ScopeRect = SCOPE_RECT ;
 const Sint16 LoopiditySdl::ScopeY = ScopeRect.y + (SCOPE_H / 2) ;
 const Uint16 LoopiditySdl::ScopeR = SCOPE_R ;
 const float LoopiditySdl::ScopePeakH = (float)SCOPE_H / 2.0 ;
-vector<SAMPLE>* LoopiditySdl::InPeaks ;
-vector<SAMPLE>* LoopiditySdl::OutPeaks ;
+vector<SAMPLE>* LoopiditySdl::PeaksIn ;
+vector<SAMPLE>* LoopiditySdl::PeaksOut ;
 SAMPLE* LoopiditySdl::TransientPeaks = 0 ;
 
 
@@ -81,7 +81,7 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 		Scenes[sceneN]->sceneGui = new SceneSdl(Scenes[sceneN]) ;
 
 	// get handles to scope and VU peaks caches
-	InPeaks = Loopidity::GetInPeaksCache() ; OutPeaks = Loopidity::GetOutPeaksCache() ;
+	PeaksIn = Loopidity::GetPeaksInCache() ; PeaksOut = Loopidity::GetPeaksOutCache() ;
 	TransientPeaks = Loopidity::GetTransientPeaksCache() ;
 
 	return true ;
@@ -135,8 +135,8 @@ void LoopiditySdl::DrawScopes()
 	for (Uint16 peakN = 0 ; peakN < N_TRANSIENT_PEAKS ; ++peakN)
 	{
 		Sint16 inX = ScopeR - peakN , outX = WinCenter - peakN ;
-		Sint16 inH = (Uint16)((*InPeaks)[peakN] * ScopePeakH) ;
-		Sint16 outH = (Uint16)((*OutPeaks)[peakN] * ScopePeakH) ;
+		Sint16 inH = (Uint16)((*PeaksIn)[peakN] * ScopePeakH) ;
+		Sint16 outH = (Uint16)((*PeaksOut)[peakN] * ScopePeakH) ;
 		Uint32 inColor , outColor ;
 		if (inH > ScopePeakH * SCOPE_LOUD) inColor = INSCOPE_LOUD_COLOR ;
 		else if (inH > ScopePeakH * SCOPE_OPTIMAL) inColor = INSCOPE_OPTIMAL_COLOR ;

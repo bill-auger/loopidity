@@ -115,8 +115,8 @@ class LoopiditySdl
 		static const Sint16 ScopeY ;
 		static const Uint16 ScopeR ;
 		static const float ScopePeakH ;
-		static vector<SAMPLE>* InPeaks ;
-		static vector<SAMPLE>* OutPeaks ;
+		static vector<SAMPLE>* PeaksIn ;
+		static vector<SAMPLE>* PeaksOut ;
 		static SAMPLE* TransientPeaks ;
 /*
 		// constants

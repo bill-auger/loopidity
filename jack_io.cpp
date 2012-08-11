@@ -75,14 +75,6 @@ void JackIO::Reset(Scene* currentScene)
 
 // getters/setters
 
-jack_port_t* JackIO::GetInPort1() { return InputPort1 ; }
-
-jack_port_t* JackIO::GetInPort2() { return InputPort2 ; }
-
-jack_port_t* JackIO::GetOutPort1() { return OutputPort1 ; }
-
-jack_port_t* JackIO::GetOutPort2() { return OutputPort2 ; }
-
 SAMPLE* JackIO::GetRecordBuffer1() { return RecordBuffer1 ; }
 
 SAMPLE* JackIO::GetRecordBuffer2() { return RecordBuffer2 ; }

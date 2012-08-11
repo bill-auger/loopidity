@@ -18,10 +18,6 @@ class JackIO
 		static void Reset(Scene* currentScene) ;
 
 		// getters/setters
-		static jack_port_t* GetInPort1() ;
-		static jack_port_t* GetInPort2() ;
-		static jack_port_t* GetOutPort1() ;
-		static jack_port_t* GetOutPort2() ;
 		static SAMPLE* GetRecordBuffer1() ;
 		static SAMPLE* GetRecordBuffer2() ;
 		static unsigned int GetNFramesPerPeriod() ;

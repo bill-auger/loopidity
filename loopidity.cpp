@@ -84,9 +84,11 @@ unsigned int Loopidity::NFramesPerPeriod = 0 ;
 unsigned int Loopidity::NFramesPerGuiInterval = 0 ;
 SAMPLE* Loopidity::RecordBuffer1 = 0 ;
 SAMPLE* Loopidity::RecordBuffer2 = 0 ;
-vector<SAMPLE> Loopidity::InPeaks ;
-vector<SAMPLE> Loopidity::OutPeaks ;
+vector<SAMPLE> Loopidity::PeaksIn ;
+vector<SAMPLE> Loopidity::PeaksOut ;
 SAMPLE Loopidity::TransientPeaks[N_PORTS] = {0} ;
+SAMPLE Loopidity::TransientPeakInMix = 0 ;
+SAMPLE Loopidity::TransientPeakOutMix = 0 ;
 
 
 /* Loop Class private functions */
@@ -215,7 +217,7 @@ bool Loopidity::Init(unsigned int recordBufferSize , bool isMonitorInputs)
 	float sampleRate = (float)JackIO::GetSampleRate() ;
 	NFramesPerGuiInterval = (unsigned int)(sampleRate * interval) ;
 	for (unsigned int peakN = 0 ; peakN < N_TRANSIENT_PEAKS ; ++peakN)
-		{ InPeaks.push_back(0.0) ; OutPeaks.push_back(0.0) ; }
+		{ PeaksIn.push_back(0.0) ; PeaksOut.push_back(0.0) ; }
 
 	// get handles on JACK buffers for scope/VU peaks
 	RecordBuffer1 = JackIO::GetRecordBuffer1() ; RecordBuffer2 = JackIO::GetRecordBuffer2() ;
@@ -272,14 +274,15 @@ bool Loopidity::GetIsPulseExist() { return JackIO::GetCurrentScene()->isPulseExi
 
 void Loopidity::SetNFramesPerPeriod(unsigned int nFrames) { NFramesPerPeriod = nFrames ; }
 
-vector<SAMPLE>* Loopidity::GetInPeaksCache() { return &InPeaks ; }
+vector<SAMPLE>* Loopidity::GetPeaksInCache() { return &PeaksIn ; }
 
-vector<SAMPLE>* Loopidity::GetOutPeaksCache() { return &OutPeaks ; }
+vector<SAMPLE>* Loopidity::GetPeaksOutCache() { return &PeaksOut ; }
 
 SAMPLE* Loopidity::GetTransientPeaksCache() { return TransientPeaks ; }
 
+SAMPLE* Loopidity::GetTransientPeakIn() { return &TransientPeakInMix ; }
 
-// helpers
+SAMPLE* Loopidity::GetTransientPeakOut() { return &TransientPeakOutMix ; }
 
 SAMPLE Loopidity::GetPeak(SAMPLE* buffer , unsigned int nFrames)
 {
@@ -293,29 +296,33 @@ SAMPLE Loopidity::GetPeak(SAMPLE* buffer , unsigned int nFrames)
 	return peak ;
 }
 
+
+// helpers
+
 void Loopidity::ScanTransientPeaks()
 {
 #if SCAN_TRANSIENT_PEAKS_DATA
 	Scene* currentScene = JackIO::GetCurrentScene() ; unsigned int frameN = currentScene->frameN ;
 // TODO; first NFramesPerGuiInterval duplicated
 	unsigned int currentFrameN = (frameN < NFramesPerGuiInterval)? 0 : frameN - NFramesPerGuiInterval ;
-	SAMPLE inPeak1 = GetPeak(&(RecordBuffer1[currentFrameN]) , NFramesPerGuiInterval) ;
-	SAMPLE inPeak2 = GetPeak(&(RecordBuffer2[currentFrameN]) , NFramesPerGuiInterval) ;
-	SAMPLE outPeak1 = 0.0 , outPeak2 = 0.0 ; unsigned int nLoops = currentScene->nLoops ;
+	SAMPLE peakIn1 = GetPeak(&(RecordBuffer1[currentFrameN]) , NFramesPerGuiInterval) ;
+	SAMPLE peakIn2 = GetPeak(&(RecordBuffer2[currentFrameN]) , NFramesPerGuiInterval) ;
+	SAMPLE peakOut1 = 0.0 , peakOut2 = 0.0 ; unsigned int nLoops = currentScene->nLoops ;
 	for (unsigned int loopN = 0 ; loopN < nLoops ; ++loopN)
 	{
 		Loop* loop = currentScene->loops[loopN] ;
-		outPeak1 += GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerGuiInterval) ;
-		outPeak2 += GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerGuiInterval) ;
+		peakOut1 += GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerGuiInterval) ;
+		peakOut2 += GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerGuiInterval) ;
 	}
 	// load scope peaks (mono mix)
-	SAMPLE inPeak = (inPeak1 + inPeak2) / N_INPUT_CHANNELS ;
-	SAMPLE outPeak = (outPeak1 + outPeak2) / N_OUTPUT_CHANNELS ;
-	if (outPeak > 1.0) outPeak = 1.0 ;
-	InPeaks.pop_back() ; InPeaks.insert(InPeaks.begin() , inPeak) ;
-	OutPeaks.pop_back() ; OutPeaks.insert(OutPeaks.begin() , outPeak) ;
+	SAMPLE peakIn = (peakIn1 + peakIn2) / N_INPUT_CHANNELS ;
+	SAMPLE peakOut = (peakOut1 + peakOut2) / N_OUTPUT_CHANNELS ;
+	if (peakOut > 1.0) peakOut = 1.0 ;
+	PeaksIn.pop_back() ; PeaksIn.insert(PeaksIn.begin() , peakIn) ;
+	PeaksOut.pop_back() ; PeaksOut.insert(PeaksOut.begin() , peakOut) ;
 	// load VU peaks (per channel)
-	TransientPeaks[0] = inPeak1 ; TransientPeaks[1] = inPeak2 ;
-	TransientPeaks[2] = outPeak1 ; TransientPeaks[3] = outPeak2 ;
+	TransientPeakInMix = peakIn ; TransientPeakOutMix = peakOut ;
+	TransientPeaks[0] = peakIn1 ; TransientPeaks[1] = peakIn2 ;
+	TransientPeaks[2] = peakOut1 ; TransientPeaks[3] = peakOut2 ;
 #endif
 }

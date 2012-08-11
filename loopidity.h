@@ -33,7 +33,7 @@
 #if DRAW_SCENES
 #define DRAW_PEAK_BAR 1
 #define DRAW_HISTOGRAMS 1
-#define DRAW_LOOP_PEAKS 1
+#define DRAW_PEAK_RINGS 1
 #define DRAW_LOOPS 1
 #define DRAW_LOOP_MASKS DRAW_LOOPS && 1
 #define DRAW_LOOP_GRADIENTS DRAW_LOOPS && 1
@@ -214,12 +214,14 @@ class Loopidity
     static bool GetIsRecording() ;
 		static bool GetIsPulseExist() ;
 		static void SetNFramesPerPeriod(unsigned int nFrames) ;
-		static vector<SAMPLE>* GetInPeaksCache() ;
-		static vector<SAMPLE>* GetOutPeaksCache() ;
+		static vector<SAMPLE>* GetPeaksInCache() ;
+		static vector<SAMPLE>* GetPeaksOutCache() ;
 		static SAMPLE* GetTransientPeaksCache() ;
+		static SAMPLE* GetTransientPeakIn() ;
+		static SAMPLE* GetTransientPeakOut() ;
+		static SAMPLE GetPeak(SAMPLE* buffer , unsigned int nFrames) ;
 
 		// helpers
-		static SAMPLE GetPeak(SAMPLE* buffer , unsigned int nFrames) ;
 		static void ScanTransientPeaks() ;
 
 	private:
@@ -234,15 +236,13 @@ class Loopidity
 		static unsigned int NFramesPerGuiInterval ;
 
 		// transient sample data
-		static jack_port_t* InPort1 ;
-		static jack_port_t* InPort2 ;
-		static jack_port_t* OutPort1 ;
-		static jack_port_t* OutPort2 ;
 		static SAMPLE* RecordBuffer1 ;
 		static SAMPLE* RecordBuffer2 ;
-		static vector<SAMPLE> InPeaks ;
-		static vector<SAMPLE> OutPeaks ;
+		static vector<SAMPLE> PeaksIn ;
+		static vector<SAMPLE> PeaksOut ;
 		static SAMPLE TransientPeaks[N_PORTS] ;
+		static SAMPLE TransientPeakInMix ;
+		static SAMPLE TransientPeakOutMix ;
 
 // DEBUG
 public: static void SetDbgLabels() ; static void Vardump() ;
