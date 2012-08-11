@@ -161,7 +161,7 @@ if (DEBUG) { char dbg[255] ; sprintf(dbg , "NEW LOOP scene:%d loopN:%d" , Loopid
 		}
 
 		// switch to NextScene if necessary
-		if (CurrentScene != NextScene) { LoopiditySdl::SceneChanged(CurrentScene->sceneN) ; CurrentScene = NextScene ; }
+		if (CurrentScene != NextScene) { CurrentScene->sceneChanged() ; CurrentScene = NextScene ; }
 	}
 #endif
 

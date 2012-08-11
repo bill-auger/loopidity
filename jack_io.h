@@ -3,8 +3,6 @@
 #define _JACK_IO_H_
 
 
-//#include <vector>
-
 #include <jack/jack.h>
 
 #include "loopidity.h"

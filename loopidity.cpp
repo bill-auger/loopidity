@@ -4,6 +4,9 @@
 
 // DEBUG
 #include "debug.h"
+
+void Scene::makeMainDbgText(char* dbg) { sprintf(dbg , "Paint() SceneN=%d nLoops=%d PeakN=%d" , sceneN , nLoops , getCurrentPeakN()) ; }
+
 void Loopidity::SetDbgLabels()
 {
 #if VARDUMP
@@ -78,11 +81,7 @@ unsigned int Loopidity::NextSceneN = 0 ;
 // audio data
 Scene* Loopidity::Scenes[N_SCENES] = {0} ;
 unsigned int Loopidity::NFramesPerPeriod = 0 ;
-unsigned int Loopidity::NFramesPerScopeInterval = 0 ;
-jack_port_t* Loopidity::InPort1 = 0 ;
-jack_port_t* Loopidity::InPort2 = 0 ;
-jack_port_t* Loopidity::OutPort1 = 0 ;
-jack_port_t* Loopidity::OutPort2 = 0 ;
+unsigned int Loopidity::NFramesPerGuiInterval = 0 ;
 SAMPLE* Loopidity::RecordBuffer1 = 0 ;
 SAMPLE* Loopidity::RecordBuffer2 = 0 ;
 vector<SAMPLE> Loopidity::InPeaks ;
@@ -90,7 +89,8 @@ vector<SAMPLE> Loopidity::OutPeaks ;
 SAMPLE Loopidity::TransientPeaks[N_PORTS] = {0} ;
 
 
-/* Loop Class public functions */
+/* Loop Class private functions */
+
 Loop::Loop(unsigned int nFrames) : peaks()
 	{ buffer1 = new SAMPLE[nFrames] ; buffer2 = new SAMPLE[nFrames] ; }
 
@@ -98,6 +98,8 @@ Loop::~Loop() { delete buffer1 ; delete buffer2 ; }
 
 
 /* Scene Class public functions */
+
+Uint16 Scene::getCurrentPeakN() { return ((float)frameN / (float)nFrames) * (float)N_LOOP_PEAKS ; }
 
 float Scene::getCurrentSeconds() { return frameN / JackIO::GetSampleRate() ; }
 
@@ -109,6 +111,8 @@ float Scene::getTotalSeconds() { return nFrames / JackIO::GetSampleRate() ; }
 Scene::Scene(unsigned int scenen , unsigned int nframes) :
 		// identity
 		sceneN(scenen) ,
+		// GUI
+		sceneGui(0) ,
 		// peaks cache
 		hiScenePeaks() , hiLoopPeaks(), highestScenePeak(0.0) ,
 		// buffer iteration
@@ -118,7 +122,13 @@ Scene::Scene(unsigned int scenen , unsigned int nframes) :
 
 // audio data
 void Scene::addLoop(Loop* newLoop)
-	{ if (nLoops < N_LOOPS) loops.push_back(newLoop) ; scanPeaks(newLoop , nLoops++) ; }
+{
+	if (nLoops < N_LOOPS)
+	{
+		loops.push_back(newLoop) ; scanPeaks(newLoop , nLoops) ;
+		sceneGui->drawLoop(nLoops , loops[nLoops]->peaks) ; ++nLoops ;
+	}
+}
 
 void Scene::deleteLoop()
 	{ if (loops.size() && nLoops) { loops.pop_back() ; --nLoops ; rescanPeaks() ; } }
@@ -129,13 +139,15 @@ void Scene::reset()
 	frameN = nLoops = 0 ; isSaveLoop = true ; isPulseExist = false ;
 }
 
+
 // peaks cache
+
 void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 {
 #if SCAN_LOOP_PEAKS_DATA
 	if (loopN >= N_LOOPS) return ;
 
-	float* peaks = loop->peaks ; unsigned int framen ; SAMPLE peak1 , peak2 ;
+	SAMPLE* peaks = loop->peaks ; unsigned int framen ; SAMPLE peak1 , peak2 ;
 	for (unsigned int peakN = 0 ; peakN < N_LOOP_PEAKS ; ++peakN)
 	{
 		framen = nFramesPerPeak * peakN ;
@@ -178,6 +190,11 @@ void Scene::setMode()
 
 unsigned int Scene::getLoopPos() { return (frameN * 1000) / nFrames ; }
 
+// helpers
+
+void Scene::sceneChanged()
+	{ sceneGui->drawScene(sceneGui->inactiveSceneSurface , this) ; LoopiditySdl::DrawMode() ; }
+
 
 /* Loopidity Class public functions */
 
@@ -193,16 +210,14 @@ bool Loopidity::Init(unsigned int recordBufferSize , bool isMonitorInputs)
 	if (!JackIO::Init(nFrames , Scenes[0] , isMonitorInputs))
 		{ LoopiditySdl::Alert(JACK_FAIL_MSG) ; return false ; }
 
-	// initialize scope peaks cache
-	float interval = GUI_UPDATE_INTERVAL_SHORT * 0.001 ;
+	// initialize scope/VU peaks cache
+	float interval = (float)GUI_UPDATE_INTERVAL_SHORT * 0.001 ;
 	float sampleRate = (float)JackIO::GetSampleRate() ;
-	NFramesPerScopeInterval = (unsigned int)(sampleRate * interval) ;
-	for (unsigned int peakN = 0 ; peakN < N_LOOP_PEAKS ; ++peakN)
+	NFramesPerGuiInterval = (unsigned int)(sampleRate * interval) ;
+	for (unsigned int peakN = 0 ; peakN < N_TRANSIENT_PEAKS ; ++peakN)
 		{ InPeaks.push_back(0.0) ; OutPeaks.push_back(0.0) ; }
 
-	// get handles on JACK ports and buffers for scope and VU peaks
-	InPort1 = JackIO::GetInPort1() ; InPort2 = JackIO::GetInPort2() ;
-	OutPort1 = JackIO::GetOutPort1() ; OutPort2 = JackIO::GetOutPort2() ;
+	// get handles on JACK buffers for scope/VU peaks
 	RecordBuffer1 = JackIO::GetRecordBuffer1() ; RecordBuffer2 = JackIO::GetRecordBuffer2() ;
 
 	return true ;
@@ -220,7 +235,7 @@ void Loopidity::SetMode()
 	else JackIO::GetCurrentScene()->setMode() ;
 	LoopiditySdl::DrawMode() ;
 
-if (DEBUG) { char dbg[256] ; sprintf(dbg , "Set mode: IsRecording:%d isPulseExist:%d isSaveLoop:%d" , IsRecording , GetIsPulseExist() , GetIsSaveLoop()) ; LoopiditySdl::SetStatusR(dbg) ; }
+if (DEBUG) { char dbg[256] ; sprintf(dbg , "IsRecording:%d isPulseExist:%d isSaveLoop:%d" , IsRecording , GetIsPulseExist() , GetIsSaveLoop()) ; LoopiditySdl::SetStatusR(dbg) ; }
 }
 
 // TODO: cancel initial recording if not committed if (!nLoops) IsRecording = false ; frameN = 0 ;
@@ -274,11 +289,7 @@ SAMPLE Loopidity::GetPeak(SAMPLE* buffer , unsigned int nFrames)
 		for (unsigned int frameN = 0 ; frameN < nFrames ; ++frameN)
 			{ SAMPLE sample = fabs(buffer[frameN]) ; if (peak < sample) peak = sample ; }
 	}
-	catch(int ex)
-		{
-			int i=0;
-		printf("Loopidity::GetPeak(): subscript out of range\n") ;
-		}
+	catch(int ex) { printf("Loopidity::GetPeak(): subscript out of range\n") ; }
 	return peak ;
 }
 
@@ -286,20 +297,21 @@ void Loopidity::ScanTransientPeaks()
 {
 #if SCAN_TRANSIENT_PEAKS_DATA
 	Scene* currentScene = JackIO::GetCurrentScene() ; unsigned int frameN = currentScene->frameN ;
-	unsigned int currentFrameN = (frameN < NFramesPerScopeInterval)? 0 : frameN - NFramesPerScopeInterval ;
-	SAMPLE inPeak1 = GetPeak(&(RecordBuffer1[currentFrameN]) , NFramesPerScopeInterval) ;
-	SAMPLE inPeak2 = GetPeak(&(RecordBuffer2[currentFrameN]) , NFramesPerScopeInterval) ;
-	SAMPLE outPeak1 = 0.0 , outPeak2 = 0.0 ; int nLoops = currentScene->nLoops ;
+// TODO; first NFramesPerGuiInterval duplicated
+	unsigned int currentFrameN = (frameN < NFramesPerGuiInterval)? 0 : frameN - NFramesPerGuiInterval ;
+	SAMPLE inPeak1 = GetPeak(&(RecordBuffer1[currentFrameN]) , NFramesPerGuiInterval) ;
+	SAMPLE inPeak2 = GetPeak(&(RecordBuffer2[currentFrameN]) , NFramesPerGuiInterval) ;
+	SAMPLE outPeak1 = 0.0 , outPeak2 = 0.0 ; unsigned int nLoops = currentScene->nLoops ;
 	for (unsigned int loopN = 0 ; loopN < nLoops ; ++loopN)
 	{
 		Loop* loop = currentScene->loops[loopN] ;
-		outPeak1 += GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerScopeInterval) ;
-		outPeak2 += GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerScopeInterval) ;
+		outPeak1 += GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerGuiInterval) ;
+		outPeak2 += GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerGuiInterval) ;
 	}
 	// load scope peaks (mono mix)
 	SAMPLE inPeak = (inPeak1 + inPeak2) / N_INPUT_CHANNELS ;
 	SAMPLE outPeak = (outPeak1 + outPeak2) / N_OUTPUT_CHANNELS ;
-	if (outPeak > SCOPE_H) outPeak = SCOPE_H ;
+	if (outPeak > 1.0) outPeak = 1.0 ;
 	InPeaks.pop_back() ; InPeaks.insert(InPeaks.begin() , inPeak) ;
 	OutPeaks.pop_back() ; OutPeaks.insert(OutPeaks.begin() , outPeak) ;
 	// load VU peaks (per channel)

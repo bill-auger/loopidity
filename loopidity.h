@@ -31,10 +31,10 @@
 #endif
 
 #if DRAW_SCENES
-#define DRAW_PEAK_BARS 1
+#define DRAW_PEAK_BAR 1
 #define DRAW_HISTOGRAMS 1
 #define DRAW_LOOP_PEAKS 1
-#define DRAW_LOOPS 0
+#define DRAW_LOOPS 1
 #define DRAW_LOOP_MASKS DRAW_LOOPS && 1
 #define DRAW_LOOP_GRADIENTS DRAW_LOOPS && 1
 #define DRAW_INACTIVE_SCENES 1
@@ -62,6 +62,7 @@
 #include <SDL.h>
 #include <SDL_gfxPrimitives.h>
 #include <SDL_image.h>
+#include <SDL_rotozoom.h>
 #include <SDL_ttf.h>
 #endif
 
@@ -70,9 +71,9 @@
 //#define DEFAULT_BUFFER_SIZE 33554432 // 2^25 (approx 3 min @ 48k)
 //#define DEFAULT_BUFFER_SIZE 25165824 // 1024 * 1024 * 24 (approx 135 sec @ 48k)
 //#define DEFAULT_BUFFER_SIZE 16777216 // 2^24 (approx 90 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 8388608 // 2^23 (approx 45 sec @ 48k)
+#define DEFAULT_BUFFER_SIZE 8388608 // 2^23 (approx 45 sec @ 48k)
 //#define DEFAULT_BUFFER_SIZE 2097152 // 2^21 (approx 10 sec @ 48k)
-#define DEFAULT_BUFFER_SIZE 1048576 // 2^20 (approx 5 sec @ 48k)
+//#define DEFAULT_BUFFER_SIZE 1048576 // 2^20 (approx 5 sec @ 48k)
 
 // TODO: implement setting N_CHANNELS via cmd line arg - GetTransientPeaks and updateVUMeters are especially brittle now
 #define N_INPUT_CHANNELS 2 // TODO: nyi - only used for memory check and scope cache
@@ -80,7 +81,7 @@
 #define N_PORTS N_INPUT_CHANNELS + N_OUTPUT_CHANNELS // TODO: nyi - only used for scope cache
 #define N_SCENES 3
 #define N_LOOPS 9 // N_LOOPS_PER_SCENE
-#define N_LOOP_PEAKS 100 // should be divisible into 3600
+#define N_LOOP_PEAKS 360 // should be divisible into 360
 
 // string constants
 //#define CONNECT_ARG "--connect"
@@ -97,6 +98,7 @@
 
 #include "jack_io.h"
 #include "loopidity_sdl.h"
+#include "scene_sdl.h"
 
 
 using namespace std ;
@@ -104,26 +106,37 @@ using namespace std ;
 
 class Loop
 {
-	public:
+friend class SceneSdl ; // TODO: Loop class is private - pass in peaks[currentPeakN] to drawScene()
+	friend class Loopidity ;
+	friend class Scene ;
+	friend class JackIO ;
+
+	private:
 
 		Loop(unsigned int nFrames) ;
 		~Loop() ;
 
 		SAMPLE* buffer1 ;
 		SAMPLE* buffer2 ;
-		float peaks[N_LOOP_PEAKS] ;
+		SAMPLE peaks[N_LOOP_PEAKS] ;
 } ;
 
 
 class Scene
 {
 	friend class Loopidity ;
+	friend class LoopiditySdl ;
 	friend class SceneSdl ;
 	friend class JackIO ;
 
 	public:
 
-		// scene time
+// DEBUG
+void makeMainDbgText(char* dbg) ;
+// DEBUG end
+
+		// scene progress
+		Uint16 getCurrentPeakN() ;
 		float getCurrentSeconds() ;
 		float getTotalSeconds() ;
 
@@ -135,6 +148,9 @@ class Scene
 
 		// identity
 		unsigned int sceneN ;
+
+		// GUI
+		SceneSdl* sceneGui ;
 
 		// audio data
 		vector<Loop*> loops ;
@@ -171,6 +187,9 @@ class Scene
 
 		// getters/setters
     unsigned int getLoopPos() ;
+
+		// helpers
+		void sceneChanged() ;
 } ;
 
 
@@ -212,7 +231,7 @@ class Loopidity
 		// audio data
 		static Scene* Scenes[N_SCENES] ;
 		static unsigned int NFramesPerPeriod ;
-		static unsigned int NFramesPerScopeInterval ;
+		static unsigned int NFramesPerGuiInterval ;
 
 		// transient sample data
 		static jack_port_t* InPort1 ;

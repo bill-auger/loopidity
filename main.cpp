@@ -2,6 +2,7 @@
 #include "loopidity_sdl.h"
 #include <X11/Xlib.h>
 
+
 /* LoopiditySdl class public variables */
 
 // window
@@ -9,28 +10,33 @@ Uint16 LoopiditySdl::GuiLongCount = 0 ;
 SDL_Surface* LoopiditySdl::Screen = 0 ;
 SDL_Rect LoopiditySdl::WinRect = WIN_RECT ;
 Uint32 LoopiditySdl::WinBgColor = 0 ;
-Uint16 LoopiditySdl::WinCenter = WIN_CENTER ;
+const Uint16 LoopiditySdl::WinCenter = WIN_CENTER ;
+
 // header
 SDL_Rect LoopiditySdl::HeaderRectDim = HEADER_RECT_DIM ;
 SDL_Rect LoopiditySdl::HeaderRectC = HEADER_RECT_C ;
 TTF_Font* LoopiditySdl::HeaderFont = 0 ;
-SDL_Color LoopiditySdl::HeaderColor = HEADER_TEXT_COLOR ;
+const SDL_Color LoopiditySdl::HeaderColor = HEADER_TEXT_COLOR ;
+
 // status
 SDL_Rect LoopiditySdl::StatusRectDim = STATUS_RECT_DIM ;
 SDL_Rect LoopiditySdl::StatusRectL = STATUS_RECT_L ;
 SDL_Rect LoopiditySdl::StatusRectR = STATUS_RECT_R ;
 TTF_Font* LoopiditySdl::StatusFont = 0 ;
-SDL_Color LoopiditySdl::StatusColor = STATUS_TEXT_COLOR ;
-string LoopiditySdl::StatusTextL = "StatusTextL" ;
-string LoopiditySdl::StatusTextR = "StatusTextR" ;
+const SDL_Color LoopiditySdl::StatusColor = STATUS_TEXT_COLOR ;
+string LoopiditySdl::StatusTextL = "" ;
+string LoopiditySdl::StatusTextR = "" ;
+
 // scenes
-SceneSdl* LoopiditySdl::SdlScenes[N_SCENES] = {0} ;
+Scene** LoopiditySdl::Scenes = 0 ;
 SDL_Surface* LoopiditySdl::SceneBgGradient = 0 ;
 SDL_Surface* LoopiditySdl::LoopBgGradient = 0 ;
+
 // scopes
 SDL_Rect LoopiditySdl::ScopeRect = SCOPE_RECT ;
-Sint16 LoopiditySdl::ScopeY = ScopeRect.y + (SCOPE_H / 2) ;
-float LoopiditySdl::ScopePeakH = (float)SCOPE_H / 2.0 ;
+const Sint16 LoopiditySdl::ScopeY = ScopeRect.y + (SCOPE_H / 2) ;
+const Uint16 LoopiditySdl::ScopeR = SCOPE_R ;
+const float LoopiditySdl::ScopePeakH = (float)SCOPE_H / 2.0 ;
 vector<SAMPLE>* LoopiditySdl::InPeaks ;
 vector<SAMPLE>* LoopiditySdl::OutPeaks ;
 SAMPLE* LoopiditySdl::TransientPeaks = 0 ;
@@ -54,7 +60,7 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 	if (SDL_EnableKeyRepeat(0 , 0)) { LoopiditySdl::Cleanup() ; return false ; }
 
 	// sett default window params
-	WinBgColor = SDL_MapRGB(LoopiditySdl::Screen->format , 0 , 0 , 0) ;
+	WinBgColor = SDL_MapRGB(LoopiditySdl::Screen->format , 16 , 16 , 16) ;
 	SDL_WM_SetCaption(APP_NAME , APP_NAME) ;
 
 	// load fonts
@@ -70,9 +76,9 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 	if (!Loopidity::Init(DEFAULT_BUFFER_SIZE , isMonitorInputs)) return false ;
 
 	// instantiate SdlScenes
-	Scene** scenes = Loopidity::GetScenes() ;
+	Scenes = Loopidity::GetScenes() ;
 	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
-		SdlScenes[sceneN] = new SceneSdl(scenes[sceneN] , sceneN) ;
+		Scenes[sceneN]->sceneGui = new SceneSdl(Scenes[sceneN]) ;
 
 	// get handles to scope and VU peaks caches
 	InPeaks = Loopidity::GetInPeaksCache() ; OutPeaks = Loopidity::GetOutPeaksCache() ;
@@ -86,7 +92,12 @@ void LoopiditySdl::Cleanup()
 	TTF_CloseFont(HeaderFont) ; TTF_CloseFont(StatusFont) ;
 	SDL_FreeSurface(SceneBgGradient) ; SDL_FreeSurface(LoopBgGradient) ;
 	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
-		{ SceneSdl* sdlScene = SdlScenes[sceneN] ; SDL_FreeSurface(sdlScene->activeSceneSurface) ; }
+	{
+		SceneSdl* sdlScene = Scenes[sceneN]->sceneGui ;
+		SDL_FreeSurface(sdlScene->activeSceneSurface) ;
+		SDL_FreeSurface(sdlScene->inactiveSceneSurface) ;
+		sdlScene->loopImgs.clear() ;
+	}
 	SDL_FreeSurface(Screen) ;
 }
 
@@ -99,11 +110,11 @@ void LoopiditySdl::DrawScenes()
 	Uint16 currentSceneN = Loopidity::GetCurrentSceneN() ; SceneSdl* sdlScene ;
 	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
 	{
-		sdlScene = SdlScenes[sceneN] ;
+		Scene* scene = Scenes[sceneN] ; sdlScene = scene->sceneGui ;
 		SDL_FillRect(LoopiditySdl::Screen , &sdlScene->sceneRect , WinBgColor) ;
 		if (sceneN == currentSceneN)
 		{
-			sdlScene->drawScene(sdlScene->activeSceneSurface) ;
+			sdlScene->drawScene(sdlScene->activeSceneSurface , scene) ;
 			SDL_BlitSurface(sdlScene->activeSceneSurface , 0 , Screen , &sdlScene->sceneRect) ;
 		}
 #if DRAW_INACTIVE_SCENES
@@ -112,7 +123,7 @@ void LoopiditySdl::DrawScenes()
 	}
 
 #if DRAW_DEBUG_TEXT
-char dbg[255] ; SdlScenes[Loopidity::GetCurrentSceneN()]->makeMainDbgText(dbg) ; LoopiditySdl::SetStatusL(dbg) ;
+char dbg[255] ; Scenes[Loopidity::GetCurrentSceneN()]->makeMainDbgText(dbg) ; LoopiditySdl::SetStatusL(dbg) ;
 #endif
 #endif // #if DRAW_SCENES
 } // void LoopiditySdl::DrawScenes()
@@ -121,9 +132,9 @@ void LoopiditySdl::DrawScopes()
 {
 #if DRAW_SCOPES
 	SDL_FillRect(Screen , &ScopeRect , WinBgColor) ;
-	for (Uint16 peakN = 0 ; peakN < N_SCOPE_PEAKS ; ++peakN)
+	for (Uint16 peakN = 0 ; peakN < N_TRANSIENT_PEAKS ; ++peakN)
 	{
-		Sint16 inX = WinCenter + N_SCOPE_PEAKS - peakN , outX = WinCenter - peakN ;
+		Sint16 inX = ScopeR - peakN , outX = WinCenter - peakN ;
 		Sint16 inH = (Uint16)((*InPeaks)[peakN] * ScopePeakH) ;
 		Sint16 outH = (Uint16)((*OutPeaks)[peakN] * ScopePeakH) ;
 		Uint32 inColor , outColor ;
@@ -133,16 +144,10 @@ void LoopiditySdl::DrawScopes()
 		if (outH > ScopePeakH * SCOPE_LOUD) outColor = OUTSCOPE_LOUD_COLOR ;
 		else if (outH > ScopePeakH * SCOPE_OPTIMAL) outColor = OUTSCOPE_OPTIMAL_COLOR ;
 		else outColor = OUTSCOPE_QUIET_COLOR ;
-		vlineColor(Screen , outX , ScopeY - outH , ScopeY + outH  , outColor) ;
-		vlineColor(Screen , inX , ScopeY - inH , ScopeY + inH  , inColor) ;
+		vlineColor(Screen , outX , ScopeY - outH , ScopeY + outH , outColor) ;
+		vlineColor(Screen , inX , ScopeY - inH , ScopeY + inH , inColor) ;
 	}
 #endif
-
-/* draw a pie
-Sint16 x = 200 , y = 200 , radius = 100 , begin = 0 , end = 180 ;
-Uint8 r = 255 , g = 255 , b = 255 , a = 255 ;
-filledPieRGBA(LoopiditySdl::Screen , x , y , radius , begin , end , r , g , b , a) ;
-*/
 }
 
 void LoopiditySdl::DrawMode()
@@ -171,7 +176,6 @@ void LoopiditySdl::DrawMode()
 #endif // #if DRAW_MODE
 } // void LoopiditySdl::SetMode()
 
-
 void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* screenRect , SDL_Rect* cropRect , SDL_Color fgColor)
 {
 	if (!text.size()) return ;
@@ -179,6 +183,7 @@ void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font 
 	SDL_Surface* textSurface = TTF_RenderText_Solid(font , text.c_str() , fgColor) ;
 	if (!textSurface) { TtfError("TTF_Init") ; return ; }
 
+	SDL_FillRect(surface , screenRect , WinBgColor) ;
 	SDL_BlitSurface(textSurface , cropRect , surface , screenRect) ; SDL_FreeSurface(textSurface) ;
 }
 
@@ -192,12 +197,6 @@ void LoopiditySdl::Alert(const char* msg) { printf("%s" , msg) ; }
 
 
 // helpers
-
-void LoopiditySdl::SceneChanged(Uint16 sceneN)
-{
-	SceneSdl* sdlScene = SdlScenes[sceneN] ;
-	sdlScene->drawScene(sdlScene->inactiveSceneSurface) ; DrawMode() ;
-}
 
 void LoopiditySdl::SetStatusL(string text) { StatusTextL = text ; }
 
