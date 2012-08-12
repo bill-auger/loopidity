@@ -148,7 +148,6 @@ void Scene::reset()
 
 void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 {
-printf("scanPeaks() nLoops=%d loopN=%d\n" , loops.size() , loopN);
 #if SCAN_LOOP_PEAKS_DATA
 	if (!loop || loopN >= N_LOOPS) return ;
 
@@ -173,8 +172,6 @@ printf("scanPeaks() nLoops=%d loopN=%d\n" , loops.size() , loopN);
 
 void Scene::rescanPeaks()
 {
-printf("rescanPeaks() nLoops=%d - %s\n" , loops.size() , (loops.size())? "yay" : "no loops");
-
 	highestScenePeak = 0.0 ;
 	for (unsigned int peakN = 0 ; peakN < N_LOOP_PEAKS ; ++peakN) hiScenePeaks[peakN] = 0.0 ;
 	for (unsigned int loopN = 0 ; loopN < N_LOOPS ; ++loopN)

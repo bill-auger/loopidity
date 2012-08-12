@@ -101,7 +101,7 @@ Uint16 approxCurrentPeakN = histN * nLoopPeaksPerHistogramSample ;
 			x = loopX + histN ; peakH = HistogramH * peaks[approxCurrentPeakN] ;
 			if (histN == loopProgress) { t = HistogramT ; b = HistogramB ; peakColor = HISTOGRAM_PEAK_CURRENT_INACTIVE_COLOR ; }
 			else { t = HistogramY - (peakH / 2) ; b = t + peakH ; peakColor = HISTOGRAM_PEAK_INACTIVE_COLOR ; }
-			vlineColor(surface , x , t , b , peakColor) ;
+			if (loopProgress) vlineColor(surface , x , t , b , peakColor) ;
 		}
 #endif // #if DRAW_HISTOGRAMS
 
@@ -131,7 +131,7 @@ r = peaks[currentPeakN] * LOOP_PEAK_R ;
 	loopFrameColor = (Loopidity::GetIsSaveLoop())? SCENE_PEAK_MAX_COLOR : HIST_FRAME_ACTIVE_COLOR ;
 	roundedRectangleColor(surface , frameL - BORDER_PAD , LoopFrameT , frameR + BORDER_PAD , LoopFrameB , 5 , loopFrameColor) ;
 	x = loopX + loopProgress ; t = HistogramT ; b = HistogramB ;
-	vlineColor(surface , x , t , b , HISTOGRAM_PEAK_CURRENT_ACTIVE_COLOR) ;
+	if (loopProgress) vlineColor(surface , x , t , b , HISTOGRAM_PEAK_CURRENT_ACTIVE_COLOR) ;
 	x = loopX + LOOP_PEAK_R ; r = *Loopidity::GetTransientPeakIn() * LOOP_PEAK_R ;
 	circleColor(surface , x , LoopY , r, LOOP_PEAK_CURRENT_COLOR) ;
 }
