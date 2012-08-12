@@ -123,7 +123,7 @@ int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 
 		// mix unmuted tracks into mix buffers
 		unsigned int frameNout = CurrentScene->frameN + frameNin ;
-		for (unsigned int loopN = 0 ; loopN < CurrentScene->nLoops ; ++loopN)
+		for (unsigned int loopN = 0 ; loopN < CurrentScene->loops.size() ; ++loopN)
 		{
 			currBuff1[frameNin] += CurrentScene->loops[loopN]->buffer1[frameNout] ;
 			currBuff2[frameNin] += CurrentScene->loops[loopN]->buffer2[frameNout] ;
@@ -138,8 +138,8 @@ int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 	// increment sample rollover - ASSERT: ((nFrames == NFramesPerPeriod) && !(frameN % CurrentScene->nFrames))
 	if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->nFrames))
 	{
-		// copy record buffers , create peaks cache , and increment nLoops
-		if (CurrentScene->isSaveLoop && CurrentScene->nLoops < N_LOOPS)
+		// create new Loop instance and copy record buffers to it
+		if (CurrentScene->isSaveLoop && CurrentScene->loops.size() < N_LOOPS)
 		{
 #if DSP
 			Loop* newLoop = new Loop(CurrentScene->nFrames) ;
@@ -149,7 +149,7 @@ int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 			CurrentScene->addLoop(newLoop) ;
 #endif
 
-if (DEBUG) { char dbg[255] ; sprintf(dbg , "NEW LOOP scene:%d loopN:%d" , Loopidity::GetCurrentSceneN() , CurrentScene->nLoops) ; LoopiditySdl::SetStatusR(dbg) ; }
+if (DEBUG) { char dbg[255] ; sprintf(dbg , "NEW LOOP scene:%d loopN:%d" , Loopidity::GetCurrentSceneN() , CurrentScene->loops.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
 		}
 
 		// switch to NextScene if necessary

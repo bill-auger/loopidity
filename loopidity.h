@@ -31,7 +31,7 @@
 #endif
 
 #if DRAW_SCENES
-#define DRAW_PEAK_BAR 1
+#define DRAW_SCENE_PEAK_BAR 1
 #define DRAW_HISTOGRAMS 1
 #define DRAW_PEAK_RINGS 1
 #define DRAW_LOOPS 1
@@ -167,7 +167,6 @@ void makeMainDbgText(char* dbg) ;
 		unsigned int nFrames ;
 		unsigned int nFramesPerPeak ;
 		unsigned int frameN ;
-		unsigned int nLoops ;
 
 		// recording state
 		bool isSaveLoop ;

@@ -10,16 +10,19 @@ const Uint16 SceneSdl::HistogramH(YPadding) ;
 const Sint16 SceneSdl::HistogramT(HistogramH - 2) ;
 const Sint16 SceneSdl::HistogramY(HistogramT + (HistogramH / 2)) ;
 const Sint16 SceneSdl::HistogramB(HistogramT + HistogramH) ;
-const Sint16 SceneSdl::HistogramBorderT = HistogramT - 1 ;
-const Sint16 SceneSdl::HistogramBorderB = HistogramB + 1 ;
+const Sint16 SceneSdl::HistFrameT = HistogramT - 1 ;
+const Sint16 SceneSdl::HistFrameB = HistogramB + 1 ;
 const Uint16 SceneSdl::LoopD(LOOP_PEAK_R * 2) ;
 const Uint16 SceneSdl::LoopW(XPadding + LoopD) ;
-const Uint16 SceneSdl::LoopT(YPadding + HistogramH) ;
+const Uint16 SceneSdl::LoopT(YPadding + HistogramH + BORDER_PAD) ;
 const Uint16 SceneSdl::LoopY(LoopT + LOOP_PEAK_R) ;
-const Uint16 SceneSdl::LoopB(LoopT + LoopD - 1) ;
+const Uint16 SceneSdl::LoopB(LoopT + LoopD) ;
+const Sint16 SceneSdl::LoopFrameT = HistFrameT - BORDER_PAD ;
+const Sint16 SceneSdl::LoopFrameB = LoopB + BORDER_PAD + 1 ;
 const Uint16 SceneSdl::SceneH((YPadding * 3) + HistogramH + LoopD) ;
 const Uint16 SceneSdl::SceneL(XPadding) ;
 const float SceneSdl::PieSliceDegrees = PIE_SLICE_DEGREES ;
+
 
 /* LoopImg class private functions */
 
@@ -39,8 +42,8 @@ SceneSdl::SceneSdl(Scene* scene) :
 {
 	// variables
 	sceneRect = {0 , sceneY , LoopiditySdl::WinRect.w , SceneH} ;
-	activeSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneW , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
-	inactiveSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneW , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
+	activeSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneRect.w , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
+	inactiveSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneRect.w , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
 	SDL_SetAlpha(inactiveSceneSurface , SDL_SRCALPHA | SDL_RLEACCEL , 128) ;
 	drawScene(inactiveSceneSurface , scene) ;
 }
@@ -48,19 +51,19 @@ SceneSdl::SceneSdl(Scene* scene) :
 void SceneSdl::drawScene(SDL_Surface* surface , Scene* scene)
 {
 	Uint16 currentPeakN = scene->getCurrentPeakN() , hiScenePeak , loopN , histN ;
-	Sint16 loopX , histogramBorderL , histogramBorderR , peakH , x , t , b , r ;
-	Uint32 borderColor , peakColorCurrent , peakColorOther , peakColor ;
+	Sint16 loopX , frameL , frameR , peakH , x , t , b , r ;
+	Uint32 peakColor , loopFrameColor ;
 	SDL_Rect maskRect , gradientRect , rotRect ;
 	LoopImg* loopImg ;
 	SDL_Surface* rotImg ;
 
 	SDL_FillRect(surface , 0 , LoopiditySdl::WinBgColor) ;
 
-#if DRAW_PEAK_BAR
+#if DRAW_SCENE_PEAK_BAR
 	// draw peak gradient mask
 	hiScenePeak = (Uint16)(scene->hiScenePeaks[currentPeakN] * (float)LOOP_PEAK_R) ;
-	maskRect.x = 0 ; maskRect.y = LOOP_PEAK_R - hiScenePeak ;
-	maskRect.w = sceneW ; maskRect.h = (hiScenePeak * 2) ;
+	maskRect.x = 0 ; maskRect.y = LOOP_PEAK_R - hiScenePeak + 1;
+	maskRect.w = sceneW ; maskRect.h = (hiScenePeak * 2) + 1 ;
 	gradientRect.x = SceneL ; gradientRect.y = LoopT + maskRect.y ;
 	SDL_BlitSurface(LoopiditySdl::SceneBgGradient , &maskRect , surface , &gradientRect) ;
 
@@ -68,7 +71,7 @@ void SceneSdl::drawScene(SDL_Surface* surface , Scene* scene)
 	hlineColor(surface , SceneL , sceneR , LoopT , SCENE_PEAK_MAX_COLOR) ;
 	hlineColor(surface , SceneL , sceneR , LoopY , SCENE_PEAK_ZERO_COLOR) ;
 	hlineColor(surface , SceneL , sceneR , LoopB , SCENE_PEAK_MAX_COLOR) ;
-#endif // #if DRAW_PEAK_BAR
+#endif // #if DRAW_SCENE_PEAK_BAR
 
 // TODO: formalize this? (with approxCurrentPeakN)
 // decoupling N_TRANSIENT_PEAKS from N_LOOP_PEAKS made the histogram draw poorly
@@ -76,7 +79,7 @@ Uint16 nLoopPeaksPerHistogramSample = N_LOOP_PEAKS / LoopD ;
 Uint16 loopProgress = (((float)currentPeakN / (float)N_LOOP_PEAKS) * 100) ; //o/c this only works cause LoopD == 100
 
 	// draw loops
-	for (loopN = 0 ; loopN < scene->nLoops ; ++loopN)
+	for (loopN = 0 ; loopN < scene->loops.size() ; ++loopN)
 	{
 // TODO: Loop class is private - draw histogram along with loop upon creation
 SAMPLE* peaks = scene->loops[loopN]->peaks ;
@@ -87,20 +90,17 @@ SAMPLE* peaks = scene->loops[loopN]->peaks ;
 // perhaps better to make this a cached image (it only changes omce per loop)
 // for histogram we need LOOP_D samples of N_LOOP_PEAKS
 // for peak bar and loop peaks we need N_LOOP_PEAKS/guiInterval samples of N_LOOP_PEAKS
-		borderColor = HISTOGRAM_BORDER_INACTIVE_COLOR ;
-		peakColorCurrent = HISTOGRAM_PEAK_CURRENT_INACTIVE_COLOR ;
-		peakColorOther = HISTOGRAM_PEAK_INACTIVE_COLOR ;
 		// draw histogram border
-		histogramBorderL = loopX - 1 , histogramBorderR = loopX + LoopD + 1 ;
-		roundedRectangleColor(surface , histogramBorderL , HistogramBorderT , histogramBorderR , HistogramBorderB , 5 , borderColor) ;
+		frameL = loopX - 1 , frameR = loopX + LoopD + 1 ;
+		roundedRectangleColor(surface , frameL , HistFrameT , frameR , HistFrameB , 5 , HIST_FRAME_INACTIVE_COLOR) ;
 		// draw histogram
 		for (histN = 0 ; histN < LoopD ; ++histN)
 		{
 // TODO: formalize this? (with nLoopPeaksPerHistogramSample and loopProgress)
 Uint16 approxCurrentPeakN = histN * nLoopPeaksPerHistogramSample ;
 			x = loopX + histN ; peakH = HistogramH * peaks[approxCurrentPeakN] ;
-			if (histN == loopProgress) { t = HistogramT ; b = HistogramB ; peakColor = peakColorCurrent ; }
-			else { t = HistogramY - (peakH / 2) ; b = t + peakH ; peakColor = peakColorOther ; }
+			if (histN == loopProgress) { t = HistogramT ; b = HistogramB ; peakColor = HISTOGRAM_PEAK_CURRENT_INACTIVE_COLOR ; }
+			else { t = HistogramY - (peakH / 2) ; b = t + peakH ; peakColor = HISTOGRAM_PEAK_INACTIVE_COLOR ; }
 			vlineColor(surface , x , t , b , peakColor) ;
 		}
 #endif // #if DRAW_HISTOGRAMS
@@ -116,23 +116,22 @@ r = peaks[currentPeakN] * LOOP_PEAK_R ;
 
 #if DRAW_LOOPS
 		// draw loop peaks
-		loopImg = loopImgs[loopN] ;
+		loopImg = loopImgs[loopN] ; // TODO: we could cache these rotImgs if need be
 		rotImg = rotozoomSurface(loopImg->loopSurface , currentPeakN * PIE_SLICE_DEGREES , 1.0 , 0) ;
 		rotRect = {x - (rotImg->w - loopImg->loopRect.w) / 2 , LoopY - (rotImg->h - loopImg->loopRect.h) / 2 , 0 , 0} ;
-		SDL_BlitSurface(rotImg , 0 , surface , &rotRect) ;
+		SDL_BlitSurface(rotImg , 0 , surface , &rotRect) ; SDL_FreeSurface(rotImg) ;
 #endif // #if DRAW_LOOPS
 	} // for (loopN)
 
 	if (loopN == N_LOOPS || surface == inactiveSceneSurface) return ;
 
 	// simplified histogram and peak rings for currently recording loop
-	loopX = SceneL + (LoopW * loopN) ;
-	borderColor = HISTOGRAM_BORDER_ACTIVE_COLOR ;
-	peakColorCurrent = HISTOGRAM_PEAK_CURRENT_ACTIVE_COLOR ;
-	histogramBorderL = loopX - 1 , histogramBorderR = loopX + LoopD + 1 ;
-	roundedRectangleColor(surface , histogramBorderL , HistogramBorderT , histogramBorderR , HistogramBorderB , 5 , borderColor) ;
-	x = loopX + loopProgress ; t = HistogramT ; b = HistogramB ; peakColor = peakColorCurrent ;
-	vlineColor(surface , x , t , b , peakColor) ;
+	loopX = SceneL + (LoopW * loopN) ; frameL = loopX - 1 , frameR = loopX + LoopD + 1 ;
+	roundedRectangleColor(surface , frameL , HistFrameT , frameR , HistFrameB , 5 , HIST_FRAME_ACTIVE_COLOR) ;
+	loopFrameColor = (Loopidity::GetIsSaveLoop())? SCENE_PEAK_MAX_COLOR : HIST_FRAME_ACTIVE_COLOR ;
+	roundedRectangleColor(surface , frameL - BORDER_PAD , LoopFrameT , frameR + BORDER_PAD , LoopFrameB , 5 , loopFrameColor) ;
+	x = loopX + loopProgress ; t = HistogramT ; b = HistogramB ;
+	vlineColor(surface , x , t , b , HISTOGRAM_PEAK_CURRENT_ACTIVE_COLOR) ;
 	x = loopX + LOOP_PEAK_R ; r = *Loopidity::GetTransientPeakIn() * LOOP_PEAK_R ;
 	circleColor(surface , x , LoopY , r, LOOP_PEAK_CURRENT_COLOR) ;
 }
@@ -171,7 +170,8 @@ void SceneSdl::drawLoop(Uint16 loopN , SAMPLE* peaks)
 		}
 		*(Uint32*)destPixel = srcPixel ;
 	}
-	SDL_UnlockSurface(maskSurface) ; SDL_UnlockSurface(loopSurface) ;
+	SDL_UnlockSurface(maskSurface) ; SDL_FreeSurface(maskSurface) ;
+	SDL_UnlockSurface(loopSurface) ;
 
 	loopImgs.push_back(new LoopImg(loopSurface , SceneL + (LoopW * loopN) , LoopT)) ;
 }
