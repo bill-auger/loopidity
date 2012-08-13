@@ -106,7 +106,7 @@ class LoopiditySdl
 		static string StatusTextR ;
 
 		// scenes
-		static Scene** Scenes ;
+		static SceneSdl* SdlScenes[N_SCENES] ;
 		static SDL_Surface* SceneBgGradient ;
 		static SDL_Surface* LoopBgGradient ;
 

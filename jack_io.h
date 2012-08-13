@@ -14,17 +14,18 @@ class JackIO
   public:
 
 		// setup
-    static bool Init(unsigned int nFrames , Scene* currentScene , bool isMonitorInputs) ;
+    static unsigned int Init(Scene* currentScene , bool isMonitorInputs) ;
 		static void Reset(Scene* currentScene) ;
 
 		// getters/setters
 		static SAMPLE* GetRecordBuffer1() ;
 		static SAMPLE* GetRecordBuffer2() ;
+		static unsigned int GetRecordBufferSize() ;
+		static bool SetRecordBufferSize(unsigned int recordBufferSize) ;
 		static unsigned int GetNFramesPerPeriod() ;
 		static const unsigned int GetFrameSize() ;
 		static unsigned int GetSampleRate() ;
 		static unsigned int GetBytesPerSecond() ;
-		static Scene* GetCurrentScene() ;
 		static void SetNextScene(Scene* nextScene) ;
 
   private:
@@ -41,6 +42,7 @@ class JackIO
 		static Scene* NextScene ;
 		static SAMPLE* RecordBuffer1 ;
 		static SAMPLE* RecordBuffer2 ;
+		static unsigned int RecordBufferSize ;
 
 		// server state
 		static unsigned int NFramesPerPeriod ;

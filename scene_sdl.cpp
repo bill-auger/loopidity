@@ -34,21 +34,22 @@ LoopImg::~LoopImg() { SDL_FreeSurface(loopSurface) ; }
 
 /* SceneSdl class private functions */
 
-SceneSdl::SceneSdl(Scene* scene) :
+SceneSdl::SceneSdl(Uint16 sceneN) :
 		// constants
-		sceneY(HEADER_H + (SceneH * scene->sceneN)) ,
+		sceneY(HEADER_H + (SceneH * sceneN)) ,
 		sceneW(LoopiditySdl::WinRect.w - (XPadding * 2)) ,
-		sceneR(SceneL + sceneW - 1)
+		sceneR(SceneL + sceneW - 1) ,
+		// audio data
+		scene(0) // owner Scene instance set by Scene instance
 {
 	// variables
 	sceneRect = {0 , sceneY , LoopiditySdl::WinRect.w , SceneH} ;
 	activeSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneRect.w , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
 	inactiveSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneRect.w , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
 	SDL_SetAlpha(inactiveSceneSurface , SDL_SRCALPHA | SDL_RLEACCEL , 128) ;
-	drawScene(inactiveSceneSurface , scene) ;
 }
 
-void SceneSdl::drawScene(SDL_Surface* surface , Scene* scene)
+void SceneSdl::drawScene(SDL_Surface* surface)
 {
 	Uint16 currentPeakN = scene->getCurrentPeakN() , hiScenePeak , loopN , histN ;
 	Sint16 loopX , frameL , frameR , peakH , x , t , b , r ;
@@ -107,10 +108,10 @@ Uint16 approxCurrentPeakN = histN * nLoopPeaksPerHistogramSample ;
 
 #if DRAW_PEAK_RINGS
 		// draw the current sample value and loudest sample value in this loop as rings
-		x = loopX + LOOP_PEAK_R ; r = scene->hiLoopPeaks[loopN] * LOOP_PEAK_R ;
+		x = loopX + LOOP_PEAK_R ; r = (Sint16)(scene->hiLoopPeaks[loopN] * (float)LOOP_PEAK_R) ;
 		circleColor(surface , x , LoopY , r, LOOP_PEAK_MAX_COLOR) ;
 // TODO: Loop class is private - pass in peaks[currentPeakN]
-r = peaks[currentPeakN] * LOOP_PEAK_R ;
+r = (Sint16)(peaks[currentPeakN] * (float)LOOP_PEAK_R) ;
 		circleColor(surface , x , LoopY , r, LOOP_PEAK_CURRENT_COLOR) ;
 #endif // #if DRAW_PEAK_RINGS
 
@@ -125,14 +126,15 @@ r = peaks[currentPeakN] * LOOP_PEAK_R ;
 
 	if (loopN == N_LOOPS || surface == inactiveSceneSurface) return ;
 
-	// simplified histogram and peak rings for currently recording loop
+	// simplified histogram and transient peak ring for currently recording loop
 	loopX = SceneL + (LoopW * loopN) ; frameL = loopX - 1 , frameR = loopX + LoopD + 1 ;
 	roundedRectangleColor(surface , frameL , HistFrameT , frameR , HistFrameB , 5 , HIST_FRAME_ACTIVE_COLOR) ;
 	loopFrameColor = (Loopidity::GetIsSaveLoop())? SCENE_PEAK_MAX_COLOR : HIST_FRAME_ACTIVE_COLOR ;
 	roundedRectangleColor(surface , frameL - BORDER_PAD , LoopFrameT , frameR + BORDER_PAD , LoopFrameB , 5 , loopFrameColor) ;
 	x = loopX + loopProgress ; t = HistogramT ; b = HistogramB ;
+if (scene->getIsRecording())
 	if (loopProgress) vlineColor(surface , x , t , b , HISTOGRAM_PEAK_CURRENT_ACTIVE_COLOR) ;
-	x = loopX + LOOP_PEAK_R ; r = *Loopidity::GetTransientPeakIn() * LOOP_PEAK_R ;
+	x = loopX + LOOP_PEAK_R ; r = *Loopidity::GetTransientPeakIn() * (float)LOOP_PEAK_R ;
 	circleColor(surface , x , LoopY , r, LOOP_PEAK_CURRENT_COLOR) ;
 }
 

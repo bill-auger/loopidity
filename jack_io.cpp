@@ -17,6 +17,7 @@ Scene* JackIO::CurrentScene = 0 ;
 Scene* JackIO::NextScene = 0 ;
 SAMPLE* JackIO::RecordBuffer1 = 0 ;
 SAMPLE* JackIO::RecordBuffer2 = 0 ;
+unsigned int JackIO::RecordBufferSize = 0 ;
 
 // server state
 unsigned int JackIO::NFramesPerPeriod = 0 ;
@@ -33,12 +34,15 @@ bool JackIO::IsMonitorInputs = true ;
 
 // setup
 
-bool JackIO::Init(unsigned int nFrames , Scene* currentScene , bool isMonitorInputs)
+unsigned int JackIO::Init(Scene* currentScene , bool isMonitorInputs)
 {
-if (! INIT_JACK) return true ;
+if (! INIT_JACK) return JACK_INIT_SUCCESS ;
 
-	// set initial state
+	// set initial state and initialize record buffers
 	Reset(currentScene) ; IsMonitorInputs = isMonitorInputs ;
+	if (!RecordBufferSize) RecordBufferSize = DEFAULT_BUFFER_SIZE ;
+	if (!(RecordBuffer1 = new (nothrow) SAMPLE[RecordBufferSize]())) return JACK_MEM_FAIL ;
+	if (!(RecordBuffer2 = new (nothrow) SAMPLE[RecordBufferSize]())) return JACK_MEM_FAIL ;
 
 	// initialize JACK client
 	const char* client_name = APP_NAME ;
@@ -48,7 +52,7 @@ if (! INIT_JACK) return true ;
 
 	// register client
 	Client = jack_client_open(client_name , options , &status , server_name) ;
-	if (!Client) return false ;
+	if (!Client) return JACK_FAIL ;
 
 	// assign callbacks
 	jack_set_process_callback(Client , ProcessCallback , 0) ;
@@ -61,12 +65,9 @@ if (! INIT_JACK) return true ;
 	OutputPort1 = jack_port_register(Client , "output1" , JACK_DEFAULT_AUDIO_TYPE , JackPortIsOutput , 0) ;
 	OutputPort2 = jack_port_register(Client , "output2" , JACK_DEFAULT_AUDIO_TYPE , JackPortIsOutput , 0) ;
 	if (InputPort1 == NULL || InputPort2 == NULL || OutputPort1 == NULL || OutputPort2 == NULL ||
-			jack_activate(Client)) return false ;
+			jack_activate(Client)) return JACK_FAIL ;
 
-	// initialize record buffers
-	RecordBuffer1 = new SAMPLE[nFrames]() ; RecordBuffer2 = new SAMPLE[nFrames]() ;
-
-	return true ;
+	return JACK_INIT_SUCCESS ;
 }
 
 void JackIO::Reset(Scene* currentScene)
@@ -79,6 +80,15 @@ SAMPLE* JackIO::GetRecordBuffer1() { return RecordBuffer1 ; }
 
 SAMPLE* JackIO::GetRecordBuffer2() { return RecordBuffer2 ; }
 
+bool JackIO::SetRecordBufferSize(unsigned int recordBufferSize)
+{
+	if (RecordBufferSize || !recordBufferSize) return false ;
+	else { RecordBufferSize = recordBufferSize  / JackIO::GetFrameSize() ; return true ; }
+}
+
+unsigned int JackIO::GetRecordBufferSize()
+	{ return (RecordBufferSize)? RecordBufferSize : DEFAULT_BUFFER_SIZE ; }
+
 unsigned int JackIO::GetNFramesPerPeriod() { return NFramesPerPeriod ; }
 
 const unsigned int JackIO::GetFrameSize() { return FRAME_SIZE ; }
@@ -86,8 +96,6 @@ const unsigned int JackIO::GetFrameSize() { return FRAME_SIZE ; }
 unsigned int JackIO::GetSampleRate() { return SampleRate ; }
 
 unsigned int JackIO::GetBytesPerSecond() { return BytesPerSecond ; }
-
-Scene* JackIO::GetCurrentScene() { return CurrentScene ; }
 
 void JackIO::SetNextScene(Scene* nextScene) { NextScene = nextScene ; }
 
@@ -98,64 +106,48 @@ void JackIO::SetNextScene(Scene* nextScene) { NextScene = nextScene ; }
 
 int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 {
-#if DSP
 	// get JACK buffers
 	SAMPLE* in1 = (SAMPLE*)jack_port_get_buffer(InputPort1 , nFrames) ;
 	SAMPLE* out1 = (SAMPLE*)jack_port_get_buffer(OutputPort1 , nFrames) ;
 	SAMPLE* in2 = (SAMPLE*)jack_port_get_buffer(InputPort2 , nFrames) ;
 	SAMPLE* out2 = (SAMPLE*)jack_port_get_buffer(OutputPort2 , nFrames) ;
-#if ! PASSTHRU
-	if (!Loopidity::GetIsRecording()) // TODO: we could avoid this call if all CurrentScene->nFrames were initially 1
-#endif
-	{
-		if (IsMonitorInputs) { memcpy(out1 , in1 , PeriodSize) ; memcpy(out2 , in2 , PeriodSize) ; }
-		return 0 ;
-	}
 
 	// index into the record buffers and mix out
-	SAMPLE* currBuff1 = &(RecordBuffer1[CurrentScene->frameN]) ;
-	SAMPLE* currBuff2 = &(RecordBuffer2[CurrentScene->frameN]) ;
-	for (unsigned int frameNin = 0 ; frameNin < nFrames ; ++frameNin)
+	unsigned int currFrameN = CurrentScene->frameN , frameN , frameIdx , loopN ;
+	for (frameN = 0 ; frameN < nFrames ; ++frameN)
 	{
-		// write input to mix buffers
-		if (!IsMonitorInputs) currBuff1[frameNin] = currBuff2[frameNin] = 0 ;
-		else { currBuff1[frameNin] = in1[frameNin] ; currBuff2[frameNin] = in2[frameNin] ; }
+		frameIdx = CurrentScene->frameN + frameN ;
+		// write input to outputs mix buffers
+		if (!IsMonitorInputs) RecordBuffer1[frameIdx] = RecordBuffer2[frameIdx] = 0 ;
+		else { RecordBuffer1[frameIdx] = in1[frameN] ; RecordBuffer2[frameIdx] = in2[frameN] ; }
 
-		// mix unmuted tracks into mix buffers
-		unsigned int frameNout = CurrentScene->frameN + frameNin ;
-		for (unsigned int loopN = 0 ; loopN < CurrentScene->loops.size() ; ++loopN)
+		// mix unmuted tracks into outputs mix buffers
+		for (loopN = 0 ; loopN < CurrentScene->loops.size() ; ++loopN)
 		{
-			currBuff1[frameNin] += CurrentScene->loops[loopN]->buffer1[frameNout] ;
-			currBuff2[frameNin] += CurrentScene->loops[loopN]->buffer2[frameNout] ;
+			RecordBuffer1[frameIdx] += CurrentScene->loops[loopN]->buffer1[frameIdx] ;
+			RecordBuffer2[frameIdx] += CurrentScene->loops[loopN]->buffer2[frameIdx] ;
 		}
 	}
-	// write mix buffers to outputs and write input to record buffers
-	memcpy(out1 , currBuff1 , PeriodSize) ; memcpy(out2 , currBuff2 , PeriodSize) ;
-	memcpy(currBuff1 , in1 , PeriodSize) ; memcpy(currBuff2 , in2 , PeriodSize) ;
-#endif
 
-#if LOOP_COUNTER
+	// write output mix buffers to outputs and write input to record buffers
+	memcpy(out1 , &RecordBuffer1[currFrameN] , PeriodSize) ; memcpy(out2 , &RecordBuffer2[currFrameN] , PeriodSize) ;
+	memcpy(&RecordBuffer1[currFrameN] , in1 , PeriodSize) ; memcpy(&RecordBuffer2[currFrameN] , in2 , PeriodSize) ;
+
 	// increment sample rollover - ASSERT: ((nFrames == NFramesPerPeriod) && !(frameN % CurrentScene->nFrames))
 	if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->nFrames))
 	{
 		// create new Loop instance and copy record buffers to it
 		if (CurrentScene->isSaveLoop && CurrentScene->loops.size() < N_LOOPS)
 		{
-#if DSP
 			Loop* newLoop = new Loop(CurrentScene->nFrames) ;
-			unsigned int nBytes = FRAME_SIZE * CurrentScene->nFrames ;
-			memcpy(newLoop->buffer1 , RecordBuffer1 , nBytes) ;
-			memcpy(newLoop->buffer2 , RecordBuffer2 , nBytes) ;
+			memcpy(newLoop->buffer1 , RecordBuffer1 , CurrentScene->nBytes) ;
+			memcpy(newLoop->buffer2 , RecordBuffer2 , CurrentScene->nBytes) ;
 			CurrentScene->addLoop(newLoop) ;
-#endif
-
-if (DEBUG) { char dbg[255] ; sprintf(dbg , "NEW LOOP scene:%d loopN:%d" , Loopidity::GetCurrentSceneN() , CurrentScene->loops.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
 		}
 
 		// switch to NextScene if necessary
-		if (CurrentScene != NextScene) { CurrentScene->sceneChanged() ; CurrentScene = NextScene ; }
+		if (CurrentScene != NextScene) { Loopidity::SceneChanged(CurrentScene = NextScene) ; }
 	}
-#endif
 
 	return 0 ;
 }

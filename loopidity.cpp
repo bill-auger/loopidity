@@ -52,11 +52,11 @@ void Loopidity::Vardump() {
 	sprintf(dbg , "%d" , IsRecording) ; app->dbgText14 = dbg ;
 	sprintf(dbg , "%u %%" , GetLoopPos() / 10) ; app->dbgText22 = dbg ;
 
-	sprintf(dbg , "%u" , JackIO::GetCurrentScene()->loops.size()) ; app->dbgText0 = dbg ;
-	sprintf(dbg , "%d (%ds)" , JackIO::GetCurrentScene()->frameN , JackIO::GetCurrentScene()->frameN / sampleRate) ; app->dbgText1 = dbg ;
-	sprintf(dbg , "%u (%ds)" , JackIO::GetCurrentScene()->nFrames , JackIO::GetCurrentScene()->nFrames / sampleRate) ; app->dbgText2 = dbg ;
-	sprintf(dbg , "%d" , JackIO::GetCurrentScene()->isSaveLoop) ; app->dbgText3 = dbg ;
-	sprintf(dbg , "%d" , JackIO::GetCurrentScene()->isPulseExist) ; app->dbgText4 = dbg ;
+	sprintf(dbg , "%u" , CurrentScene->loops.size()) ; app->dbgText0 = dbg ;
+	sprintf(dbg , "%d (%ds)" , CurrentScene->frameN , CurrentScene->frameN / sampleRate) ; app->dbgText1 = dbg ;
+	sprintf(dbg , "%u (%ds)" , CurrentScene->nFrames , CurrentScene->nFrames / sampleRate) ; app->dbgText2 = dbg ;
+	sprintf(dbg , "%d" , CurrentScene->isSaveLoop) ; app->dbgText3 = dbg ;
+	sprintf(dbg , "%d" , CurrentScene->isPulseExist) ; app->dbgText4 = dbg ;
 
 	Scene* nextScene = Scenes[NextSceneN] ;
 	sprintf(dbg , "%u" , nextScene->loops.size()) ; app->dbgText15 = dbg ;
@@ -72,10 +72,15 @@ void Loopidity::Vardump() {
 } // DEBUG end
 
 
+/* Scene Class private varables */
+
+bool Scene::IsRecording = false ;
+
+
 /* Loopidity Class private varables */
 
 // recording state
-bool Loopidity::IsRecording = false ;
+Scene* Loopidity::CurrentScene = 0 ;
 unsigned int Loopidity::NextSceneN = 0 ;
 
 // audio data
@@ -110,7 +115,7 @@ float Scene::getTotalSeconds() { return nFrames / JackIO::GetSampleRate() ; }
 
 /* Scene Class private functions */
 
-Scene::Scene(unsigned int scenen , unsigned int nframes) :
+Scene::Scene(unsigned int scenen) :
 		// identity
 		sceneN(scenen) ,
 		// GUI
@@ -118,9 +123,14 @@ Scene::Scene(unsigned int scenen , unsigned int nframes) :
 		// peaks cache
 		hiScenePeaks() , hiLoopPeaks(), highestScenePeak(0.0) ,
 		// buffer iteration
-		nFrames(nframes) , nFramesPerPeak(nframes / N_LOOP_PEAKS) , frameN(0) ,
+		frameN(0) , nBytes(0) ,
 		// recording state
-		isSaveLoop(true) , isPulseExist(false) {}
+		isSaveLoop(false) , isPulseExist(false)
+{
+	// buffer iteration
+	nFrames = JackIO::GetRecordBufferSize() ; nFramesPerPeak = nFrames / N_LOOP_PEAKS ;
+}
+
 
 // audio data
 void Scene::addLoop(Loop* newLoop)
@@ -134,8 +144,10 @@ void Scene::addLoop(Loop* newLoop)
 }
 
 void Scene::deleteLoop()
-	{ if (loops.size()) { loops.pop_back() ; sceneGui->loopImgs.pop_back() ; rescanPeaks() ; } }
-
+{
+	if (loops.size()) { loops.pop_back() ; sceneGui->loopImgs.pop_back() ; rescanPeaks() ; }
+	else { nFrames = JackIO::GetRecordBufferSize() ; IsRecording = false ; }
+}
 
 void Scene::reset()
 {
@@ -183,36 +195,50 @@ void Scene::rescanPeaks()
 
 void Scene::setMode()
 {
-	if (isPulseExist) { isSaveLoop = !isSaveLoop ; return ; }
-
-	nFramesPerPeak = (nFrames = frameN + JackIO::GetNFramesPerPeriod()) / N_LOOP_PEAKS ;
-	isPulseExist = true ;
+	if (!IsRecording) { frameN = 0 ; IsRecording = true ; return ; }
+	if (!isPulseExist)
+	{
+		nFrames = frameN + JackIO::GetNFramesPerPeriod() ;
+		nFramesPerPeak = nFrames / N_LOOP_PEAKS ;
+		nBytes = JackIO::GetFrameSize() * nFrames ;
+		isSaveLoop = isPulseExist = true ;
+	}
+	else isSaveLoop = !isSaveLoop ;
 }
 
 
 // getters/setters
 
+void Scene::setSceneGui(SceneSdl* aSceneGui)
+	{ sceneGui = aSceneGui ; sceneGui->scene = this ; sceneGui->drawScene(sceneGui->inactiveSceneSurface) ; }
+
+bool Scene::getIsRecording() { return IsRecording ; }
+
 unsigned int Scene::getLoopPos() { return (frameN * 1000) / nFrames ; }
+
 
 // helpers
 
 void Scene::sceneChanged()
-	{ sceneGui->drawScene(sceneGui->inactiveSceneSurface , this) ; LoopiditySdl::DrawMode() ; }
+	{ sceneGui->drawScene(sceneGui->inactiveSceneSurface) ; LoopiditySdl::DrawMode() ; }
 
 
 /* Loopidity Class public functions */
 
 // user actions
 
-bool Loopidity::Init(unsigned int recordBufferSize , bool isMonitorInputs)
+bool Loopidity::SetRecordBufferSize(unsigned int recordBufferSize)
 {
-	if (!recordBufferSize) { LoopiditySdl::Alert(ZERO_BUFFER_SIZE_MSG) ; return false ; }
+	return (JackIO::SetRecordBufferSize(recordBufferSize)) ;
+// TODO: caller can LoopiditySdl::Alert(ZERO_BUFFER_SIZE_MSG) ;
+}
 
-	unsigned int nFrames = recordBufferSize / JackIO::GetFrameSize() ;
-	for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
-		Scenes[sceneN] = new Scene(sceneN , nFrames) ;
-	if (!JackIO::Init(nFrames , Scenes[0] , isMonitorInputs))
-		{ LoopiditySdl::Alert(JACK_FAIL_MSG) ; return false ; }
+bool Loopidity::Init(bool isMonitorInputs)
+{
+	for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN) Scenes[sceneN] = new Scene(sceneN) ;
+	int jackInit = JackIO::Init((CurrentScene = Scenes[0]) , isMonitorInputs) ;
+	if (jackInit == JACK_MEM_FAIL) { LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return false ; }
+	else if(jackInit == JACK_FAIL) { LoopiditySdl::Alert(JACK_FAIL_MSG) ; return false ; }
 
 	// initialize scope/VU peaks cache
 	float interval = (float)GUI_UPDATE_INTERVAL_SHORT * 0.001 ;
@@ -229,23 +255,23 @@ bool Loopidity::Init(unsigned int recordBufferSize , bool isMonitorInputs)
 
 void Loopidity::ToggleScene()
 {
+	if (!Scene::IsRecording) return ;
+
 	JackIO::SetNextScene(Scenes[NextSceneN = (NextSceneN + 1) % N_SCENES]) ;
 	LoopiditySdl::DrawMode() ;
 }
 
 void Loopidity::SetMode()
 {
-	if (!IsRecording) IsRecording = true ;
-	else JackIO::GetCurrentScene()->setMode() ;
+	CurrentScene->setMode() ;
+#if DRAW_MODE
 	LoopiditySdl::DrawMode() ;
-
-if (DEBUG) { char dbg[256] ; sprintf(dbg , "IsRecording:%d isPulseExist:%d isSaveLoop:%d" , IsRecording , GetIsPulseExist() , GetIsSaveLoop()) ; LoopiditySdl::SetStatusR(dbg) ; }
+#endif
 }
 
-// TODO: cancel initial recording if not committed if (!nLoops) IsRecording = false ; frameN = 0 ;
-void Loopidity::DeleteLoop() { JackIO::GetCurrentScene()->deleteLoop() ; }
+void Loopidity::DeleteLoop() { CurrentScene->deleteLoop() ; }
 
-void Loopidity::ResetCurrentScene() { JackIO::GetCurrentScene()->reset() ; }
+void Loopidity::ResetCurrentScene() { CurrentScene->reset() ; }
 
 void Loopidity::Reset()
 {
@@ -256,23 +282,23 @@ void Loopidity::Reset()
 
 // getters/setters
 
-Scene** Loopidity::GetScenes() { return Scenes ; }
+void Loopidity::SetSceneGui(SceneSdl* sceneGui , unsigned int sceneN) { Scenes[sceneN]->setSceneGui(sceneGui) ; }
+
+Scene* Loopidity::GetCurrentScene() { return CurrentScene ; }
 
 unsigned int Loopidity::GetCurrentSceneN()
-{
-	unsigned int sceneN = N_SCENES ; Scene* currentScene = JackIO::GetCurrentScene() ;
+{// TODO: who needs this?
+	unsigned int sceneN = N_SCENES ; Scene* currentScene = CurrentScene ;
 	while (sceneN-- && Scenes[sceneN] != currentScene) ; return sceneN ;
 }
 
 unsigned int Loopidity::GetNextSceneN() { return NextSceneN ; }
 
-unsigned int Loopidity::GetLoopPos() { return JackIO::GetCurrentScene()->getLoopPos() ; }
+unsigned int Loopidity::GetLoopPos() { return CurrentScene->getLoopPos() ; }
 
-bool Loopidity::GetIsSaveLoop() { return JackIO::GetCurrentScene()->isSaveLoop ; }
+bool Loopidity::GetIsSaveLoop() { return CurrentScene->isSaveLoop ; }
 
-bool Loopidity::GetIsRecording() { return IsRecording ; }
-
-bool Loopidity::GetIsPulseExist() { return JackIO::GetCurrentScene()->isPulseExist ; }
+bool Loopidity::GetIsPulseExist() { return CurrentScene->isPulseExist ; }
 
 void Loopidity::SetNFramesPerPeriod(unsigned int nFrames) { NFramesPerPeriod = nFrames ; }
 
@@ -301,18 +327,20 @@ SAMPLE Loopidity::GetPeak(SAMPLE* buffer , unsigned int nFrames)
 
 // helpers
 
+void Loopidity::SceneChanged(Scene* nextScene) { CurrentScene->sceneChanged() ; CurrentScene = nextScene ; }
+
 void Loopidity::ScanTransientPeaks()
 {
 #if SCAN_TRANSIENT_PEAKS_DATA
-	Scene* currentScene = JackIO::GetCurrentScene() ; unsigned int frameN = currentScene->frameN ;
+	unsigned int frameN = CurrentScene->frameN ;
 // TODO; first NFramesPerGuiInterval duplicated
 	unsigned int currentFrameN = (frameN < NFramesPerGuiInterval)? 0 : frameN - NFramesPerGuiInterval ;
 	SAMPLE peakIn1 = GetPeak(&(RecordBuffer1[currentFrameN]) , NFramesPerGuiInterval) ;
 	SAMPLE peakIn2 = GetPeak(&(RecordBuffer2[currentFrameN]) , NFramesPerGuiInterval) ;
-	SAMPLE peakOut1 = 0.0 , peakOut2 = 0.0 ; unsigned int nLoops = currentScene->loops.size() ;
+	SAMPLE peakOut1 = 0.0 , peakOut2 = 0.0 ; unsigned int nLoops = CurrentScene->loops.size() ;
 	for (unsigned int loopN = 0 ; loopN < nLoops ; ++loopN)
 	{
-		Loop* loop = currentScene->loops[loopN] ;
+		Loop* loop = CurrentScene->loops[loopN] ;
 		peakOut1 += GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerGuiInterval) ;
 		peakOut2 += GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerGuiInterval) ;
 	}

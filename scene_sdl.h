@@ -53,7 +53,7 @@ class SceneSdl
 
 	private:
 
-		SceneSdl(Scene* scene) ;
+		SceneSdl(Uint16 sceneN) ;
 
 		// drawing constants
 		static const Uint16 XPadding ;
@@ -83,6 +83,10 @@ class SceneSdl
 		SDL_Surface* activeSceneSurface ;
 		SDL_Surface* inactiveSceneSurface ;
 
+		// audio data
+		Scene* scene ;
+
+		// loop images
 		vector<LoopImg*> loopImgs ;
 
 		// drawing helpers
@@ -97,7 +101,7 @@ class SceneSdl
 */
 
 		// drawing
-		void drawScene(SDL_Surface* screen , Scene* scene) ;
+		void drawScene(SDL_Surface* screen) ;
 		void drawLoop(Uint16 loopN , SAMPLE* peaks) ;
 } ;
 

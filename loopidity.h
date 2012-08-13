@@ -90,7 +90,12 @@
 #define JACK_FAIL_MSG "ERROR: Could not register JACK client - quitting"
 #define FREEMEM_FAIL_MSG "ERROR: Could not determine available memory - quitting"
 #define ZERO_BUFFER_SIZE_MSG "ERROR: initBufferSize is zero - quitting"
-//#define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory - quitting"
+#define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory - quitting"
+
+// error states
+#define JACK_INIT_SUCCESS 0
+#define JACK_FAIL 1
+#define JACK_MEM_FAIL 2
 
 // aliases
 #define SAMPLE jack_default_audio_sample_t
@@ -143,7 +148,7 @@ void makeMainDbgText(char* dbg) ;
 	private:
 
 		typedef Scene CLASSNAME ;
-		Scene(unsigned int sceneN , unsigned int initBufferSize) ;
+		Scene(unsigned int scenen) ;
 		virtual ~Scene() {}
 
 		// identity
@@ -167,8 +172,10 @@ void makeMainDbgText(char* dbg) ;
 		unsigned int nFrames ;
 		unsigned int nFramesPerPeak ;
 		unsigned int frameN ;
+		unsigned int nBytes ;
 
 		// recording state
+		static bool IsRecording ;
 		bool isSaveLoop ;
 		bool isPulseExist ;
 
@@ -185,6 +192,8 @@ void makeMainDbgText(char* dbg) ;
     void setMode() ;
 
 		// getters/setters
+		void setSceneGui(SceneSdl* aSceneGui) ;
+		bool getIsRecording() ;
     unsigned int getLoopPos() ;
 
 		// helpers
@@ -197,7 +206,8 @@ class Loopidity
 	public:
 
 		// user actions
-    static bool Init(unsigned int recordBufferSize , bool isMonitorInputs) ;
+		static bool SetRecordBufferSize(unsigned int recordBufferSize) ;
+    static bool Init(bool isMonitorInputs) ;
 		static void ToggleScene() ;
     static void SetMode() ;
     static void DeleteLoop() ;
@@ -205,12 +215,12 @@ class Loopidity
 		static void Reset() ;
 
 		// getters/setters
-		static Scene** GetScenes() ;
+		static void SetSceneGui(SceneSdl* sceneGui , unsigned int sceneN) ;
+		static Scene* GetCurrentScene() ;
 		static unsigned int GetCurrentSceneN() ;
 		static unsigned int GetNextSceneN() ;
     static unsigned int GetLoopPos() ;
 		static bool GetIsSaveLoop() ;
-    static bool GetIsRecording() ;
 		static bool GetIsPulseExist() ;
 		static void SetNFramesPerPeriod(unsigned int nFrames) ;
 		static vector<SAMPLE>* GetPeaksInCache() ;
@@ -221,12 +231,13 @@ class Loopidity
 		static SAMPLE GetPeak(SAMPLE* buffer , unsigned int nFrames) ;
 
 		// helpers
+		static void SceneChanged(Scene* nextScene) ;
 		static void ScanTransientPeaks() ;
 
 	private:
 
 		// recording state
-		static bool IsRecording ;
+		static Scene* CurrentScene ;
 		static unsigned int NextSceneN ;
 
 		// audio data
