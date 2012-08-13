@@ -122,12 +122,16 @@ class LoopiditySdl
 		static vector<SAMPLE>* PeaksIn ;
 		static vector<SAMPLE>* PeaksOut ;
 		static SAMPLE* TransientPeaks ;
-/*
-		// constants
-		static const Color STATUS_COLOR_RECORDING ;
-		static const Color STATUS_COLOR_PLAYING ;
-		static const Color STATUS_COLOR_IDLE ;
-*/
+
+		// DrawScenes() 'local' variables
+		static Uint16 CurrentSceneN ;
+		static Uint16 NextSceneN ;
+		static Uint32 CurrentPeakN ;
+		static Uint16 LoopProgress ;
+		static Uint16 SceneN ;
+		static SceneSdl* SdlScene ;
+		static SDL_Surface* ActiveSurface ;
+
 		// setup
 		static void SdlError(const char* functionName) ;
 		static void TtfError(const char* functionName) ;
@@ -137,7 +141,6 @@ class LoopiditySdl
 		// drawing
 		static void DrawScenes() ;
 		static void DrawScopes() ;
-		static void DrawMode() ;
 		static void DrawText(string text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* screenRect , SDL_Rect* cropRect , SDL_Color fgColor) ;
 		static void DrawHeader() ;
 		static void DrawStatusTextL() ;
@@ -148,14 +151,11 @@ class LoopiditySdl
 		static void SetStatusL(string msg) ;
 		static void SetStatusR(string msg) ;
 /*
-		static string makeTime(Uint16 seconds) ;
-		static Uint32 getAvailableMemory() ;
-*/
-		static void ResetGUI() ;
-/*
-		void updateMemory() ;
-		void updateLoopProgress() ;
-		void updateVUMeters() ;
+		static string MakeTime(Uint16 seconds) ;
+		static Uint32 GetAvailableMemory() ;
+		static void UpdateMemory() ;
+		static void UpdateLoopProgress() ;
+		static void UpdateVUMeters() ;
 */
 } ;
 

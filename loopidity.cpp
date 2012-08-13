@@ -106,7 +106,7 @@ Loop::~Loop() { delete buffer1 ; delete buffer2 ; }
 
 /* Scene Class public functions */
 
-Uint16 Scene::getCurrentPeakN() { return ((float)frameN / (float)nFrames) * (float)N_LOOP_PEAKS ; }
+unsigned int Scene::getCurrentPeakN() { return ((float)frameN / (float)nFrames) * (float)N_LOOP_PEAKS ; }
 
 float Scene::getCurrentSeconds() { return frameN / JackIO::GetSampleRate() ; }
 
@@ -146,13 +146,13 @@ void Scene::addLoop(Loop* newLoop)
 void Scene::deleteLoop()
 {
 	if (loops.size()) { loops.pop_back() ; sceneGui->loopImgs.pop_back() ; rescanPeaks() ; }
-	else { nFrames = JackIO::GetRecordBufferSize() ; IsRecording = false ; }
+	if (!loops.size()) reset() ;
 }
 
 void Scene::reset()
 {
-	for (unsigned int loopN = 0 ; loopN < loops.size() ; ++loopN) deleteLoop() ;
-	frameN = 0 ; isSaveLoop = true ; isPulseExist = false ;
+	unsigned int loopN = loops.size() ; while (loopN--) deleteLoop() ;
+	nFrames = JackIO::GetRecordBufferSize() ; IsRecording = isPulseExist = isSaveLoop = false ;
 }
 
 
@@ -185,8 +185,8 @@ void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 void Scene::rescanPeaks()
 {
 	highestScenePeak = 0.0 ;
-	for (unsigned int peakN = 0 ; peakN < N_LOOP_PEAKS ; ++peakN) hiScenePeaks[peakN] = 0.0 ;
-	for (unsigned int loopN = 0 ; loopN < N_LOOPS ; ++loopN)
+	unsigned int peakN = N_LOOP_PEAKS ; while (peakN--) hiScenePeaks[peakN] = 0.0 ;
+	unsigned int loopN = N_LOOPS ; while (loopN--)
 		{ hiLoopPeaks[loopN] = 0.0 ; if (loopN < loops.size()) scanPeaks(loops[loopN] , loopN) ; }
 }
 
@@ -195,8 +195,8 @@ void Scene::rescanPeaks()
 
 void Scene::setMode()
 {
-	if (!IsRecording) { frameN = 0 ; IsRecording = true ; return ; }
-	if (!isPulseExist)
+	if (!IsRecording) { frameN = 0 ; IsRecording = true ; }
+	else if (!isPulseExist)
 	{
 		nFrames = frameN + JackIO::GetNFramesPerPeriod() ;
 		nFramesPerPeak = nFrames / N_LOOP_PEAKS ;
@@ -204,13 +204,15 @@ void Scene::setMode()
 		isSaveLoop = isPulseExist = true ;
 	}
 	else isSaveLoop = !isSaveLoop ;
+
+	setStateIndicators() ;
 }
 
 
 // getters/setters
 
 void Scene::setSceneGui(SceneSdl* aSceneGui)
-	{ sceneGui = aSceneGui ; sceneGui->scene = this ; sceneGui->drawScene(sceneGui->inactiveSceneSurface) ; }
+	{ sceneGui = aSceneGui ; sceneGui->scene = this ; sceneGui->drawScene(sceneGui->inactiveSceneSurface , 0 , 0) ; }
 
 bool Scene::getIsRecording() { return IsRecording ; }
 
@@ -219,8 +221,24 @@ unsigned int Scene::getLoopPos() { return (frameN * 1000) / nFrames ; }
 
 // helpers
 
+void Scene::setStateIndicators()
+{
+	sceneGui->histFrameColor = STATUS_PLAYING_COLOR ;
+	if (IsRecording)
+	{
+		sceneGui->loopFrameColor = (isSaveLoop)? STATUS_RECORDING_COLOR : STATUS_PENDING_COLOR ;
+		sceneGui->sceneFrameColor = (sceneN != Loopidity::GetNextSceneN())? STATUS_IDLE_COLOR :
+			(sceneN == Loopidity::GetCurrentSceneN())? STATUS_PLAYING_COLOR : STATUS_PENDING_COLOR ;
+	}
+	else sceneGui->loopFrameColor = sceneGui->sceneFrameColor = STATUS_IDLE_COLOR ;
+
+#if DRAW_MODE
+	LoopiditySdl::DrawMode() ;
+#endif
+}
+
 void Scene::sceneChanged()
-	{ sceneGui->drawScene(sceneGui->inactiveSceneSurface) ; LoopiditySdl::DrawMode() ; }
+	{ setStateIndicators() ; sceneGui->drawScene(sceneGui->inactiveSceneSurface , 0 , 0) ; }
 
 
 /* Loopidity Class public functions */
@@ -235,7 +253,7 @@ bool Loopidity::SetRecordBufferSize(unsigned int recordBufferSize)
 
 bool Loopidity::Init(bool isMonitorInputs)
 {
-	for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN) Scenes[sceneN] = new Scene(sceneN) ;
+	unsigned int sceneN = N_SCENES ; while (sceneN--) Scenes[sceneN] = new Scene(sceneN) ;
 	int jackInit = JackIO::Init((CurrentScene = Scenes[0]) , isMonitorInputs) ;
 	if (jackInit == JACK_MEM_FAIL) { LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return false ; }
 	else if(jackInit == JACK_FAIL) { LoopiditySdl::Alert(JACK_FAIL_MSG) ; return false ; }
@@ -257,17 +275,12 @@ void Loopidity::ToggleScene()
 {
 	if (!Scene::IsRecording) return ;
 
-	JackIO::SetNextScene(Scenes[NextSceneN = (NextSceneN + 1) % N_SCENES]) ;
-	LoopiditySdl::DrawMode() ;
+	NextSceneN = (NextSceneN + 1) % N_SCENES ;
+	JackIO::SetNextScene(Scenes[NextSceneN]) ;
+	unsigned int sceneN = N_SCENES ; while (sceneN--) Scenes[sceneN]->setStateIndicators() ;
 }
 
-void Loopidity::SetMode()
-{
-	CurrentScene->setMode() ;
-#if DRAW_MODE
-	LoopiditySdl::DrawMode() ;
-#endif
-}
+void Loopidity::SetMode() { CurrentScene->setMode() ; }
 
 void Loopidity::DeleteLoop() { CurrentScene->deleteLoop() ; }
 
@@ -275,8 +288,8 @@ void Loopidity::ResetCurrentScene() { CurrentScene->reset() ; }
 
 void Loopidity::Reset()
 {
-	NextSceneN = 0 ; unsigned int n = N_SCENES ; while (n--) Scenes[n]->reset() ;
-	LoopiditySdl::ResetGUI() ; JackIO::Reset(Scenes[0]) ;
+	CurrentScene = Scenes[NextSceneN = 0] ; JackIO::Reset(Scenes[0]) ;
+	unsigned int sceneN = N_SCENES ; while (sceneN--) Scenes[sceneN]->reset() ;
 }
 
 
@@ -287,7 +300,7 @@ void Loopidity::SetSceneGui(SceneSdl* sceneGui , unsigned int sceneN) { Scenes[s
 Scene* Loopidity::GetCurrentScene() { return CurrentScene ; }
 
 unsigned int Loopidity::GetCurrentSceneN()
-{// TODO: who needs this?
+{
 	unsigned int sceneN = N_SCENES ; Scene* currentScene = CurrentScene ;
 	while (sceneN-- && Scenes[sceneN] != currentScene) ; return sceneN ;
 }
@@ -327,7 +340,7 @@ SAMPLE Loopidity::GetPeak(SAMPLE* buffer , unsigned int nFrames)
 
 // helpers
 
-void Loopidity::SceneChanged(Scene* nextScene) { CurrentScene->sceneChanged() ; CurrentScene = nextScene ; }
+void Loopidity::SceneChanged(Scene* nextScene) { CurrentScene = nextScene ; CurrentScene->sceneChanged() ; }
 
 void Loopidity::ScanTransientPeaks()
 {

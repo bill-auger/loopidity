@@ -35,9 +35,8 @@
 #define DRAW_HISTOGRAMS 1
 #define DRAW_PEAK_RINGS 1
 #define DRAW_LOOPS 1
-#define DRAW_LOOP_MASKS DRAW_LOOPS && 1
-#define DRAW_LOOP_GRADIENTS DRAW_LOOPS && 1
-#define DRAW_INACTIVE_SCENES 1
+#define DRAW_RECORDING_LOOP DRAW_LOOPS && 1
+#define DRAW_CURRENT_SCENE_INDICATOR 1
 #define DRAW_DEBUG_TEXT 1
 #endif
 
@@ -141,7 +140,7 @@ void makeMainDbgText(char* dbg) ;
 // DEBUG end
 
 		// scene progress
-		Uint16 getCurrentPeakN() ;
+		unsigned int getCurrentPeakN() ;
 		float getCurrentSeconds() ;
 		float getTotalSeconds() ;
 
@@ -197,6 +196,7 @@ void makeMainDbgText(char* dbg) ;
     unsigned int getLoopPos() ;
 
 		// helpers
+		void setStateIndicators() ;
 		void sceneChanged() ;
 } ;
 
