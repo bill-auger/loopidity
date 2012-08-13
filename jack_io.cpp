@@ -23,7 +23,7 @@ unsigned int JackIO::RecordBufferSize = 0 ;
 unsigned int JackIO::NFramesPerPeriod = 0 ;
 const unsigned int JackIO::FRAME_SIZE = sizeof(SAMPLE) ;
 unsigned int JackIO::PeriodSize = 0 ;
-unsigned int JackIO::SampleRate = 48000 ;
+unsigned int JackIO::SampleRate = 0 ;
 unsigned int JackIO::BytesPerSecond = FRAME_SIZE * SampleRate ;
 
 // misc flags

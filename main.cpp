@@ -34,9 +34,11 @@ SDL_Surface* LoopiditySdl::LoopBgGradient = 0 ;
 
 // scopes
 SDL_Rect LoopiditySdl::ScopeRect = SCOPE_RECT ;
-const Sint16 LoopiditySdl::ScopeY = ScopeRect.y + (SCOPE_H / 2) ;
+SDL_Rect LoopiditySdl::MaskRect = {0 , 0 , 1 , 0} ;
+SDL_Rect LoopiditySdl::GradientRect = {0 , 0 , 0 , 0} ;
+const Sint16 LoopiditySdl::Scope0 = SCOPE_0 ;
 const Uint16 LoopiditySdl::ScopeR = SCOPE_R ;
-const float LoopiditySdl::ScopePeakH = (float)SCOPE_H / 2.0 ;
+const float LoopiditySdl::ScopePeakH = SCOPE_PEAK_H ;
 vector<SAMPLE>* LoopiditySdl::PeaksIn ;
 vector<SAMPLE>* LoopiditySdl::PeaksOut ;
 SAMPLE* LoopiditySdl::TransientPeaks = 0 ;
@@ -112,7 +114,7 @@ void LoopiditySdl::DrawScenes()
 	Uint16 currentSceneN = Loopidity::GetCurrentSceneN() ; SceneSdl* sdlScene ;
 	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
 	{
-		SceneSdl* sdlScene = SdlScenes[sceneN] ;
+		sdlScene = SdlScenes[sceneN] ;
 		SDL_FillRect(LoopiditySdl::Screen , &sdlScene->sceneRect , WinBgColor) ;
 		if (sceneN == currentSceneN)
 		{
@@ -147,8 +149,13 @@ void LoopiditySdl::DrawScopes()
 		if (outH > ScopePeakH * SCOPE_LOUD) outColor = OUTSCOPE_LOUD_COLOR ;
 		else if (outH > ScopePeakH * SCOPE_OPTIMAL) outColor = OUTSCOPE_OPTIMAL_COLOR ;
 		else outColor = OUTSCOPE_QUIET_COLOR ;
-		vlineColor(Screen , outX , ScopeY - outH , ScopeY + outH , outColor) ;
-		vlineColor(Screen , inX , ScopeY - inH , ScopeY + inH , inColor) ;
+
+		MaskRect.y = (Sint16)ScopePeakH - inH ; MaskRect.h = (inH * 2) + 1 ;
+		GradientRect.x = inX ; GradientRect.y = Scope0 - inH ;
+		SDL_BlitSurface(LoopiditySdl::SceneBgGradient , &MaskRect , Screen , &GradientRect) ;
+		MaskRect.y = (Sint16)ScopePeakH - outH ; MaskRect.h = (outH * 2) + 1 ;
+		GradientRect.x = outX ; GradientRect.y = Scope0 - outH ;
+		SDL_BlitSurface(LoopiditySdl::SceneBgGradient , &MaskRect , Screen , &GradientRect) ;
 	}
 #endif
 }

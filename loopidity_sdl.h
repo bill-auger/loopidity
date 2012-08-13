@@ -51,11 +51,13 @@ using namespace std ;
 // scope magnitudes
 #define N_TRANSIENT_PEAKS 100 // TODO: maybe set this to screen width/2
 #define SCOPE_W N_TRANSIENT_PEAKS * 2
-#define SCOPE_H 100
-#define SCOPE_X WIN_CENTER - N_TRANSIENT_PEAKS
+#define SCOPE_H PEAK_RADIUS * 2
+#define SCOPE_L WIN_CENTER - N_TRANSIENT_PEAKS
 #define SCOPE_R WIN_CENTER + N_TRANSIENT_PEAKS
-#define SCOPE_Y WinRect.h - (STATUS_H * 2) - SCOPE_H
-#define SCOPE_RECT {SCOPE_X , SCOPE_Y , SCOPE_W + 1 , SCOPE_H + 1}
+#define SCOPE_T WinRect.h - (STATUS_H * 2) - SCOPE_H
+#define SCOPE_0 SCOPE_T + (SCOPE_H / 2) ;
+#define SCOPE_PEAK_H (float)SCOPE_H / 2.0
+#define SCOPE_RECT {SCOPE_L , SCOPE_T , SCOPE_W + 1 , SCOPE_H + 1}
 #define SCOPE_LOUD 0.95
 #define SCOPE_OPTIMAL 0.8
 
@@ -112,7 +114,9 @@ class LoopiditySdl
 
 		// scopes
 		static SDL_Rect ScopeRect ;
-		static const Sint16 ScopeY ;
+		static SDL_Rect MaskRect ;
+		static SDL_Rect GradientRect ;
+		static const Sint16 Scope0 ;
 		static const Uint16 ScopeR ;
 		static const float ScopePeakH ;
 		static vector<SAMPLE>* PeaksIn ;

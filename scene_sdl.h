@@ -7,15 +7,32 @@
 class Scene ;
 
 
-// loop magnitudes
-#define LOOP_PEAK_R 50
-// lets fix this to N_LOOP_PEAKS / 2 for sdl histogramWidth (loopD)
+// magnitudes
+#define PEAK_RADIUS 50
+#define LOOP_DIAMETER PEAK_RADIUS * 2
+#define X_PADDING PEAK_RADIUS / 4
+#define Y_PADDING PEAK_RADIUS / 3
+#define BORDER_PAD 5
+#define HISTOGRAM_H Y_PADDING
+#define HISTOGRAM_T HISTOGRAM_H - 2
+#define HISTOGRAM_0 HistogramT + (HistogramH / 2)
+#define HISTOGRAM_B HistogramT + HistogramH
+#define HISTOGRAM_FRAME_T HistogramT - 1
+#define HISTOGRAM_FRAME_B HistogramB + 1
+#define LOOP_W XPadding + LoopD
+#define LOOP_T YPadding + HistogramH + BORDER_PAD
+#define LOOP_0 LoopT + PEAK_RADIUS
+#define LOOP_B LoopT + LoopD
+#define LOOP_FRAME_T HistFrameT - BORDER_PAD
+#define LOOP_FRAME_B LoopB + BORDER_PAD + 1
+#define SCENE_W WIN_W - (X_PADDING * 2)
+#define SCENE_H (Y_PADDING * 3) + HISTOGRAM_H + LoopD
+#define SCENE_L X_PADDING
+#define SCENE_R SceneL + SceneW - 1
 #define PIE_SLICE_DEGREES 360.0 / (float)N_LOOP_PEAKS
 #define PIE_12_OCLOCK -90
-#define BORDER_PAD 5
 
 // colors
-// TODO: perhaps it maybe more efficient to SDL_MapRGB(LoopiditySdl::Screen->format , 0 , 0 , 0)
 #define SCENE_PEAK_MAX_COLOR 0xff0000ff
 #define SCENE_PEAK_ZERO_COLOR 0x808080ff
 #define HIST_FRAME_ACTIVE_COLOR 0x00ff00ff
@@ -60,23 +77,23 @@ class SceneSdl
 		static const Uint16 YPadding ;
 		static const Uint16 HistogramH ;
 		static const Sint16 HistogramT ;
-		static const Sint16 HistogramY ;
+		static const Sint16 Histogram0 ;
 		static const Sint16 HistogramB ;
 		static const Sint16 HistFrameT ;
 		static const Sint16 HistFrameB ;
 		static const Uint16 LoopD ;
 		static const Uint16 LoopW ;
 		static const Uint16 LoopT ;
-		static const Uint16 LoopY ;
+		static const Uint16 Loop0 ;
 		static const Uint16 LoopB ;
 		static const Sint16 LoopFrameT ;
 		static const Sint16 LoopFrameB ;
+		static const Uint16 SceneW ;
 		static const Uint16 SceneH ;
 		static const Uint16 SceneL ;
+		static const Uint16 SceneR ;
 		static const float PieSliceDegrees ;
 		const Uint16 sceneY ;
-		const Uint16 sceneW ;
-		const Uint16 sceneR ;
 		SDL_Rect sceneRect ; // will not change but cannot be const
 
 		// drawing backbuffers
@@ -88,6 +105,14 @@ class SceneSdl
 
 		// loop images
 		vector<LoopImg*> loopImgs ;
+
+		// drawScene variables
+		Uint16 currentPeakN , hiScenePeak , loopN , histN ;
+		Sint16 loopX , frameL , frameR , peakH , x , t , b , r ;
+		Uint32 peakColor , loopFrameColor ;
+		SDL_Rect maskRect , gradientRect , rotRect ;
+		LoopImg* loopImg ;
+		SDL_Surface* rotImg ;
 
 		// drawing helpers
 /*
