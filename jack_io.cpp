@@ -97,6 +97,9 @@ unsigned int JackIO::GetSampleRate() { return SampleRate ; }
 
 unsigned int JackIO::GetBytesPerSecond() { return BytesPerSecond ; }
 
+void JackIO::SetCurrentScene(Scene* currentScene)
+	{ if (Scene::IsRecording) CurrentScene = currentScene ; }
+
 void JackIO::SetNextScene(Scene* nextScene) { NextScene = nextScene ; }
 
 
@@ -145,6 +148,8 @@ int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 			memcpy(NewLoop->buffer1 , RecordBuffer1 , CurrentScene->nBytes) ;
 			memcpy(NewLoop->buffer2 , RecordBuffer2 , CurrentScene->nBytes) ;
 			CurrentScene->addLoop(NewLoop) ; NewLoop = 0 ;
+
+// TODO: we're getting a bit glitchey here - best to just set a flag after copying
 		}
 
 		// switch to NextScene if necessary

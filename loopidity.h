@@ -89,9 +89,10 @@
 #define N_LOOPS 9 // N_LOOPS_PER_SCENE
 
 // string constants
-//#define CONNECT_ARG "--connect"
 #define APP_NAME "Loopidity"
+//#define CONNECT_ARG "--connect"
 #define MONITOR_ARG "--nomon"
+#define SCENE_CHANGE_ARG "--noautoscenechange"
 #define JACK_FAIL_MSG "ERROR: Could not register JACK client - quitting"
 #define FREEMEM_FAIL_MSG "ERROR: Could not determine available memory - quitting"
 #define ZERO_BUFFER_SIZE_MSG "ERROR: initBufferSize is zero - quitting"
@@ -223,6 +224,7 @@ class Loopidity
 		// user actions
 		static bool SetRecordBufferSize(unsigned int recordBufferSize) ;
     static bool Init(bool isMonitorInputs) ;
+    static void ToggleAutoSceneChange() ;
 		static void ToggleScene() ;
     static void SetMode() ;
     static void DeleteLoop() ;
@@ -256,6 +258,7 @@ class Loopidity
 		// recording state
 		static Scene* CurrentScene ;
 		static unsigned int NextSceneN ;
+		static bool IsAutoSceneChange ;
 
 		// audio data
 		static Scene* Scenes[N_SCENES] ;

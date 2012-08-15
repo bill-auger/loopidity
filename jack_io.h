@@ -29,6 +29,7 @@ class JackIO
 		static const unsigned int GetFrameSize() ;
 		static unsigned int GetSampleRate() ;
 		static unsigned int GetBytesPerSecond() ;
+		static void SetCurrentScene(Scene* currentScene) ;
 		static void SetNextScene(Scene* nextScene) ;
 
   private:

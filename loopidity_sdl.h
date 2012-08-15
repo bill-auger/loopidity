@@ -135,9 +135,9 @@ class LoopiditySdl
 		static SDL_Surface* ActiveSurface ;
 
 		// setup
+		static bool Init(int argc , char** argv) ;
 		static void SdlError(const char* functionName) ;
 		static void TtfError(const char* functionName) ;
-		static bool Init(bool isMonitorInputs) ;
 		static void Cleanup() ;
 
 		// drawing

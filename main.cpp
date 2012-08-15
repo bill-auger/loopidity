@@ -57,12 +57,14 @@ SDL_Surface* LoopiditySdl::ActiveSurface = 0 ;
 
 // setup
 
-void LoopiditySdl::SdlError(const char* functionName) { printf("%s(): %s\n" , functionName , SDL_GetError()) ; }
-
-void LoopiditySdl::TtfError(const char* functionName) { printf("%s(): %s\n" , functionName , TTF_GetError()) ; }
-
-bool LoopiditySdl::Init(bool isMonitorInputs)
+bool LoopiditySdl::Init(int argc , char** argv)
 {
+	// parse command line arguments
+	bool isMonitorInputs = true , isAutoSceneChange = true ;
+	for (int argN = 0 ; argN < argc ; ++argN)
+		if (!strcmp(argv[argN] , MONITOR_ARG)) isMonitorInputs = false ;
+		else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) isAutoSceneChange = false ;
+
 	// initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) { SdlError("SDL_Init") ; return false ; }
 	atexit(SDL_Quit) ;
@@ -85,6 +87,7 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 	if (!(LoopGradient = SDL_LoadBMP(LOOP_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
 
 	// initialize Loopidity and JackIO classes
+	if (!isAutoSceneChange) Loopidity::ToggleAutoSceneChange() ;
 	if (!Loopidity::Init(isMonitorInputs)) return false ;
 
 	// instantiate SdlScenes
@@ -100,6 +103,10 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 
 	return true ;
 }
+
+void LoopiditySdl::SdlError(const char* functionName) { printf("%s(): %s\n" , functionName , SDL_GetError()) ; }
+
+void LoopiditySdl::TtfError(const char* functionName) { printf("%s(): %s\n" , functionName , TTF_GetError()) ; }
 
 void LoopiditySdl::Cleanup()
 {
@@ -201,6 +208,8 @@ void LoopiditySdl::SetStatusR(string text) { StatusTextR = text ; }
 
 int main(int argc , char** argv)
 {
+	// run some sanity checks
+
 	// detect screen resolution
 	Display* display = XOpenDisplay(NULL) ; XWindowAttributes winAttr ;
 	Uint16 screenN = DefaultScreen(display);
@@ -209,13 +218,8 @@ int main(int argc , char** argv)
 	if (winAttr.width < SCREEN_W || winAttr.height < SCREEN_H)
 		{ printf("screen resolution must be at least 1024x760 - quitting\n"); return 1 ; }
 
-	// parse command line arguments
-	bool isMonitorInputs = true ;
-	for (int argN = 0 ; argN < argc ; ++argN)
-		if (!strcmp(argv[argN] , MONITOR_ARG)) isMonitorInputs = false ;
-
 	// initialize SDL
-	if (!LoopiditySdl::Init(isMonitorInputs)) return 1 ;
+	if (!LoopiditySdl::Init(argc , argv)) return 1 ;
 
 	// blank screen and draw header
 	SDL_FillRect(LoopiditySdl::Screen , 0 , LoopiditySdl::WinBgColor) ;

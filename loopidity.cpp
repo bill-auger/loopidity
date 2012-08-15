@@ -21,6 +21,7 @@ bool Scene::IsRecording = false ;
 // recording state
 Scene* Loopidity::CurrentScene = 0 ;
 unsigned int Loopidity::NextSceneN = 0 ;
+bool Loopidity::IsAutoSceneChange = true ;
 
 // audio data
 Scene* Loopidity::Scenes[N_SCENES] = {0} ;
@@ -155,8 +156,9 @@ void Scene::setStateIndicators()
 	if (IsRecording)
 	{
 		sceneGui->loopFrameColor = (isSaveLoop)? STATUS_RECORDING_COLOR : STATUS_PENDING_COLOR ;
-		sceneGui->sceneFrameColor = (sceneN != Loopidity::GetNextSceneN())? STATUS_IDLE_COLOR :
-			(sceneN == Loopidity::GetCurrentSceneN())? STATUS_PLAYING_COLOR : STATUS_PENDING_COLOR ;
+		sceneGui->sceneFrameColor = (sceneN == Loopidity::GetCurrentSceneN())?
+				STATUS_PLAYING_COLOR : (sceneN == Loopidity::GetNextSceneN())?
+						STATUS_PENDING_COLOR : STATUS_IDLE_COLOR ;
 	}
 	else sceneGui->loopFrameColor = sceneGui->sceneFrameColor = STATUS_IDLE_COLOR ;
 
@@ -223,12 +225,12 @@ bool Loopidity::Init(bool isMonitorInputs)
 	return true ;
 }
 
+void Loopidity::ToggleAutoSceneChange() { IsAutoSceneChange = !IsAutoSceneChange ; }
+
 void Loopidity::ToggleScene()
 {
-	if (!Scene::IsRecording) return ;
-
-	NextSceneN = (NextSceneN + 1) % N_SCENES ;
-	JackIO::SetNextScene(Scenes[NextSceneN]) ;
+	NextSceneN = (NextSceneN + 1) % N_SCENES ; JackIO::SetNextScene(Scenes[NextSceneN]) ;
+	if (!Scene::IsRecording) JackIO::SetCurrentScene(CurrentScene = Scenes[NextSceneN]) ;
 	unsigned int sceneN = N_SCENES ; while (sceneN--) Scenes[sceneN]->setStateIndicators() ;
 }
 
@@ -298,7 +300,11 @@ SAMPLE Loopidity::GetPeak(SAMPLE* buffer , unsigned int nFrames)
 
 // helpers
 
-void Loopidity::SceneChanged(Scene* nextScene) { CurrentScene = nextScene ; CurrentScene->sceneChanged() ; }
+void Loopidity::SceneChanged(Scene* nextScene)
+{
+	CurrentScene = nextScene ; CurrentScene->sceneChanged() ;
+	if (IsAutoSceneChange) do ToggleScene() ; while (!Scenes[NextSceneN]->loops.size()) ;
+}
 
 void Loopidity::ScanTransientPeaks()
 {
