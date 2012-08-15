@@ -6,12 +6,15 @@
 #include <jack/jack.h>
 
 #include "loopidity.h"
+class Loop ;
 class Scene ;
 
 
 class JackIO
 {
-  public:
+	friend class Loopidity ;
+
+  private:
 
 		// setup
     static unsigned int Init(Scene* currentScene , bool isMonitorInputs) ;
@@ -43,6 +46,7 @@ class JackIO
 		static SAMPLE* RecordBuffer1 ;
 		static SAMPLE* RecordBuffer2 ;
 		static unsigned int RecordBufferSize ;
+		static Loop* NewLoop ;
 
 		// server state
 		static unsigned int NFramesPerPeriod ;

@@ -1,4 +1,3 @@
-// TODO: u++ (in DEBUG cfg) says jack_client_open and jack_client_close cause a heap leak
 
 #include "jack_io.h"
 
@@ -18,6 +17,7 @@ Scene* JackIO::NextScene = 0 ;
 SAMPLE* JackIO::RecordBuffer1 = 0 ;
 SAMPLE* JackIO::RecordBuffer2 = 0 ;
 unsigned int JackIO::RecordBufferSize = 0 ;
+Loop* JackIO::NewLoop = 0 ;
 
 // server state
 unsigned int JackIO::NFramesPerPeriod = 0 ;
@@ -139,10 +139,12 @@ int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 		// create new Loop instance and copy record buffers to it
 		if (CurrentScene->isSaveLoop && CurrentScene->loops.size() < N_LOOPS)
 		{
-			Loop* newLoop = new Loop(CurrentScene->nFrames) ;
-			memcpy(newLoop->buffer1 , RecordBuffer1 , CurrentScene->nBytes) ;
-			memcpy(newLoop->buffer2 , RecordBuffer2 , CurrentScene->nBytes) ;
-			CurrentScene->addLoop(newLoop) ;
+			if (!(NewLoop = new (nothrow) Loop(CurrentScene->nFrames))) { Loopidity::OOM() ; return 0 ; }
+
+//			Loop* newLoop = new Loop(CurrentScene->nFrames) ;
+			memcpy(NewLoop->buffer1 , RecordBuffer1 , CurrentScene->nBytes) ;
+			memcpy(NewLoop->buffer2 , RecordBuffer2 , CurrentScene->nBytes) ;
+			CurrentScene->addLoop(NewLoop) ; NewLoop = 0 ;
 		}
 
 		// switch to NextScene if necessary
@@ -156,7 +158,7 @@ int JackIO::SetBufferSizeCallback(jack_nframes_t nFrames , void* arg)
 {
 	NFramesPerPeriod = nFrames ; PeriodSize = FRAME_SIZE * (nFrames) ;
 	BytesPerSecond = FRAME_SIZE * (SampleRate = (unsigned int)jack_get_sample_rate(Client)) ;
-	Loopidity::SetNFramesPerPeriod(nFrames) ; return 0 ;
+	Loopidity::SetMetaData(SampleRate , FRAME_SIZE , nFrames) ; return 0 ;
 }
 
 void JackIO::ShutdownCallback(void* arg)

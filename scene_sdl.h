@@ -3,44 +3,55 @@
 #define _SCENE_SDL_H_
 
 
-#include "loopidity.h"
-class Scene ;
-
-
 // magnitudes
 #define PEAK_RADIUS 50
-#define LOOP_DIAMETER (PEAK_RADIUS * 2)
-#define X_PADDING (PEAK_RADIUS / 4)
-#define Y_PADDING (PEAK_RADIUS / 3)
+#define LOOP_DIAMETER ((PEAK_RADIUS * 2) + 1)
+#define X_PADDING 10
+#define Y_PADDING 18
 #define BORDER_PAD 5
-#define HISTOGRAM_H Y_PADDING
-#define HISTOGRAM_T (HISTOGRAM_H - 2)
-#define HISTOGRAM_0 (HISTOGRAM_T + (HISTOGRAM_H / 2))
-#define HISTOGRAM_B (HISTOGRAM_T + HISTOGRAM_H)
-#define HISTOGRAM_FRAME_T (HISTOGRAM_T - 1)
-#define HISTOGRAM_FRAME_B (HISTOGRAM_B + 1)
+#define HISTOGRAMS_H 17 // should be odd
+#define HISTOGRAMS_T (Y_PADDING - 2)										// drawRecordingLoop() (offset from SCENE_T)
+#define HISTOGRAMS_B (HISTOGRAMS_T + HISTOGRAMS_H - 1)	// ""
+#define HISTOGRAM_FRAMES_T (HISTOGRAMS_T - 1)						// ""
+#define HISTOGRAM_FRAMES_B (HISTOGRAMS_B + 1)						// ""
+#define N_PEAKS_COURSE LOOP_DIAMETER										// drawHistogram() (offset from HISTOGRAMS_T)
+#define HISTOGRAM_IMG_W 103 // (N_PEAKS_COURSE + 2)			// ""
+#define HISTOGRAM_IMG_H 19 // (HISTOGRAMS_H + 2)				// ""
+#define HISTOGRAM_FRAME_R (N_PEAKS_COURSE + 1)					// ""
+#define HISTOGRAM_FRAME_B (HISTOGRAMS_H + 1)						// ""
+#define HISTOGRAM_PEAK_H (HISTOGRAMS_H / 2)							// ""
+#define HISTOGRAM_0 HISTOGRAM_PEAK_H + 1								// ""
+#define LOOP_0 PEAK_RADIUS
 #define LOOP_W (X_PADDING + LOOP_DIAMETER)
-#define LOOP_T (Y_PADDING + HISTOGRAM_H + BORDER_PAD)
-#define LOOP_0 (LOOP_T + PEAK_RADIUS)
-#define LOOP_B (LOOP_T + LOOP_DIAMETER)
-#define LOOP_FRAME_T (HISTOGRAM_FRAME_T - BORDER_PAD)
-#define LOOP_FRAME_B (LOOP_B + BORDER_PAD + 1)
-#define SCENE_W (WIN_W - (X_PADDING * 2))
-#define SCENE_H ((Y_PADDING * 3) + HISTOGRAM_H + LOOP_DIAMETER)
-#define SCENE_L X_PADDING
-#define SCENE_R (SCENE_L + SCENE_W - 1)
+#define LOOPS_L 16
+#define LOOPS_T (HISTOGRAM_FRAMES_B + BORDER_PAD + 1)
+#define LOOPS_0 (LOOPS_T + PEAK_RADIUS + 1)
+#define LOOPS_B (LOOPS_T + LOOP_DIAMETER + 1)
+#define LOOP_FRAMES_T (HISTOGRAM_FRAMES_T - BORDER_PAD - 1)
+#define LOOP_FRAMES_B (LOOPS_B + BORDER_PAD + 1)
+#define N_PEAKS_FINE 360 // should be divisible into 360
+#define SCENE_W 1000 // SCOPE_IMG is 1000x101
+#define SCENE_H ((Y_PADDING * 3) + HISTOGRAMS_H + LOOP_DIAMETER)
+#define SCENE_L (LOOPS_L - BORDER_PAD - 1)
+#define SCENE_R (SCENE_L + 999) // SCOPE_IMG is 1000x101 , LOOP_DIAMETER is 101 when PEAK_RADIUS is 50
 #define SCENE_T (HEADER_H + (SCENE_H * sceneN))
 #define SCENE_B (SCENE_T + SCENE_H)
-#define SCENE_FRAME_L (SCENE_L - BORDER_PAD)
-#define SCENE_FRAME_R (SCENE_R + BORDER_PAD)
-#define SCENE_FRAME_T (SCENE_T + HISTOGRAM_FRAME_T - BORDER_PAD)
-#define SCENE_FRAME_B (SCENE_T + LOOP_FRAME_B + BORDER_PAD)
-#define PIE_SLICE_DEGREES (360.0 / (float)N_LOOP_PEAKS)
+#define SCENE_FRAME_L (SCENE_L - BORDER_PAD - 1)
+#define SCENE_FRAME_R (SCENE_R + BORDER_PAD + 1)
+#define SCENE_FRAME_T (SCENE_T + LOOP_FRAMES_T - BORDER_PAD - 1)
+#define SCENE_FRAME_B (SCENE_T + LOOP_FRAMES_B + BORDER_PAD + 1)
+#define SCOPE_MASK_RECT {0 , 0 , SCENE_W , 0}
+#define SCOPE_GRADIENT_RECT {SCENE_L , 0 , 0 , 0}
+#define HISTOGRAM_RECT {0 , HISTOGRAM_FRAMES_T , 0 , 0}
+#define HISTOGRAM_MASK_RECT {0 , 0 , 1 , 0}
+#define HISTOGRAM_GRADIENT_RECT {0 , 0 , 0 , 0}
+#define ROT_LOOP_IMG_RECT {0 , 0 , 0 , 0}
+#define PIE_SLICE_DEGREES (360.0 / (float)N_PEAKS_FINE)
 #define PIE_12_OCLOCK -90
 
 // colors
-#define SCENE_PEAK_MAX_COLOR 0xff0000ff
-#define SCENE_PEAK_ZERO_COLOR 0x808080ff
+#define SCOPE_PEAK_MAX_COLOR 0x800000ff
+#define SCOPE_PEAK_ZERO_COLOR 0x808080ff
 #define STATUS_RECORDING_COLOR 0xff0000ff
 #define STATUS_PENDING_COLOR 0xffff00ff
 #define STATUS_PLAYING_COLOR 0x00ff00ff
@@ -49,6 +60,11 @@ class Scene ;
 #define HISTOGRAM_PEAK_COLOR 0x008000ff
 #define LOOP_PEAK_MAX_COLOR 0x800000ff
 #define LOOP_IMG_MASK_COLOR 0xffffffff
+
+
+#include "loopidity.h"
+class Loop ;
+class Scene ;
 
 
 using namespace std ;
@@ -60,11 +76,12 @@ class LoopImg
 
 	private:
 
-		LoopImg(SDL_Surface* loopImg , Uint16 loopX , Uint16 loopY) ;
+		LoopImg(SDL_Surface* playingImg , SDL_Surface* mutedImg , Uint16 x , Uint16 y) ;
 		~LoopImg() ;
 
-		SDL_Surface* loopSurface ;
-		SDL_Rect loopRect ;
+		SDL_Surface* playingSurface ;
+		SDL_Surface* mutedSurface ;
+		SDL_Rect rect ;
 } ;
 
 
@@ -78,22 +95,25 @@ class SceneSdl
 		SceneSdl(Uint16 sceneN) ;
 
 		// drawing constants
-		static const Uint16 XPadding ;
-		static const Uint16 YPadding ;
-		static const Uint16 HistogramH ;
-		static const Sint16 HistogramT ;
-		static const Sint16 Histogram0 ;
-		static const Sint16 HistogramB ;
-		static const Sint16 HistFrameT ;
-		static const Sint16 HistFrameB ;
+		static const Sint16 HistogramsT ;		// drawRecordingLoop()
+		static const Sint16 HistogramsB ;		// drawRecordingLoop()
+		static const Sint16 HistFramesT ;		// drawRecordingLoop()
+		static const Sint16 HistFramesB ;		// drawRecordingLoop()
+		static const Uint16 HistSurfaceW ;	// drawHistogram()
+		static const Uint16 HistSurfaceH ;	// drawHistogram()
+		static const Sint16 HistFrameR ;		// drawHistogram()
+		static const Sint16 HistFrameB ;		// drawHistogram()
+		static const float HistPeakH ;			// drawHistogram()
+		static const Sint16 Histogram0 ;		// drawHistogram()
 		static const Uint16 LoopD ;
 		static const Uint16 LoopW ;
-		static const Uint16 LoopT ;
 		static const Uint16 Loop0 ;
-		static const Uint16 LoopB ;
+		static const Uint16 LoopsL ;
+		static const Uint16 LoopsT ;
+		static const Uint16 Loops0 ;
+		static const Uint16 LoopsB ;
 		static const Sint16 LoopFrameT ;
 		static const Sint16 LoopFrameB ;
-		static const Uint16 SceneW ;
 		static const Uint16 SceneH ;
 		static const Uint16 SceneL ;
 		static const Uint16 SceneR ;
@@ -112,27 +132,28 @@ class SceneSdl
 		// audio data
 		Scene* scene ;
 
-		// loop images
+		// loop image caches
+		vector<LoopImg*> histogramImgs ;
 		vector<LoopImg*> loopImgs ;
 
 		// drawScene() instance variables
-		Uint32 histFrameColor ;
 		Uint32 loopFrameColor ;
 		Uint32 sceneFrameColor ;
-
 		// drawScene() 'local' variables
-		Uint16 currentPeakN , hiScenePeak , loopN , histN ;
-		Sint16 loopL , histFrameL , histFrameR , peakH , l , t , b , r ;
-		Uint32 peakColor ;
-		SDL_Rect maskRect , gradientRect , rotRect ;
-		LoopImg* loopImg ;
+		Uint16 currentPeakN , hiScenePeak , loopN , histPeakN , peakH ;
+		SDL_Rect scopeMaskRect , scopeGradRect , histogramRect , rotRect , histMaskRect , histGradRect ;
+		Sint16 loopL , loopC , histFrameL , histFrameR , ringR , loopFrameL , loopFrameR ;
 		SDL_Surface* rotImg ;
 
 		// drawing
 		void drawScene(SDL_Surface* screen , unsigned int currentPeakN , Uint16 loopProgress) ;
-		void drawLoop(Uint16 loopN , SAMPLE* peaks) ;
+		void drawHistogram(Loop* loop) ;
+		void drawLoop(Loop* loop , Uint16 loopN) ;
 		void drawRecordingLoop(SDL_Surface* surface , Uint16 loopProgress) ;
 		void drawSceneStateIndicator(SDL_Surface* surface) ;
+
+		// helpers
+		static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
 } ;
 
 

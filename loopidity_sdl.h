@@ -4,7 +4,6 @@
 
 
 #include "loopidity.h"
-class Scene ;
 #include "scene_sdl.h"
 class SceneSdl ;
 
@@ -23,9 +22,9 @@ using namespace std ;
 #define WIN_BORDER_W 2 // approximate window decoration size
 #define WIN_BORDER_H 2 // approximate window decoration size
 #define PIXEL_DEPTH 32
-#define LOOP_IMG_BYTES_PER_PIXEL 4 // PIXEL_DEPTH / 8
-#define WIN_W SCREEN_W - (WIN_BORDER_W * 2)
-#define WIN_H SCREEN_H - WIN_TITLE_H - WIN_BORDER_H
+#define BYTES_PER_PIXEL 4 // assert BYTES_PER_PIXEL == PIXEL_DEPTH / 8
+#define WIN_W (SCREEN_W - (WIN_BORDER_W * 2))
+#define WIN_H (SCREEN_H - WIN_TITLE_H - WIN_BORDER_H)
 #define WIN_RECT {0 , 0 , WIN_W , WIN_H}
 #define WIN_CENTER (WinRect.w / 2)
 
@@ -34,7 +33,7 @@ using namespace std ;
 //#define HEADER_W 200 // approx 10 chars @ STATUS_FONT_SIZE 36
 #define HEADER_W 360 // approx 18 chars @ STATUS_FONT_SIZE 36
 #define HEADER_H 48 // HEADER_FONT_SIZE 36
-#define HEADER_X WIN_CENTER - (HEADER_W / 2)
+#define HEADER_X (WIN_CENTER - (HEADER_W / 2))
 #define HEADER_RECT_DIM {0 , 0 , HEADER_W , HEADER_H}
 #define HEADER_RECT_C {HEADER_X , 0 , 0 , 0}
 
@@ -49,14 +48,15 @@ using namespace std ;
 #define STATUS_RECT_R {STATUS_X , STATUS_Y , 0 , 0}
 
 // scope magnitudes
-#define N_TRANSIENT_PEAKS 100 // TODO: maybe set this to screen width/2
-#define SCOPE_W N_TRANSIENT_PEAKS * 2
-#define SCOPE_H PEAK_RADIUS * 2
-#define SCOPE_L WIN_CENTER - N_TRANSIENT_PEAKS
-#define SCOPE_R WIN_CENTER + N_TRANSIENT_PEAKS
-#define SCOPE_T WinRect.h - (STATUS_H * 2) - SCOPE_H
+#define N_PEAKS_TRANSIENT 480 // TODO: maybe set this to scene width/2
+#define SCOPE_W (N_PEAKS_TRANSIENT * 2)
+#define SCOPE_H (PEAK_RADIUS * 2)
+#define SCOPE_L (WIN_CENTER - N_PEAKS_TRANSIENT)
+#define SCOPE_R (WIN_CENTER + N_PEAKS_TRANSIENT)
+//#define SCOPE_T (WinRect.h - (STATUS_H * 2) - SCOPE_H)
+#define SCOPE_T (HEADER_H + Y_PADDING + (SCENE_H * N_SCENES))
 #define SCOPE_0 SCOPE_T + (SCOPE_H / 2) ;
-#define SCOPE_PEAK_H (float)SCOPE_H / 2.0
+#define SCOPE_PEAK_H ((float)SCOPE_H / 2.0)
 #define SCOPE_RECT {SCOPE_L , SCOPE_T , SCOPE_W + 1 , SCOPE_H + 1}
 #define SCOPE_LOUD 0.95
 #define SCOPE_OPTIMAL 0.8
@@ -74,8 +74,9 @@ using namespace std ;
 #define STATUS_TEXT_COLOR {255 , 0 , 255}
 
 // external images
-#define SCENE_BG_IMG "scene_bg_gradient.bmp"
-#define LOOP_BG_IMG "loop_bg_gradient.alpha.bmp"
+#define SCOPE_IMG "scope_gradient.bmp"
+#define HISTOGRAM_IMG "histogram_gradient.bmp"
+#define LOOP_IMG "loop_gradient.argb.bmp"
 
 // string constants
 #define HEADER_TEXT "This is "APP_NAME
@@ -109,8 +110,9 @@ class LoopiditySdl
 
 		// scenes
 		static SceneSdl* SdlScenes[N_SCENES] ;
-		static SDL_Surface* SceneBgGradient ;
-		static SDL_Surface* LoopBgGradient ;
+		static SDL_Surface* ScopeGradient ;
+		static SDL_Surface* HistogramGradient ;
+		static SDL_Surface* LoopGradient ;
 
 		// scopes
 		static SDL_Rect ScopeRect ;

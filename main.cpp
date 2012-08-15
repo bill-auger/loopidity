@@ -1,6 +1,5 @@
 
 #include "loopidity_sdl.h"
-#include <X11/Xlib.h>
 
 
 /* LoopiditySdl class public variables */
@@ -29,8 +28,9 @@ string LoopiditySdl::StatusTextR = "" ;
 
 // scenes
 SceneSdl* LoopiditySdl::SdlScenes[N_SCENES] = {0} ;
-SDL_Surface* LoopiditySdl::SceneBgGradient = 0 ;
-SDL_Surface* LoopiditySdl::LoopBgGradient = 0 ;
+SDL_Surface* LoopiditySdl::ScopeGradient = 0 ;
+SDL_Surface* LoopiditySdl::HistogramGradient = 0 ;
+SDL_Surface* LoopiditySdl::LoopGradient = 0 ;
 
 // scopes
 SDL_Rect LoopiditySdl::ScopeRect = SCOPE_RECT ;
@@ -80,8 +80,9 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 	if(!(HeaderFont = TTF_OpenFont(HEADER_FONT))) { TtfError("TTF_OpenFont") ; return false ; }
 
 	// load images
-	if (!(SceneBgGradient = SDL_LoadBMP(SCENE_BG_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
-	if (!(LoopBgGradient = IMG_Load(LOOP_BG_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
+	if (!(ScopeGradient = SDL_LoadBMP(SCOPE_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
+	if (!(HistogramGradient = SDL_LoadBMP(HISTOGRAM_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
+	if (!(LoopGradient = SDL_LoadBMP(LOOP_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
 
 	// initialize Loopidity and JackIO classes
 	if (!Loopidity::Init(isMonitorInputs)) return false ;
@@ -103,7 +104,8 @@ bool LoopiditySdl::Init(bool isMonitorInputs)
 void LoopiditySdl::Cleanup()
 {
 	TTF_CloseFont(HeaderFont) ; TTF_CloseFont(StatusFont) ;
-	SDL_FreeSurface(SceneBgGradient) ; SDL_FreeSurface(LoopBgGradient) ;
+	SDL_FreeSurface(ScopeGradient) ; SDL_FreeSurface(HistogramGradient) ;
+	SDL_FreeSurface(LoopGradient) ;
 	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
 	{
 		SceneSdl* sdlScene = SdlScenes[sceneN] ;
@@ -128,7 +130,7 @@ void LoopiditySdl::DrawScenes()
 		if (SceneN == CurrentSceneN)
 		{
 			CurrentPeakN = SdlScene->scene->getCurrentPeakN() ;
-			LoopProgress = ((float)CurrentPeakN / (float)N_LOOP_PEAKS) * 100 ;
+			LoopProgress = ((float)CurrentPeakN / (float)N_PEAKS_FINE) * 100 ;
 			SdlScene->drawScene(ActiveSurface , CurrentPeakN , LoopProgress) ;
 
 #if DRAW_RECORDING_LOOP
@@ -153,17 +155,17 @@ void LoopiditySdl::DrawScopes()
 {
 #if DRAW_SCOPES
 	SDL_FillRect(Screen , &ScopeRect , WinBgColor) ;
-	for (Uint16 peakN = 0 ; peakN < N_TRANSIENT_PEAKS ; ++peakN)
+	for (Uint16 peakN = 0 ; peakN < N_PEAKS_TRANSIENT ; ++peakN)
 	{
 		Sint16 inX = ScopeR - peakN , outX = WinCenter - peakN ;
 		Sint16 inH = (Uint16)((*PeaksIn)[peakN] * ScopePeakH) ;
 		Sint16 outH = (Uint16)((*PeaksOut)[peakN] * ScopePeakH) ;
 		MaskRect.y = (Sint16)ScopePeakH - inH ; MaskRect.h = (inH * 2) + 1 ;
 		GradientRect.x = inX ; GradientRect.y = Scope0 - inH ;
-		SDL_BlitSurface(LoopiditySdl::SceneBgGradient , &MaskRect , Screen , &GradientRect) ;
+		SDL_BlitSurface(LoopiditySdl::ScopeGradient , &MaskRect , Screen , &GradientRect) ;
 		MaskRect.y = (Sint16)ScopePeakH - outH ; MaskRect.h = (outH * 2) + 1 ;
 		GradientRect.x = outX ; GradientRect.y = Scope0 - outH ;
-		SDL_BlitSurface(LoopiditySdl::SceneBgGradient , &MaskRect , Screen , &GradientRect) ;
+		SDL_BlitSurface(LoopiditySdl::ScopeGradient , &MaskRect , Screen , &GradientRect) ;
 	}
 #endif
 }
