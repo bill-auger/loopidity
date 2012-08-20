@@ -99,6 +99,10 @@
 #define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory - quitting"
 #define OUT_OF_MEMORY_MSG "ERROR: Out of Memory"
 
+// sdl user events
+#define EVT_NEW_LOOP 1
+#define EVT_SCENE_CHANGED 2
+
 // error states
 #define JACK_INIT_SUCCESS 0
 #define JACK_FAIL 1
@@ -149,10 +153,6 @@ class Scene
 
 	public:
 
-// DEBUG
-void makeMainDbgText(char* dbg) ;
-// DEBUG end
-
 		// scene progress
 		unsigned int getCurrentPeakN() ;
 		float getCurrentSeconds() ;
@@ -166,9 +166,6 @@ void makeMainDbgText(char* dbg) ;
 
 		// identity
 		unsigned int sceneN ;
-
-		// GUI
-		SceneSdl* sceneGui ;
 
 		// audio data
 		vector<Loop*> loops ;
@@ -192,11 +189,11 @@ void makeMainDbgText(char* dbg) ;
 
 		// recording state
 		static bool IsRecording ;
-		bool isSaveLoop ;
-		bool isPulseExist ;
+		bool shouldSaveLoop ;
+		bool doesPulseExist ;
 
 		// audio data
-		void addLoop(Loop* newLoop) ;
+		bool addLoop(Loop* newLoop) ;
 		void deleteLoop() ;
 		void reset() ;
 
@@ -204,14 +201,11 @@ void makeMainDbgText(char* dbg) ;
 		void scanPeaks(Loop* loop , unsigned int loopN) ;
 		void rescanPeaks() ;
 
-		// recording state
-		void setStateIndicators() ;
-    void setMode() ;
-    void sceneChanged() ;
+		// scene state
+    void setStatus() ;
 
 		// getters/setters
 		static void SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod) ;
-		void setSceneGui(SceneSdl* aSceneGui) ;
 		bool getIsRecording() ;
     unsigned int getLoopPos() ;
 } ;
@@ -226,20 +220,18 @@ class Loopidity
     static bool Init(bool isMonitorInputs) ;
     static void ToggleAutoSceneChange() ;
 		static void ToggleScene() ;
-    static void SetMode() ;
+    static void SetStatus() ;
     static void DeleteLoop() ;
     static void ResetCurrentScene() ;
 		static void Reset() ;
 
 		// getters/setters
 		static void SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod) ;
-		static void SetSceneGui(SceneSdl* sceneGui , unsigned int sceneN) ;
-		static Scene* GetCurrentScene() ;
 		static unsigned int GetCurrentSceneN() ;
 		static unsigned int GetNextSceneN() ;
     static unsigned int GetLoopPos() ;
-		static bool GetIsSaveLoop() ;
-		static bool GetIsPulseExist() ;
+		static bool GetShouldSaveLoop() ;
+		static bool GetDoesPulseExist() ;
 		static void SetNFramesPerPeriod(unsigned int nFrames) ;
 		static vector<SAMPLE>* GetPeaksInCache() ;
 		static vector<SAMPLE>* GetPeaksOutCache() ;
@@ -249,16 +241,17 @@ class Loopidity
 		static SAMPLE GetPeak(SAMPLE* buffer , unsigned int nFrames) ;
 
 		// helpers
-		static void SceneChanged(Scene* nextScene) ;
+		static void AddLoop(unsigned int sceneN , Loop* newLoop) ;
+		static void SceneChanged(unsigned int sceneN) ;
 		static void ScanTransientPeaks() ;
 		static void OOM() ;
 
 	private:
 
 		// recording state
-		static Scene* CurrentScene ;
+		static unsigned int CurrentSceneN ;
 		static unsigned int NextSceneN ;
-		static bool IsAutoSceneChange ;
+		static bool ShouldSceneAutoChange ;
 
 		// audio data
 		static Scene* Scenes[N_SCENES] ;
@@ -273,6 +266,10 @@ class Loopidity
 		static SAMPLE TransientPeaks[N_PORTS] ;
 		static SAMPLE TransientPeakInMix ;
 		static SAMPLE TransientPeakOutMix ;
+
+// DEBUG
+public: static void SetDbgText() ;
+// DEBUG end
 } ;
 
 

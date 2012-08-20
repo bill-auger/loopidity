@@ -6,6 +6,8 @@
 // magnitudes
 #define PEAK_RADIUS 50
 #define LOOP_DIAMETER ((PEAK_RADIUS * 2) + 1)
+#define N_PEAKS_FINE 360 // should be divisible into 360
+#define N_PEAKS_COURSE LOOP_DIAMETER
 #define X_PADDING 10
 #define Y_PADDING 18
 #define BORDER_PAD 5
@@ -14,8 +16,7 @@
 #define HISTOGRAMS_B (HISTOGRAMS_T + HISTOGRAMS_H - 1)	// ""
 #define HISTOGRAM_FRAMES_T (HISTOGRAMS_T - 1)						// ""
 #define HISTOGRAM_FRAMES_B (HISTOGRAMS_B + 1)						// ""
-#define N_PEAKS_COURSE LOOP_DIAMETER										// drawHistogram() (offset from HISTOGRAMS_T)
-#define HISTOGRAM_IMG_W 103 // (N_PEAKS_COURSE + 2)			// ""
+#define HISTOGRAM_IMG_W 103 // (N_PEAKS_COURSE + 2)			// drawHistogram() (offset from HISTOGRAMS_T)
 #define HISTOGRAM_IMG_H 19 // (HISTOGRAMS_H + 2)				// ""
 #define HISTOGRAM_FRAME_R (N_PEAKS_COURSE + 1)					// ""
 #define HISTOGRAM_FRAME_B (HISTOGRAMS_H + 1)						// ""
@@ -29,12 +30,11 @@
 #define LOOPS_B (LOOPS_T + LOOP_DIAMETER + 1)
 #define LOOP_FRAMES_T (HISTOGRAM_FRAMES_T - BORDER_PAD - 1)
 #define LOOP_FRAMES_B (LOOPS_B + BORDER_PAD + 1)
-#define N_PEAKS_FINE 360 // should be divisible into 360
 #define SCENE_W 1000 // SCOPE_IMG is 1000x101
 #define SCENE_H ((Y_PADDING * 3) + HISTOGRAMS_H + LOOP_DIAMETER)
 #define SCENE_L (LOOPS_L - BORDER_PAD - 1)
 #define SCENE_R (SCENE_L + 999) // SCOPE_IMG is 1000x101 , LOOP_DIAMETER is 101 when PEAK_RADIUS is 50
-#define SCENE_T (HEADER_H + (SCENE_H * sceneN))
+#define SCENE_T (HEADER_H + (SCENE_H * aScene->sceneN))
 #define SCENE_B (SCENE_T + SCENE_H)
 #define SCENE_FRAME_L (SCENE_L - BORDER_PAD - 1)
 #define SCENE_FRAME_R (SCENE_R + BORDER_PAD + 1)
@@ -70,14 +70,14 @@ class Scene ;
 using namespace std ;
 
 
-class LoopImg
+class LoopSdl
 {
 	friend class SceneSdl ;
 
 	private:
 
-		LoopImg(SDL_Surface* playingImg , SDL_Surface* mutedImg , Uint16 x , Uint16 y) ;
-		~LoopImg() ;
+		LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Uint16 x , Uint16 y) ;
+		~LoopSdl() ;
 
 		SDL_Surface* playingSurface ;
 		SDL_Surface* mutedSurface ;
@@ -87,12 +87,12 @@ class LoopImg
 
 class SceneSdl
 {
-	friend class Scene ;
+	friend class Loopidity ;
 	friend class LoopiditySdl ;
 
 	private:
 
-		SceneSdl(Uint16 sceneN) ;
+		SceneSdl(Scene* aScene) ;
 
 		// drawing constants
 		static const Sint16 HistogramsT ;		// drawRecordingLoop()
@@ -133,8 +133,8 @@ class SceneSdl
 		Scene* scene ;
 
 		// loop image caches
-		vector<LoopImg*> histogramImgs ;
-		vector<LoopImg*> loopImgs ;
+		vector<LoopSdl*> histogramImgs ;
+		vector<LoopSdl*> loopImgs ;
 
 		// drawScene() instance variables
 		Uint32 loopFrameColor ;
@@ -145,6 +145,9 @@ class SceneSdl
 		Sint16 loopL , loopC , histFrameL , histFrameR , ringR , loopFrameL , loopFrameR ;
 		SDL_Surface* rotImg ;
 
+		// getters/setters
+		void setStatus() ;
+
 		// drawing
 		void drawScene(SDL_Surface* screen , unsigned int currentPeakN , Uint16 loopProgress) ;
 		void drawHistogram(Loop* loop) ;
@@ -153,6 +156,9 @@ class SceneSdl
 		void drawSceneStateIndicator(SDL_Surface* surface) ;
 
 		// helpers
+		void drawSceneInactive() ;
+		void addLoop(Loop* newLoop , Uint16 nLoops) ;
+		void deleteLoop() ;
 		static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
 } ;
 

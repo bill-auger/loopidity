@@ -31,22 +31,22 @@ const Uint16 SceneSdl::SceneFrameR = SCENE_FRAME_R ;
 const float SceneSdl::PieSliceDegrees = PIE_SLICE_DEGREES ;
 
 
-/* LoopImg class private functions */
+/* LoopSdl class private functions */
 
-LoopImg::LoopImg(SDL_Surface* playingImg , SDL_Surface* mutedImg , Uint16 x , Uint16 y)
+LoopSdl::LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Uint16 x , Uint16 y)
 	{ playingSurface = playingImg ; mutedSurface = mutedImg ; rect = {x , y , 0 , 0} ; }
 
-LoopImg::~LoopImg() { SDL_FreeSurface(playingSurface) ; SDL_FreeSurface(mutedSurface) ; }
+LoopSdl::~LoopSdl() { SDL_FreeSurface(playingSurface) ; SDL_FreeSurface(mutedSurface) ; }
 
 
 /* SceneSdl class private functions */
 
-SceneSdl::SceneSdl(Uint16 sceneN) :
+SceneSdl::SceneSdl(Scene* aScene) :
+		// audio data
+		scene(aScene) ,
 		// constants
 		sceneT(SCENE_T) , sceneFrameT(SCENE_FRAME_T) , sceneFrameB(SCENE_FRAME_B) ,
-		// audio data
-		scene(0) , // owner Scene instance set by Scene->setSceneGui()
-		// drawScene() instance variables (set by Scene->setStateIndicators())
+		// drawScene() instance variables
 		loopFrameColor(STATUS_IDLE_COLOR) ,
 		sceneFrameColor(STATUS_IDLE_COLOR) ,
 		// drawScene() and drawHistogram() 'local' variables
@@ -63,7 +63,27 @@ SceneSdl::SceneSdl(Uint16 sceneN) :
 	activeSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneRect.w , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
 	inactiveSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneRect.w , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
 	SDL_SetAlpha(inactiveSceneSurface , SDL_SRCALPHA | SDL_RLEACCEL , 128) ;
+
+	drawScene(inactiveSceneSurface , 0 , 0) ;
 }
+
+
+// getters/setters
+
+void SceneSdl::setStatus()
+{
+	if (scene->IsRecording)
+	{
+		loopFrameColor = (scene->shouldSaveLoop)? STATUS_RECORDING_COLOR : STATUS_PENDING_COLOR ;
+		sceneFrameColor = (scene->sceneN == Loopidity::GetCurrentSceneN())?
+				STATUS_PLAYING_COLOR : (scene->sceneN == Loopidity::GetNextSceneN())?
+						STATUS_PENDING_COLOR : STATUS_IDLE_COLOR ;
+	}
+	else loopFrameColor = sceneFrameColor = STATUS_IDLE_COLOR ;
+}
+
+
+// drawing
 
 void SceneSdl::drawScene(SDL_Surface* surface , unsigned int currentPeakN , Uint16 sceneProgress)
 {
@@ -148,7 +168,7 @@ void SceneSdl::drawHistogram(Loop* loop)
 	SDL_UnlockSurface(playingSurface) ; SDL_UnlockSurface(mutedSurface) ;
 #endif // #if DRAW_MUTED_HISTOGRAMS
 
-	histogramImgs.push_back(new LoopImg(playingSurface , mutedSurface , LoopsL + (LoopW * loopN) , LoopsT)) ;
+	histogramImgs.push_back(new LoopSdl(playingSurface , mutedSurface , LoopsL + (LoopW * loopN) , LoopsT)) ;
 #endif // #if DRAW_HISTOGRAMS
 }
 
@@ -197,7 +217,7 @@ void SceneSdl::drawLoop(Loop* loop , Uint16 loopN)
 	SDL_UnlockSurface(playingSurface) ; SDL_UnlockSurface(mutedSurface) ;
 	SDL_UnlockSurface(loopBgGradient) ;
 
-	loopImgs.push_back(new LoopImg(playingSurface , mutedSurface , LoopsL + (LoopW * loopN) , LoopsT)) ;
+	loopImgs.push_back(new LoopSdl(playingSurface , mutedSurface , LoopsL + (LoopW * loopN) , LoopsT)) ;
 #endif // #if DRAW_LOOPS
 }
 
@@ -222,6 +242,12 @@ void SceneSdl::drawSceneStateIndicator(SDL_Surface* surface)
 
 
 // helpers
+
+void SceneSdl::drawSceneInactive() { drawScene(inactiveSceneSurface , 0 , 0) ; }
+
+void SceneSdl::addLoop(Loop* newLoop , Uint16 loopN) { drawHistogram(newLoop) ; drawLoop(newLoop , loopN) ; }
+
+void SceneSdl::deleteLoop() { if (!loopImgs.empty()) loopImgs.pop_back() ; }
 
 void SceneSdl::PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel)
 {

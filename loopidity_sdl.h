@@ -123,7 +123,7 @@ class LoopiditySdl
 		static const float ScopePeakH ;
 		static vector<SAMPLE>* PeaksIn ;
 		static vector<SAMPLE>* PeaksOut ;
-		static SAMPLE* TransientPeaks ;
+		static SAMPLE* PeaksTransient ;
 
 		// DrawScenes() 'local' variables
 		static Uint16 CurrentSceneN ;

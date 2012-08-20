@@ -41,7 +41,7 @@ const Uint16 LoopiditySdl::ScopeR = SCOPE_R ;
 const float LoopiditySdl::ScopePeakH = SCOPE_PEAK_H ;
 vector<SAMPLE>* LoopiditySdl::PeaksIn ;
 vector<SAMPLE>* LoopiditySdl::PeaksOut ;
-SAMPLE* LoopiditySdl::TransientPeaks = 0 ;
+SAMPLE* LoopiditySdl::PeaksTransient = 0 ;
 
 // DrawScenes() 'local' variables
 Uint16 LoopiditySdl::CurrentSceneN = 0 ;
@@ -65,16 +65,32 @@ bool LoopiditySdl::Init(int argc , char** argv)
 		if (!strcmp(argv[argN] , MONITOR_ARG)) isMonitorInputs = false ;
 		else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) isAutoSceneChange = false ;
 
+	// detect screen resolution
+	Display* display = XOpenDisplay(NULL) ; XWindowAttributes winAttr ;
+	Uint16 screenN = DefaultScreen(display);
+	if (!XGetWindowAttributes(display, RootWindow(display , screenN) , &winAttr))
+		{ printf("XGetWindowAttributes(): can't get root window geometry - quitting\n"); return false ; }
+	if (winAttr.width < SCREEN_W || winAttr.height < SCREEN_H)
+		{ printf("screen resolution must be at least 1024x760 - quitting\n"); return false ; }
+
 	// initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) { SdlError("SDL_Init") ; return false ; }
 	atexit(SDL_Quit) ;
 	Screen = SDL_SetVideoMode(WinRect.w , WinRect.h , PIXEL_DEPTH , SDL_HWSURFACE | SDL_DOUBLEBUF) ;
 	if (!Screen) { SdlError("SDL_SetVideoMode") ; return false ; }
-	if (SDL_EnableKeyRepeat(0 , 0)) { LoopiditySdl::Cleanup() ; return false ; }
 
-	// sett default window params
+	// set input params
+	if (SDL_EnableKeyRepeat(0 , 0)) { SdlError("SDL_EnableKeyRepeat") ; return false ; }
+	SDL_EventState(SDL_MOUSEMOTION , SDL_IGNORE) ;
+
+	// set default window params
 	WinBgColor = SDL_MapRGB(LoopiditySdl::Screen->format , 16 , 16 , 16) ;
 	SDL_WM_SetCaption(APP_NAME , APP_NAME) ;
+/*
+	SDL_Surface* icon = SDL_LoadBMP("icon.bmp") ;
+	SDL_SetColorKey(icon , SDL_SRCCOLORKEY , SDL_MapRGB(icon->format , 255 , 0 , 255)) ;
+	SDL_WM_SetIcon(icon , NULL) ;
+*/
 
 	// load fonts
 	if (TTF_Init()) { TtfError("TTF_Init") ; return false ; }
@@ -82,24 +98,17 @@ bool LoopiditySdl::Init(int argc , char** argv)
 	if(!(HeaderFont = TTF_OpenFont(HEADER_FONT))) { TtfError("TTF_OpenFont") ; return false ; }
 
 	// load images
-	if (!(ScopeGradient = SDL_LoadBMP(SCOPE_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
-	if (!(HistogramGradient = SDL_LoadBMP(HISTOGRAM_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
-	if (!(LoopGradient = SDL_LoadBMP(LOOP_IMG)))  { SdlError("SDL_LoadBMP") ; return false ; }
+	if (!(ScopeGradient = SDL_LoadBMP(SCOPE_IMG))) { SdlError("SDL_LoadBMP") ; return false ; }
+	if (!(HistogramGradient = SDL_LoadBMP(HISTOGRAM_IMG))) { SdlError("SDL_LoadBMP") ; return false ; }
+	if (!(LoopGradient = SDL_LoadBMP(LOOP_IMG))) { SdlError("SDL_LoadBMP") ; return false ; }
 
-	// initialize Loopidity and JackIO classes
+	// initialize Loopidity class (controller) and instantiate Scenes (models) and SdlScenes (views)
 	if (!isAutoSceneChange) Loopidity::ToggleAutoSceneChange() ;
 	if (!Loopidity::Init(isMonitorInputs)) return false ;
 
-	// instantiate SdlScenes
-	for (Uint16 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
-	{
-		SdlScenes[sceneN] = new SceneSdl(sceneN) ;
-		Loopidity::SetSceneGui(SdlScenes[sceneN] , sceneN) ;
-	}
-
 	// get handles to scope and VU peaks caches
 	PeaksIn = Loopidity::GetPeaksInCache() ; PeaksOut = Loopidity::GetPeaksOutCache() ;
-	TransientPeaks = Loopidity::GetTransientPeaksCache() ;
+	PeaksTransient = Loopidity::GetTransientPeaksCache() ;
 
 	return true ;
 }
@@ -152,8 +161,7 @@ void LoopiditySdl::DrawScenes()
 	}
 
 #if DRAW_DEBUG_TEXT
-char dbg[255] ; Loopidity::GetCurrentScene()->makeMainDbgText(dbg) ; LoopiditySdl::SetStatusL(dbg) ;
-sprintf(dbg , "isPulseExist:%d isSaveLoop:%d" , Loopidity::GetCurrentScene()->isPulseExist , Loopidity::GetCurrentScene()->isSaveLoop) ; LoopiditySdl::SetStatusR(dbg) ;
+Loopidity::SetDbgText() ;
 #endif
 #endif // #if DRAW_SCENES
 } // void LoopiditySdl::DrawScenes()
@@ -179,6 +187,7 @@ void LoopiditySdl::DrawScopes()
 
 void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* screenRect , SDL_Rect* cropRect , SDL_Color fgColor)
 {
+#if DRAW_STATUS
 	if (!text.size()) return ;
 
 	SDL_Surface* textSurface = TTF_RenderText_Solid(font , text.c_str() , fgColor) ;
@@ -186,6 +195,7 @@ void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font 
 
 	SDL_FillRect(surface , screenRect , WinBgColor) ;
 	SDL_BlitSurface(textSurface , cropRect , surface , screenRect) ; SDL_FreeSurface(textSurface) ;
+#endif // #if DRAW_STATUS
 }
 
 void LoopiditySdl::DrawHeader() { DrawText(HEADER_TEXT , Screen , HeaderFont , &HeaderRectC , &HeaderRectDim , HeaderColor) ; }
@@ -208,18 +218,8 @@ void LoopiditySdl::SetStatusR(string text) { StatusTextR = text ; }
 
 int main(int argc , char** argv)
 {
-	// run some sanity checks
-
-	// detect screen resolution
-	Display* display = XOpenDisplay(NULL) ; XWindowAttributes winAttr ;
-	Uint16 screenN = DefaultScreen(display);
-	if (!XGetWindowAttributes(display, RootWindow(display , screenN) , &winAttr))
-		{ printf("XGetWindowAttributes(): can't get root window geometry - quitting\n"); return 1 ; }
-	if (winAttr.width < SCREEN_W || winAttr.height < SCREEN_H)
-		{ printf("screen resolution must be at least 1024x760 - quitting\n"); return 1 ; }
-
-	// initialize SDL
-	if (!LoopiditySdl::Init(argc , argv)) return 1 ;
+	// initialize SDL and Loopidity
+	if (!LoopiditySdl::Init(argc , argv)) { LoopiditySdl::Cleanup() ; return 1 ; }
 
 	// blank screen and draw header
 	SDL_FillRect(LoopiditySdl::Screen , 0 , LoopiditySdl::WinBgColor) ;
@@ -229,15 +229,17 @@ int main(int argc , char** argv)
 	bool done = false ; SDL_Event event ; Uint16 timerStart = SDL_GetTicks() , elapsed ;
 	while (!done)
 	{
+		// poll events and pass them off to our controller
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
 			{
 				case SDL_QUIT: done = true ; break ;
+
 				case SDL_KEYDOWN:
 					switch (event.key.keysym.sym)
 					{
-						case SDLK_SPACE: Loopidity::SetMode() ; break ;
+						case SDLK_SPACE: Loopidity::SetStatus() ; break ;
 						case SDLK_KP0: Loopidity::ToggleScene() ; break ;
 						case SDLK_ESCAPE:
 							switch (event.key.keysym.mod)
@@ -249,6 +251,34 @@ int main(int argc , char** argv)
 						default: break ;
 					}
 				break ;
+
+				case SDL_MOUSEBUTTONDOWN:
+					switch (event.button.button)
+					{
+						case SDL_BUTTON_LEFT: printf("mouse left btn\n") ; break ;
+						case SDL_BUTTON_MIDDLE: printf("mouse middle btn\n") ; break ;
+						case SDL_BUTTON_RIGHT: printf("mouse right btn\n") ; break ;
+						case SDL_BUTTON_WHEELUP: printf("mouse wheel up\n") ; break ;
+						case SDL_BUTTON_WHEELDOWN: printf("mouse wheel down\n") ; break ;
+						default: break ;
+					}
+				break ;
+
+				case SDL_USEREVENT:
+				{
+					unsigned int sceneN = *((unsigned int*)event.user.data1) ;
+					switch (event.user.code)
+					{
+						case EVT_NEW_LOOP: Loopidity::AddLoop(sceneN , *((Loop**)event.user.data2)) ;
+printf("EVT_NEW_LOOP sceneN=%d\n" , sceneN) ;
+						break ;
+						case EVT_SCENE_CHANGED: Loopidity::SceneChanged(sceneN) ;
+printf("EVT_SCENE_CHANGED sceneN=%d\n" , sceneN) ;
+						break ;
+						default: break ;
+					}
+				}
+				break ;
 				default: break ;
 			} // switch (event.type)
 		} // while (SDL_PollEvent(&event))
@@ -257,10 +287,9 @@ int main(int argc , char** argv)
 		if (elapsed >= GUI_UPDATE_INTERVAL_SHORT) timerStart = SDL_GetTicks() ;
 		else { SDL_Delay(1) ; continue ; }
 
-#if DRAW_STATUS
+		// draw stuff
 		if (!(LoopiditySdl::GuiLongCount = (LoopiditySdl::GuiLongCount + 1) % GUI_LONGCOUNT))
 			{ /*updateMemory() ;*/ LoopiditySdl::DrawStatusTextL() ; LoopiditySdl::DrawStatusTextR() ; }
-#endif // #if DRAW_STATUS
 
 		Loopidity::ScanTransientPeaks() ; //updateVUMeters() ;
 		LoopiditySdl::DrawScenes() ;

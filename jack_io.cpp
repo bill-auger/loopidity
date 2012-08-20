@@ -14,10 +14,18 @@ jack_port_t* JackIO::OutputPort2 = 0 ;
 // audio data
 Scene* JackIO::CurrentScene = 0 ;
 Scene* JackIO::NextScene = 0 ;
+unsigned int JackIO::CurrentSceneN = 0 ;
+unsigned int JackIO::NextSceneN = 0 ;
 SAMPLE* JackIO::RecordBuffer1 = 0 ;
 SAMPLE* JackIO::RecordBuffer2 = 0 ;
 unsigned int JackIO::RecordBufferSize = 0 ;
+
+// event structs
+SDL_Event JackIO::eventNewLoop ;
 Loop* JackIO::NewLoop = 0 ;
+SDL_Event JackIO::eventSceneChanged ;
+unsigned int JackIO::AddLoopSceneN = 0 ;
+unsigned int JackIO::ChangedSceneN = 0 ;
 
 // server state
 unsigned int JackIO::NFramesPerPeriod = 0 ;
@@ -27,19 +35,31 @@ unsigned int JackIO::SampleRate = 0 ;
 unsigned int JackIO::BytesPerSecond = FRAME_SIZE * SampleRate ;
 
 // misc flags
-bool JackIO::IsMonitorInputs = true ;
+bool JackIO::ShouldMonitorInputs = true ;
 
 
 /* JackIO class public functions */
 
 // setup
 
-unsigned int JackIO::Init(Scene* currentScene , bool isMonitorInputs)
+unsigned int JackIO::Init(Scene* currentScene , unsigned int currentSceneN , bool shouldMonitorInputs)
 {
 if (! INIT_JACK) return JACK_INIT_SUCCESS ;
 
-	// set initial state and initialize record buffers
-	Reset(currentScene) ; IsMonitorInputs = isMonitorInputs ;
+	// set initial state
+	Reset(currentScene , currentSceneN) ; ShouldMonitorInputs = shouldMonitorInputs ;
+
+	// initialize event structs
+	eventNewLoop.type = SDL_USEREVENT ;
+	eventNewLoop.user.code = EVT_NEW_LOOP ;
+	eventNewLoop.user.data1 = &AddLoopSceneN ;
+	eventNewLoop.user.data2 = &NewLoop ;
+	eventSceneChanged.type = SDL_USEREVENT ;
+	eventSceneChanged.user.code = EVT_SCENE_CHANGED ;
+	eventSceneChanged.user.data1 = &ChangedSceneN ;
+	eventSceneChanged.user.data2 = 0 ; // unused
+
+	// initialize record buffers
 	if (!RecordBufferSize) RecordBufferSize = DEFAULT_BUFFER_SIZE ;
 	if (!(RecordBuffer1 = new (nothrow) SAMPLE[RecordBufferSize]())) return JACK_MEM_FAIL ;
 	if (!(RecordBuffer2 = new (nothrow) SAMPLE[RecordBufferSize]())) return JACK_MEM_FAIL ;
@@ -70,8 +90,11 @@ if (! INIT_JACK) return JACK_INIT_SUCCESS ;
 	return JACK_INIT_SUCCESS ;
 }
 
-void JackIO::Reset(Scene* currentScene)
-	{ CurrentScene = NextScene = currentScene ; PeriodSize = NFramesPerPeriod = 0 ; }
+void JackIO::Reset(Scene* currentScene , unsigned int currentSceneN)
+{
+	CurrentScene = NextScene = currentScene ; CurrentSceneN = NextSceneN = currentSceneN ;
+	PeriodSize = NFramesPerPeriod = 0 ;
+}
 
 
 // getters/setters
@@ -97,10 +120,11 @@ unsigned int JackIO::GetSampleRate() { return SampleRate ; }
 
 unsigned int JackIO::GetBytesPerSecond() { return BytesPerSecond ; }
 
-void JackIO::SetCurrentScene(Scene* currentScene)
-	{ if (Scene::IsRecording) CurrentScene = currentScene ; }
+void JackIO::SetCurrentScene(Scene* currentScene , unsigned int currentSceneN)
+	{ if (Scene::IsRecording) { CurrentScene = currentScene ; CurrentSceneN = currentSceneN ; } }
 
-void JackIO::SetNextScene(Scene* nextScene) { NextScene = nextScene ; }
+void JackIO::SetNextScene(Scene* nextScene , unsigned int nextSceneN)
+	{ NextScene = nextScene ; NextSceneN = nextSceneN ; }
 
 
 /* JackIO class private functions */
@@ -121,7 +145,7 @@ int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 	{
 		frameIdx = CurrentScene->frameN + frameN ;
 		// write input to outputs mix buffers
-		if (!IsMonitorInputs) RecordBuffer1[frameIdx] = RecordBuffer2[frameIdx] = 0 ;
+		if (!ShouldMonitorInputs) RecordBuffer1[frameIdx] = RecordBuffer2[frameIdx] = 0 ;
 		else { RecordBuffer1[frameIdx] = in1[frameN] ; RecordBuffer2[frameIdx] = in2[frameN] ; }
 
 		// mix unmuted tracks into outputs mix buffers
@@ -140,20 +164,21 @@ int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 	if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->nFrames))
 	{
 		// create new Loop instance and copy record buffers to it
-		if (CurrentScene->isSaveLoop && CurrentScene->loops.size() < N_LOOPS)
+		if (CurrentScene->shouldSaveLoop)
 		{
 			if (!(NewLoop = new (nothrow) Loop(CurrentScene->nFrames))) { Loopidity::OOM() ; return 0 ; }
 
-//			Loop* newLoop = new Loop(CurrentScene->nFrames) ;
 			memcpy(NewLoop->buffer1 , RecordBuffer1 , CurrentScene->nBytes) ;
 			memcpy(NewLoop->buffer2 , RecordBuffer2 , CurrentScene->nBytes) ;
-			CurrentScene->addLoop(NewLoop) ; NewLoop = 0 ;
-
-// TODO: we're getting a bit glitchey here - best to just set a flag after copying
+			AddLoopSceneN = CurrentSceneN ; SDL_PushEvent(&eventNewLoop) ;
 		}
 
 		// switch to NextScene if necessary
-		if (CurrentScene != NextScene) { Loopidity::SceneChanged(CurrentScene = NextScene) ; }
+		if (CurrentScene != NextScene)
+		{
+			CurrentScene = NextScene ; CurrentSceneN = ChangedSceneN = NextSceneN ;
+			SDL_PushEvent(&eventSceneChanged) ;
+		}
 	}
 
 	return 0 ;

@@ -17,8 +17,8 @@ class JackIO
   private:
 
 		// setup
-    static unsigned int Init(Scene* currentScene , bool isMonitorInputs) ;
-		static void Reset(Scene* currentScene) ;
+    static unsigned int Init(Scene* currentScene , unsigned int currentSceneN , bool isMonitorInputs) ;
+		static void Reset(Scene* currentScene , unsigned int currentSceneN) ;
 
 		// getters/setters
 		static SAMPLE* GetRecordBuffer1() ;
@@ -29,8 +29,8 @@ class JackIO
 		static const unsigned int GetFrameSize() ;
 		static unsigned int GetSampleRate() ;
 		static unsigned int GetBytesPerSecond() ;
-		static void SetCurrentScene(Scene* currentScene) ;
-		static void SetNextScene(Scene* nextScene) ;
+		static void SetCurrentScene(Scene* currentScene , unsigned int currentSceneN) ;
+		static void SetNextScene(Scene* nextScene , unsigned int nextSceneN) ;
 
   private:
 
@@ -44,10 +44,18 @@ class JackIO
 		// audio data
 		static Scene* CurrentScene ;
 		static Scene* NextScene ;
+		static unsigned int CurrentSceneN ;
+		static unsigned int NextSceneN ;
 		static SAMPLE* RecordBuffer1 ;
 		static SAMPLE* RecordBuffer2 ;
 		static unsigned int RecordBufferSize ;
+
+		// event structs
+		static SDL_Event eventNewLoop ;
 		static Loop* NewLoop ;
+		static SDL_Event eventSceneChanged ;
+		static unsigned int AddLoopSceneN ;
+		static unsigned int ChangedSceneN ;
 
 		// server state
 		static unsigned int NFramesPerPeriod ;
@@ -57,7 +65,7 @@ class JackIO
 		static unsigned int BytesPerSecond ;
 
 		// misc flags
-		static bool IsMonitorInputs ;
+		static bool ShouldMonitorInputs ;
 
 		// JACK callbacks
     static int ProcessCallback(jack_nframes_t nframes , void* arg) ;
