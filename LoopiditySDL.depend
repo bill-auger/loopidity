@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1345451523 source:/home/me/src/LoopiditySDL/main.cpp
+1346403911 source:/home/me/src/LoopiditySDL/main.cpp
 	"loopidity_sdl.h"
 
-1327664837 /usr/include/SDL/SDL.h
+1343821716 /usr/include/SDL/SDL.h
 	"SDL_main.h"
 	"SDL_stdinc.h"
 	"SDL_audio.h"
@@ -21,14 +21,14 @@
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_main.h
+1343821716 /usr/include/SDL/SDL_main.h
 	"SDL_stdinc.h"
 	"begin_code.h"
 	"close_code.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_stdinc.h
+1343821716 /usr/include/SDL/SDL_stdinc.h
 	"SDL_config.h"
 	<sys/types.h>
 	<stdio.h>
@@ -54,17 +54,17 @@
 	<stdlib.h>
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_config.h
+1343821716 /usr/include/SDL/SDL_config.h
 	"SDL_platform.h"
 	<stdarg.h>
 
-1327664837 /usr/include/SDL/SDL_platform.h
+1343821716 /usr/include/SDL/SDL_platform.h
 
-1327664837 /usr/include/SDL/begin_code.h
+1343821716 /usr/include/SDL/begin_code.h
 
-1327664837 /usr/include/SDL/close_code.h
+1343821716 /usr/include/SDL/close_code.h
 
-1327664837 /usr/include/SDL/SDL_audio.h
+1343821716 /usr/include/SDL/SDL_audio.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_endian.h"
@@ -74,23 +74,24 @@
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_error.h
+1343821716 /usr/include/SDL/SDL_error.h
 	"SDL_stdinc.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_endian.h
+1343821716 /usr/include/SDL/SDL_endian.h
 	"SDL_stdinc.h"
+	<endian.h>
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_mutex.h
+1343821716 /usr/include/SDL/SDL_mutex.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_thread.h
+1343821716 /usr/include/SDL/SDL_thread.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_mutex.h"
@@ -98,24 +99,24 @@
 	<process.h>
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_rwops.h
+1343821716 /usr/include/SDL/SDL_rwops.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_cdrom.h
+1343821716 /usr/include/SDL/SDL_cdrom.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_cpuinfo.h
+1343821716 /usr/include/SDL/SDL_cpuinfo.h
 	"SDL_stdinc.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_events.h
+1343821716 /usr/include/SDL/SDL_events.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_active.h"
@@ -126,80 +127,86 @@
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_active.h
+1343821716 /usr/include/SDL/SDL_active.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_keyboard.h
+1343821716 /usr/include/SDL/SDL_keyboard.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_keysym.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_keysym.h
+1343821716 /usr/include/SDL/SDL_keysym.h
 
-1327664837 /usr/include/SDL/SDL_mouse.h
+1343821716 /usr/include/SDL/SDL_mouse.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_video.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_video.h
+1343821716 /usr/include/SDL/SDL_video.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"SDL_rwops.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_joystick.h
+1343821716 /usr/include/SDL/SDL_joystick.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_quit.h
+1343821716 /usr/include/SDL/SDL_quit.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 
-1327664837 /usr/include/SDL/SDL_loadso.h
-	"SDL_stdinc.h"
-	"SDL_error.h"
-	"begin_code.h"
-	"close_code.h"
-
-1327664837 /usr/include/SDL/SDL_timer.h
+1343821716 /usr/include/SDL/SDL_loadso.h
 	"SDL_stdinc.h"
 	"SDL_error.h"
 	"begin_code.h"
 	"close_code.h"
 
-1327664837 /usr/include/SDL/SDL_version.h
+1343821716 /usr/include/SDL/SDL_timer.h
+	"SDL_stdinc.h"
+	"SDL_error.h"
+	"begin_code.h"
+	"close_code.h"
+
+1343821716 /usr/include/SDL/SDL_version.h
 	"SDL_stdinc.h"
 	"begin_code.h"
 	"close_code.h"
 
-1326465968 /usr/include/SDL/SDL_gfxPrimitives.h
+1344068320 /usr/include/SDL/SDL_gfxPrimitives.h
 	<math.h>
 	"SDL.h"
 
-1345452252 source:/home/me/src/LoopiditySDL/jack_io.cpp
+1346375951 source:/home/me/src/LoopiditySDL/jack_io.cpp
 	"jack_io.h"
 
-1345452127 /home/me/src/LoopiditySDL/jack_io.h
+1345478809 /home/me/src/LoopiditySDL/jack_io.h
 	<jack/jack.h>
 	"loopidity.h"
 
-1345452243 /home/me/src/LoopiditySDL/loopidity.h
+1380351734 /home/me/src/LoopiditySDL/loopidity.h
 	<cstdlib>
-	<vector>
+	<list>
+	<sstream>
+	<stdio.h>
 	<string>
+	<vector>
+	<list.h>
+	<sstream.h>
+	<stdio.h>
 	<stdlib.h>
-	<vector.h>
 	<string.h>
+	<vector.h>
 	<SDL/SDL.h>
 	<SDL/SDL_gfxPrimitives.h>
 	<SDL/SDL_rotozoom.h>
@@ -211,24 +218,26 @@
 	<X11/Xlib.h>
 	"jack_io.h"
 	"loopidity_sdl.h"
+	"scene.h"
 	"scene_sdl.h"
 
-1345346289 /home/me/src/LoopiditySDL/loopidity_sdl.h
+1346299762 /home/me/src/LoopiditySDL/loopidity_sdl.h
 	"loopidity.h"
 	"scene_sdl.h"
 
-1345446743 /home/me/src/LoopiditySDL/scene_sdl.h
+1346401788 /home/me/src/LoopiditySDL/scene_sdl.h
 	"loopidity.h"
 
-1345452345 source:/home/me/src/LoopiditySDL/loopidity.cpp
+1346377298 source:/home/me/src/LoopiditySDL/loopidity.cpp
 	"loopidity.h"
+	"trace.h"
 
-1344418423 /home/me/src/LoopiditySDL/debug.h
+1346374325 /home/me/src/LoopiditySDL/debug.h
 
-1345444713 source:/home/me/src/LoopiditySDL/scene_sdl.cpp
+1380353223 source:/home/me/src/LoopiditySDL/scene_sdl.cpp
 	"scene_sdl.h"
 
-1325205476 /usr/include/SDL/SDL_ttf.h
+1335800845 /usr/include/SDL/SDL_ttf.h
 	"SDL.h"
 	"begin_code.h"
 	"close_code.h"
@@ -239,7 +248,21 @@
 	"begin_code.h"
 	"close_code.h"
 
-1326465968 /usr/include/SDL/SDL_rotozoom.h
+1344068320 /usr/include/SDL/SDL_rotozoom.h
 	<math.h>
 	"SDL.h"
+
+1346377802 source:/home/me/src/LoopiditySDL/scene.cpp
+	"jack_io.h"
+
+1345873668 source:/home/me/src/LoopiditySDL/debug.cpp
+	"loopidity.h"
+
+1346398038 /home/me/src/LoopiditySDL/trace.h
+
+1346286727 /home/me/src/LoopiditySDL/scene.h
+	"loopidity.h"
+
+1346397573 source:/home/me/src/LoopiditySDL/trace.cpp
+	"trace.h"
 

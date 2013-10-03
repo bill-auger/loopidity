@@ -39,15 +39,17 @@
 			<Add library="/usr/lib/i386-linux-gnu/libSDL_ttf.so" />
 			<Add library="/usr/lib/i386-linux-gnu/libjack.so" />
 		</Linker>
-		<Unit filename="debug.h" />
 		<Unit filename="jack_io.cpp" />
 		<Unit filename="jack_io.h" />
 		<Unit filename="loopidity.cpp" />
 		<Unit filename="loopidity.h" />
 		<Unit filename="loopidity_sdl.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="scene.cpp" />
+		<Unit filename="scene.h" />
 		<Unit filename="scene_sdl.cpp" />
 		<Unit filename="scene_sdl.h" />
+		<Unit filename="trace.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

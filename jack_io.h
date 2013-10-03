@@ -21,8 +21,8 @@ class JackIO
 		static void Reset(Scene* currentScene , unsigned int currentSceneN) ;
 
 		// getters/setters
-		static SAMPLE* GetRecordBuffer1() ;
-		static SAMPLE* GetRecordBuffer2() ;
+		static SAMPLE* GetBuffer1() ;
+		static SAMPLE* GetBuffer2() ;
 		static unsigned int GetRecordBufferSize() ;
 		static bool SetRecordBufferSize(unsigned int recordBufferSize) ;
 		static unsigned int GetNFramesPerPeriod() ;
@@ -36,26 +36,26 @@ class JackIO
 
 		// JACK handles
     static jack_client_t* Client ;
-    static jack_port_t* InputPort1 ;
-    static jack_port_t* InputPort2 ;
-    static jack_port_t* OutputPort1 ;
-    static jack_port_t* OutputPort2 ;
+    static jack_port_t* PortInput1 ;
+    static jack_port_t* PortInput2 ;
+    static jack_port_t* PortOutput1 ;
+    static jack_port_t* PortOutput2 ;
 
 		// audio data
 		static Scene* CurrentScene ;
 		static Scene* NextScene ;
 		static unsigned int CurrentSceneN ;
 		static unsigned int NextSceneN ;
-		static SAMPLE* RecordBuffer1 ;
-		static SAMPLE* RecordBuffer2 ;
+		static SAMPLE* Buffer1 ;
+		static SAMPLE* Buffer2 ;
 		static unsigned int RecordBufferSize ;
 
 		// event structs
-		static SDL_Event eventNewLoop ;
+		static SDL_Event EventLoopCreation ;
 		static Loop* NewLoop ;
-		static SDL_Event eventSceneChanged ;
-		static unsigned int AddLoopSceneN ;
-		static unsigned int ChangedSceneN ;
+		static SDL_Event EventSceneChange ;
+		static unsigned int EventLoopCreationSceneN ;
+		static unsigned int EventSceneChangeSceneN ;
 
 		// server state
 		static unsigned int NFramesPerPeriod ;

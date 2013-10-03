@@ -4,10 +4,8 @@
 
 
 // magnitudes
-#define PEAK_RADIUS 50
-#define LOOP_DIAMETER ((PEAK_RADIUS * 2) + 1)
-#define N_PEAKS_FINE 360 // should be divisible into 360
-#define N_PEAKS_COURSE LOOP_DIAMETER
+#define PEAK_RADIUS SDL_PEAK_RADIUS
+#define LOOP_DIAMETER SDL_LOOP_DIAMETER
 #define X_PADDING 10
 #define Y_PADDING 18
 #define BORDER_PAD 5
@@ -34,7 +32,7 @@
 #define SCENE_H ((Y_PADDING * 3) + HISTOGRAMS_H + LOOP_DIAMETER)
 #define SCENE_L (LOOPS_L - BORDER_PAD - 1)
 #define SCENE_R (SCENE_L + 999) // SCOPE_IMG is 1000x101 , LOOP_DIAMETER is 101 when PEAK_RADIUS is 50
-#define SCENE_T (HEADER_H + (SCENE_H * aScene->sceneN))
+#define SCENE_T (HEADER_H + (BORDER_PAD * 2) + (SCENE_H * sceneN))
 #define SCENE_B (SCENE_T + SCENE_H)
 #define SCENE_FRAME_L (SCENE_L - BORDER_PAD - 1)
 #define SCENE_FRAME_R (SCENE_R + BORDER_PAD + 1)
@@ -52,15 +50,19 @@
 // colors
 #define SCOPE_PEAK_MAX_COLOR 0x800000ff
 #define SCOPE_PEAK_ZERO_COLOR 0x808080ff
-#define STATUS_RECORDING_COLOR 0xff0000ff
-#define STATUS_PENDING_COLOR 0xffff00ff
-#define STATUS_PLAYING_COLOR 0x00ff00ff
-#define STATUS_IDLE_COLOR 0x808080ff
+#define STATE_RECORDING_COLOR 0xff0000ff
+#define STATE_PENDING_COLOR 0xffff00ff
+#define STATE_PLAYING_COLOR 0x00ff00ff
+#define STATE_IDLE_COLOR 0x808080ff
 #define PEAK_CURRENT_COLOR 0xffff00ff
 #define HISTOGRAM_PEAK_COLOR 0x008000ff
 #define LOOP_PEAK_MAX_COLOR 0x800000ff
 #define LOOP_IMG_MASK_COLOR 0xffffffff
 
+// loop states
+#define STATE_LOOP_PLAYING 1
+#define STATE_LOOP_PENDING 2
+#define STATE_LOOP_MUTED 3
 
 #include "loopidity.h"
 class Loop ;
@@ -79,9 +81,15 @@ class LoopSdl
 		LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Uint16 x , Uint16 y) ;
 		~LoopSdl() ;
 
-		SDL_Surface* playingSurface ;
-		SDL_Surface* mutedSurface ;
+		// drawing backbuffers
+		SDL_Surface *playingSurface , *mutedSurface , *currentSurface ;
+
+		// drawing coordinates
+		Sint16 loopL , loopC ;
 		SDL_Rect rect ;
+
+		// loop state
+		void setStatus(Uint16 loopStatus) ;
 } ;
 
 
@@ -92,11 +100,11 @@ class SceneSdl
 
 	private:
 
-		SceneSdl(Scene* aScene) ;
+		SceneSdl(Scene* aScene , Uint16 sceneN , Uint32 frameColor) ;
 
 		// drawing constants
-		static const Sint16 HistogramsT ;		// drawRecordingLoop()
-		static const Sint16 HistogramsB ;		// drawRecordingLoop()
+		static Sint16 HistogramsT ;					// drawRecordingLoop()
+		static Sint16 HistogramsB ;					// drawRecordingLoop()
 		static const Sint16 HistFramesT ;		// drawRecordingLoop()
 		static const Sint16 HistFramesB ;		// drawRecordingLoop()
 		static const Uint16 HistSurfaceW ;	// drawHistogram()
@@ -129,37 +137,48 @@ class SceneSdl
 		SDL_Surface* activeSceneSurface ;
 		SDL_Surface* inactiveSceneSurface ;
 
-		// audio data
+		// model
 		Scene* scene ;
 
 		// loop image caches
-		vector<LoopSdl*> histogramImgs ;
-		vector<LoopSdl*> loopImgs ;
+		list<LoopSdl*> histogramImgs ;
+		list<LoopSdl*> loopImgs ;
 
 		// drawScene() instance variables
-		Uint32 loopFrameColor ;
-		Uint32 sceneFrameColor ;
-		// drawScene() 'local' variables
+		Uint32 loopFrameColor , sceneFrameColor ;
+
+		// drawScene() , drawHistogram() , and drawRecordingLoop() 'temp' variables
 		Uint16 currentPeakN , hiScenePeak , loopN , histPeakN , peakH ;
 		SDL_Rect scopeMaskRect , scopeGradRect , histogramRect , rotRect , histMaskRect , histGradRect ;
 		Sint16 loopL , loopC , histFrameL , histFrameR , ringR , loopFrameL , loopFrameR ;
+		LoopSdl *histogramImg , *loopImg ;
+		Loop* loop ;
 		SDL_Surface* rotImg ;
 
 		// getters/setters
-		void setStatus() ;
+		LoopSdl* getLoop(list<LoopSdl*>* imgs , unsigned int loopN) ;
+		void updateStatus() ;
+		void startRolling() ;
+		void reset() ;
+		void cleanup() ;
 
 		// drawing
 		void drawScene(SDL_Surface* screen , unsigned int currentPeakN , Uint16 loopProgress) ;
-		void drawHistogram(Loop* loop) ;
-		void drawLoop(Loop* loop , Uint16 loopN) ;
+		LoopSdl* drawHistogram(Loop* loop) ;
+		LoopSdl* drawLoop(Loop* loop , Uint16 loopN) ;
 		void drawRecordingLoop(SDL_Surface* surface , Uint16 loopProgress) ;
 		void drawSceneStateIndicator(SDL_Surface* surface) ;
 
 		// helpers
 		void drawSceneInactive() ;
 		void addLoop(Loop* newLoop , Uint16 nLoops) ;
-		void deleteLoop() ;
+		void deleteLoop(unsigned int loopN) ;
 		static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
+		static Uint16 GetLoopL(Uint16 loopN) ;
+
+//bool areMVCVectorsEqualSized() ;
+//bool dbgSanityCheck(string sender) ;
+//public: bool traceSceneSdl(string sender) ;
 } ;
 
 

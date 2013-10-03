@@ -42,10 +42,19 @@ using namespace std ;
 #define STATUS_H 20 // STATUS_FONT_SIZE 12
 #define STATUS_W 256 // approx 36 chars @ STATUS_FONT_SIZE 12
 #define STATUS_Y WinRect.h - STATUS_H
-#define STATUS_X WinRect.w - STATUS_W
+#define STATUS_L 0
+#define STATUS_C (WinRect.w / 2) - (STATUS_W / 2)
+#define STATUS_R WinRect.w - STATUS_W
 #define STATUS_RECT_DIM {0 , 0 , STATUS_W , STATUS_H}
-#define STATUS_RECT_L {0 , STATUS_Y , 0 , 0}
-#define STATUS_RECT_R {STATUS_X , STATUS_Y , 0 , 0}
+#define STATUS_RECT_L {STATUS_L , STATUS_Y , 0 , 0}
+#define STATUS_RECT_C {STATUS_C , STATUS_Y , 0 , 0}
+#define STATUS_RECT_R {STATUS_R , STATUS_Y , 0 , 0}
+
+// mouse magnitudes
+#define MOUSE_SCENES_L (LOOPS_L - BORDER_PAD)
+#define MOUSE_SCENES_R (MOUSE_SCENES_L + (LOOP_W * N_LOOPS))
+#define MOUSE_SCENES_T (HEADER_H - (Y_PADDING / 2))
+#define MOUSE_SCENES_B (MOUSE_SCENES_T + (SCENE_H * N_SCENES))
 
 // scope magnitudes
 #define N_PEAKS_TRANSIENT 480 // TODO: maybe set this to scene width/2
@@ -102,14 +111,16 @@ class LoopiditySdl
 		// status
 		static SDL_Rect StatusRectDim ;
 		static SDL_Rect StatusRectL ;
+		static SDL_Rect StatusRectC ;
 		static SDL_Rect StatusRectR ;
 		static TTF_Font* StatusFont ;
 		static const SDL_Color StatusColor ;
 		static string StatusTextL ;
+		static string StatusTextC ;
 		static string StatusTextR ;
 
 		// scenes
-		static SceneSdl* SdlScenes[N_SCENES] ;
+		static SceneSdl** SdlScenes ;
 		static SDL_Surface* ScopeGradient ;
 		static SDL_Surface* HistogramGradient ;
 		static SDL_Surface* LoopGradient ;
@@ -140,17 +151,26 @@ class LoopiditySdl
 		static void TtfError(const char* functionName) ;
 		static void Cleanup() ;
 
+		// events SDL_Event JackIO::EventLoopCreation ;
+
+		// event handlers
+		static void HandleKeyEvent(SDL_Event* event) ;
+		static void HandleMouseEvent(SDL_Event* event) ;
+		static void HandleUserEvent(SDL_Event* event) ;
+
 		// drawing
 		static void DrawScenes() ;
 		static void DrawScopes() ;
 		static void DrawText(string text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* screenRect , SDL_Rect* cropRect , SDL_Color fgColor) ;
 		static void DrawHeader() ;
 		static void DrawStatusTextL() ;
+		static void DrawStatusTextC() ;
 		static void DrawStatusTextR() ;
 		static void Alert(const char* msg) ;
 
-		// helpers
+		// getters/settters
 		static void SetStatusL(string msg) ;
+		static void SetStatusC(string msg) ;
 		static void SetStatusR(string msg) ;
 /*
 		static string MakeTime(Uint16 seconds) ;
