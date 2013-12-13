@@ -4,7 +4,6 @@
 
 
 #include "loopidity.h"
-//#include "trace.h"
 
 
 using namespace std ;
@@ -12,9 +11,9 @@ using namespace std ;
 
 class Loop
 {
-	friend class Loopidity ;
-	friend class Scene ;
-	friend class JackIO ;
+  friend class JackIO ;
+  friend class Loopidity ;
+  friend class Scene ;
 friend class SceneSdl ;
 
 	public:
@@ -43,10 +42,11 @@ friend class SceneSdl ;
 
 class Scene
 {
-	friend class Loopidity ;
-	friend class LoopiditySdl ;
-	friend class SceneSdl ;
-	friend class JackIO ;
+  friend class JackIO ;
+  friend class Loopidity ;
+  friend class LoopiditySdl ;
+  friend class SceneSdl ;
+  friend class Trace ;
 
 	public:
 
@@ -108,10 +108,6 @@ class Scene
 		Loop* getLoop(unsigned int loopN) ;
 		bool getIsRolling() ;
     unsigned int getLoopPos() ;
-
-// DEBUG
-//bool traceScene(const char* senderFunction) ;
-// DEBUG end
 } ;
 
 

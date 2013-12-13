@@ -62,16 +62,23 @@ SDL_Surface* LoopiditySdl::ActiveSurface = 0 ;
 bool LoopiditySdl::Init(int argc , char** argv)
 {
 #if DEBUG_TRACE
-printf("\nINIT: LoopiditySdl::Init()\n\n") ;
+cout << INIT_MSG ;
 #endif // #if DEBUG_TRACE
 
 	if (Screen) return false ; // we only want to do this once
 
 	// parse command line arguments
-	bool isMonitorInputs = true , isAutoSceneChange = true ;
+	bool isMonitorInputs = true , isAutoSceneChange = true ; unsigned int bufferSize ;
 	for (int argN = 0 ; argN < argc ; ++argN)
 		if (!strcmp(argv[argN] , MONITOR_ARG)) isMonitorInputs = false ;
 		else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) isAutoSceneChange = false ;
+		// TODO: user defined buffer sizes via command line
+#if USER_DEFINED_BUFFER
+//		else if (!strcmp(argv[argN] , BUFFER_SIZE_ARG)) isAutoSceneChange = bufferSize = arg ;
+	bufferSize = 0 ; // nyi
+#else
+	bufferSize = 0 ;
+#endif // #if DEBUG_STATIC_BUFFER_SIZE
 
 	// detect screen resolution
 	Display* display = XOpenDisplay(NULL) ; XWindowAttributes winAttr ;
@@ -111,7 +118,8 @@ printf("\nINIT: LoopiditySdl::Init()\n\n") ;
 	if (!(LoopGradient = SDL_LoadBMP(LOOP_IMG))) { SdlError("SDL_LoadBMP") ; return false ; }
 
 	// initialize Loopidity class (controller) and instantiate SdlScenes (views)
-	if (!(SdlScenes = Loopidity::Init((isMonitorInputs) , (isAutoSceneChange)))) return false ;
+	SdlScenes = Loopidity::Init(isMonitorInputs , isAutoSceneChange , bufferSize) ;
+	if (!SdlScenes) return false ;
 
 	// get handles to scope and VU peaks caches
 	PeaksIn = Loopidity::GetPeaksInCache() ; PeaksOut = Loopidity::GetPeaksOutCache() ;
@@ -216,9 +224,8 @@ void LoopiditySdl::DrawScenes()
 
 //SDL_FillRect((LoopiditySdl::Screen , &(SdlScenes[SceneN]->sceneRect) , WinBgColor) ;
 
-#if DRAW_DEBUG_TEXT
-Loopidity::SetDbgTextL() ;
-#endif
+DRAW_DEBUG_TEXT_L
+
 #endif // #if DRAW_SCENES
 } // void LoopiditySdl::DrawScenes()
 
@@ -278,12 +285,12 @@ void LoopiditySdl::SetStatusR(string text) { StatusTextR = text ; }
 
 int main(int argc , char** argv)
 {
-	// initialize SDL and Loopidity
+  // initialize SDL and Loopidity
 #if DEBUG_TRACE
-		if (LoopiditySdl::Init(argc , argv)) printf(INIT_SUCCESS_MSG) ;
-		else { printf(INIT_FAIL_MSG) ; LoopiditySdl::Cleanup() ; return 1 ; }
+  if (LoopiditySdl::Init(argc , argv)) printf(INIT_SUCCESS_MSG) ;
+  else { printf(INIT_FAIL_MSG) ; LoopiditySdl::Cleanup() ; return 1 ; }
 #else
-	if (!LoopiditySdl::Init(argc , argv)) { LoopiditySdl::Cleanup() ; return 1 ; }
+  if (!LoopiditySdl::Init(argc , argv)) { LoopiditySdl::Cleanup() ; return 1 ; }
 #endif // #if DEBUG_TRACE
 
 	// blank screen and draw header

@@ -1,2 +1,4 @@
-c:b project file included - else see loopidity.h for deps
+requires sdl and X11 libs
+c:b project file included
+
 

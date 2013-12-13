@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1346403911 source:/home/me/src/LoopiditySDL/main.cpp
+1386966566 source:/home/me/src/LoopiditySDL/main.cpp
 	"loopidity_sdl.h"
 
 1343821716 /usr/include/SDL/SDL.h
@@ -187,30 +187,20 @@
 	<math.h>
 	"SDL.h"
 
-1346375951 source:/home/me/src/LoopiditySDL/jack_io.cpp
+1386964418 source:/home/me/src/LoopiditySDL/jack_io.cpp
 	"jack_io.h"
 
-1345478809 /home/me/src/LoopiditySDL/jack_io.h
+1386961264 /home/me/src/LoopiditySDL/jack_io.h
 	<jack/jack.h>
 	"loopidity.h"
 
-1380351734 /home/me/src/LoopiditySDL/loopidity.h
+1386969856 /home/me/src/LoopiditySDL/loopidity.h
 	<cstdlib>
+	<iostream>
 	<list>
 	<sstream>
-	<stdio.h>
 	<string>
 	<vector>
-	<list.h>
-	<sstream.h>
-	<stdio.h>
-	<stdlib.h>
-	<string.h>
-	<vector.h>
-	<SDL/SDL.h>
-	<SDL/SDL_gfxPrimitives.h>
-	<SDL/SDL_rotozoom.h>
-	<SDL/SDL_ttf.h>
 	<SDL.h>
 	<SDL_gfxPrimitives.h>
 	<SDL_rotozoom.h>
@@ -220,21 +210,20 @@
 	"loopidity_sdl.h"
 	"scene.h"
 	"scene_sdl.h"
-
-1346299762 /home/me/src/LoopiditySDL/loopidity_sdl.h
-	"loopidity.h"
-	"scene_sdl.h"
-
-1346401788 /home/me/src/LoopiditySDL/scene_sdl.h
-	"loopidity.h"
-
-1346377298 source:/home/me/src/LoopiditySDL/loopidity.cpp
-	"loopidity.h"
 	"trace.h"
+
+1386953145 /home/me/src/LoopiditySDL/loopidity_sdl.h
+	"loopidity.h"
+
+1386969484 /home/me/src/LoopiditySDL/scene_sdl.h
+	"loopidity.h"
+
+1386964418 source:/home/me/src/LoopiditySDL/loopidity.cpp
+	"loopidity.h"
 
 1346374325 /home/me/src/LoopiditySDL/debug.h
 
-1380353223 source:/home/me/src/LoopiditySDL/scene_sdl.cpp
+1386966566 source:/home/me/src/LoopiditySDL/scene_sdl.cpp
 	"scene_sdl.h"
 
 1335800845 /usr/include/SDL/SDL_ttf.h
@@ -258,11 +247,12 @@
 1345873668 source:/home/me/src/LoopiditySDL/debug.cpp
 	"loopidity.h"
 
-1346398038 /home/me/src/LoopiditySDL/trace.h
+1386969853 /home/me/src/LoopiditySDL/trace.h
+	<iostream>
 
-1346286727 /home/me/src/LoopiditySDL/scene.h
+1386963334 /home/me/src/LoopiditySDL/scene.h
 	"loopidity.h"
 
-1346397573 source:/home/me/src/LoopiditySDL/trace.cpp
-	"trace.h"
+1386968746 source:/home/me/src/LoopiditySDL/trace.cpp
+	"loopidity.h"
 

@@ -4,9 +4,7 @@
 
 
 #include "loopidity.h"
-#include "scene_sdl.h"
 class SceneSdl ;
-
 
 using namespace std ;
 
@@ -88,7 +86,10 @@ using namespace std ;
 #define LOOP_IMG "loop_gradient.argb.bmp"
 
 // string constants
-#define HEADER_TEXT "This is "APP_NAME
+#define HEADER_TEXT      "This is "APP_NAME
+#define INIT_MSG         "\nINIT:  LoopiditySdl::Init()\n"
+#define INIT_SUCCESS_MSG "\nINIT:  main(): init success - entering sdl loop\n\n"
+#define INIT_FAIL_MSG    "\nERROR: main(): init failed - quitting\n\n"
 
 
 class LoopiditySdl

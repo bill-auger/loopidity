@@ -82,7 +82,7 @@ SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN , Uint32 frameColor) :
 	inactiveSceneSurface = SDL_CreateRGBSurface(SDL_HWSURFACE , sceneRect.w , SceneH , PIXEL_DEPTH , 0 , 0 , 0 , 0) ;
 	SDL_SetAlpha(inactiveSceneSurface , SDL_SRCALPHA | SDL_RLEACCEL , 128) ;
 
-	drawScene(inactiveSceneSurface , 0 , 0) ;
+  drawScene(inactiveSceneSurface , 0 , 0) ;
 }
 
 
@@ -107,11 +107,7 @@ DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN
 	loopFrameColor = (!scene->isRolling)? STATE_IDLE_COLOR :
 			(scene->shouldSaveLoop)? STATE_RECORDING_COLOR : STATE_PENDING_COLOR ;
 
-printf("SceneSdl::updateStatus(%d) loopFrameColor=%x sceneFrameColor=%x\n" ,
-		scene->sceneN , loopFrameColor , sceneFrameColor) ;
-printf("SceneSdl::updateStatus(%d) (isCurrentScene)=%d (isNextSceneN)=%d\n" ,
-		scene->sceneN , (scene->sceneN == Loopidity::GetCurrentSceneN()) ,
-		scene->sceneN , (scene->sceneN == Loopidity::GetNextSceneN())) ;
+//DEBUG_TRACE_SCENESDL_UPDATESTATUS_MID
 
 	for (Uint16 loopN = 0 ; loopN < loopImgs.size() ; ++loopN)
 	{
@@ -124,9 +120,7 @@ Uint16 loopState ;
 		getLoop(&loopImgs , loopN)->setStatus(loopState) ;
 	}
 
-#if DRAW_DEBUG_TEXT
-Loopidity::SetDbgTextR() ;
-#endif
+DRAW_DEBUG_TEXT_R
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT
 } // SceneSdl::updateState()
 
@@ -338,7 +332,7 @@ DEBUG_TRACE_SCENESDL_DELETELOOP_IN
 	list<LoopSdl*>::iterator aHistogramImg = histogramImgs.begin() ;
 	list<LoopSdl*>::iterator aLoopImg = loopImgs.begin() ;
 	while (loopN--) { ++aHistogramImg ; ++aLoopImg ; }
-	if (!histogramImgs.empty())	histogramImgs.erase(aHistogramImg) ;
+	if (!histogramImgs.empty()) histogramImgs.erase(aHistogramImg) ;
 	if (!loopImgs.empty()) loopImgs.erase(aLoopImg) ;
 
 DEBUG_TRACE_SCENESDL_DELETELOOP_OUT

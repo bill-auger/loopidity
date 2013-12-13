@@ -1,6 +1,5 @@
 
 #include "loopidity.h"
-#include "trace.h"
 
 
 /* Loopidity Class private varables */
@@ -29,13 +28,8 @@ SAMPLE Loopidity::TransientPeakOutMix = 0 ;
 
 // setup
 
-bool Loopidity::SetRecordBufferSize(unsigned int recordBufferSize)
-{
-	return (JackIO::SetRecordBufferSize(recordBufferSize)) ;
-// TODO: caller can LoopiditySdl::Alert(ZERO_BUFFER_SIZE_MSG) ;
-}
-
-SceneSdl** Loopidity::Init(bool isMonitorInputs , bool isAutoSceneChange)
+SceneSdl** Loopidity::Init(bool isMonitorInputs , bool isAutoSceneChange ,
+													 unsigned int recordBufferSize)
 {
 	// sanity check
 	if (Scenes[0]) return NULL ;
@@ -53,9 +47,14 @@ SceneSdl** Loopidity::Init(bool isMonitorInputs , bool isAutoSceneChange)
 	}
 
 	// initialize JACK
-	int jackInit = JackIO::Init(Scenes[0] , 0 , isMonitorInputs) ;
-	if (jackInit == JACK_MEM_FAIL) { LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return NULL ; }
-	else if(jackInit == JACK_FAIL) { LoopiditySdl::Alert(JACK_FAIL_MSG) ; return NULL ; }
+	string errMsg ;
+	switch (JackIO::Init(Scenes[0] , 0 , isMonitorInputs , recordBufferSize))
+	{
+		case JACK_FAIL:      errMsg = JACK_FAIL_MSG ;
+		case JACK_BUFF_FAIL: errMsg = ZERO_BUFFER_SIZE_MSG ;
+		case JACK_MEM_FAIL:  errMsg = INSUFFICIENT_MEMORY_MSG ;
+												 LoopiditySdl::Alert(errMsg.c_str()) ; return NULL ;
+	}
 
 	// initialize scope/VU peaks cache
 	for (unsigned int peakN = 0 ; peakN < N_PEAKS_TRANSIENT ; ++peakN)
@@ -185,10 +184,6 @@ void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , u
 	Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ;
 }
 
-Scene** Loopidity::GetScenes() { return Scenes ; }
-
-SceneSdl** Loopidity::GetSdlScenes() { return SdlScenes ; }
-
 unsigned int Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
 
 unsigned int Loopidity::GetNextSceneN() { return NextSceneN ; }
@@ -219,7 +214,7 @@ SAMPLE Loopidity::GetPeak(SAMPLE* buffer , unsigned int nFrames)
 		for (unsigned int frameN = 0 ; frameN < nFrames ; ++frameN)
 			{ SAMPLE sample = fabs(buffer[frameN]) ; if (peak < sample) peak = sample ; }
 	}
-	catch(int ex) { printf("Loopidity::GetPeak(): subscript out of range\n") ; }
+	catch(int ex) { printf(GETPEAK_ERROR_MSG) ; }
 	return peak ;
 }
 
@@ -292,119 +287,6 @@ void Loopidity::ScanTransientPeaks()
 }
 
 void Loopidity::UpdateView(unsigned int sceneN) { SdlScenes[sceneN]->updateStatus() ; }
-//{ if (Scenes[sceneN]->isRolling) SdlScenes[sceneN]->updateStatus() ; }
+// { if (Scenes[sceneN]->isRolling) SdlScenes[sceneN]->updateStatus() ; }
 
 void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OUT_OF_MEMORY_MSG) ; }
-
-
-// DEBUG
-//void Loopidity::DbgPad(unsigned int nTabs , string* str)
-//	{ nTabs -= str->size() ; if (nTabs > 0) while (nTabs--) *str += " " ; }
-/*
-unsigned int Loopidity::GetNLoops(unsigned int sceneN)  { return Scenes[sceneN]->loops.size() ; }
-unsigned int Loopidity::GetHistogramImgsSize(unsigned int sceneN) {	return SdlScenes[sceneN]->histogramImgs.size() ; }
-unsigned int Loopidity::GetLoopImgsSize(unsigned int sceneN) {	return SdlScenes[sceneN]->loopImgs.size() ; }
-*/
-bool Loopidity::SanityCheck(unsigned int sceneN)
-{
-	Scene* scene = Scenes[sceneN] ; SceneSdl* sdlScene = SdlScenes[sceneN] ;
-	unsigned int nLoops = scene->loops.size() ;
-	return (nLoops == sdlScene->histogramImgs.size() && nLoops == sdlScene->loopImgs.size()) ;
-}
-
-//bool Scene::traceScene(const char* senderTemplate) { return Loopidity::TraceScene(senderTemplate , this) ; }
-
-bool Loopidity::TraceScene(const char* senderTemplate , Scene* scene)
-{
-/*
-	char* normalEvent , errorEvent ;
-	bool isModel = (!strncmp(sender , "Scene::" , 0 , 7)) ;
-	bool isView = (!strncmp(sender , "SceneSdl::" , 0 , 10) || !strncmp(sender "LoopiditySdl::" , 0 , 14)) ;
-	bool isController = (!strncmp(sender "Loopidity::" , 0 , 11)) ;
-printf("Loopidity::TraceScenes() isModel=%d isView=%d isController=%d\n" , isModel , isView , isController) ;
-*/
-/*
-	if (isModel) { normalEvent = DEBUG_TRACE_MODEL ; errorEvent = DEBUG_TRACE_MODEL_ERR ; }
-	else if (isView) { normalEvent = DEBUG_TRACE_VIEW ; errorEvent = DEBUG_TRACE_VIEW_ERR ; }
-	else if (isController) { normalEvent = DEBUG_TRACE_CONTROLLER ; errorEvent = DEBUG_TRACE_CONTROLLER_ERR ; }
-	else { printf ("Loopidity::TraceScenes() unknown sender='%s'\n" , sender) ; return false ; }
-*/
-#if DEBUG_TRACE
-	// mvc sanity checks
-	bool isEq = SanityCheck(scene->sceneN) ;
-	char *modelEvent , *modelDescFormat , *viewEvent , *viewDescFormat ;
-	if (isEq)
-	{
-		modelEvent = DEBUG_TRACE_MODEL ; modelDescFormat = DEBUG_TRACE_MODEL_DESC_FORMAT ;
-		viewEvent = DEBUG_TRACE_VIEW ; viewDescFormat = DEBUG_TRACE_VIEW_DESC_FORMAT ;
-	}
-	else
-	{
-		modelEvent = DEBUG_TRACE_MODEL_ERROR ; modelDescFormat = DEBUG_TRACE_MODEL_ERROR_FORMAT ;
-		viewEvent = DEBUG_TRACE_VIEW_ERROR ; viewDescFormat = DEBUG_TRACE_VIEW_ERROR_FORMAT ;
-	}
-/*
-	switch (senderClass)
-	{
-		case LOOPIDITY_CLASS: sender = "Loopidity::" ; break ;
-		case LOOPIDITYSDL_CLASS: sender = "LoopiditySdl::" ; break ;
-		case SCENE_CLASS: SenderClass = "Scene::" ; break ;
-		case SCENESDL_CLASS: SenderClass = "SceneSdl::" ; break ;
-		default: printf ("Trace::TraceScene() unknown sender='%s'\n" , senderFunction) ; return ; break ;
-	}
-*/
-	unsigned int sceneN = scene->sceneN ;
-	char sender[DEBUG_TRACE_EVENT_LEN] ; sprintf(sender , senderTemplate , sceneN) ;
-	SceneSdl* sdlScene = SdlScenes[sceneN] ;
-
-	// model state dump
-	Trace::TraceScene(modelEvent , sender ,
-			DEBUG_TRACE_MODEL_STATE_FORMAT , modelDescFormat , scene->isRolling , scene->shouldSaveLoop , scene->doesPulseExist , isEq) ;
-	// view state dump
-	Trace::TraceScene(viewEvent , sender ,
-			DEBUG_TRACE_VIEW_STATE_FORMAT , viewDescFormat , scene->loops.size() , sdlScene->histogramImgs.size() , sdlScene->loopImgs.size() , isEq) ;
-
-//	Loopidity::SdlScenes[sceneN]->traceSceneSdl(sender) ;
-/*
-	char recordingStatus[2] = ' \0' , saveLoopStatus[2] = ' \0' , pulseExistStatus[2] = ' \0' ;
-	if (isRecording < 0 || isRecording > 1) recordingStatus[0] = 'X' ; else snprintf(recordingStatus , "%d" , isRecording , 1) ;
-	if (shouldSaveLoop < 0 || shouldSaveLoop > 1) saveLoopStatus[0] = 'X' ; else snprintf(saveLoopStatus , "%d" , shouldSaveLoop , 1) ;
-	if (doesPulseExist < 0 || doesPulseExist > 1) pulseExistStatus[0] = 'X' ; else snprintf(pulseExistStatus , "%d" , doesPulseExist , 1) ;
-*/
-//	if (!IsEq) { event = DEBUG_TRACE_MODEL_ERR + sender ; Loopidity::DbgPad(0 , &event) ; } printf("%sScene::mvc inconsistent\n" , event.c_str()) ; }
-/*
-	event = "TRACE: " + sender ; Loopidity::DbgPad(0 , &event) ;
-	stringstream recordingSs , saveLoopSs , pulseExistSs , descSs ;
-	recordingSs << "isRecording=" << isRecording ;
-	saveLoopSs << " shouldSaveLoop=" << shouldSaveLoop ;
-	pulseExistSs << " doesPulseExist=" << doesPulseExist ;
-	descSs << recordingSs << saveLoopSs << pulseExistSs ;
-	string desc = descSs.str() ; Loopidity::DbgPad(1 , &desc) ;
-	printf("%s%s%d%d%d\n" , event.c_str() , descStr.c_str() , isRecording , shouldSaveLoop , doesPulseExist) ;
-*/
-/*
-	event = "TRACE: " + sender ; Loopidity::DbgPad(0 , &event) ; char desc[256] ;
-	sprintf(desc , "isRecording=%d shouldSaveLoop=%d doesPulseExist=%d" , isRecording , shouldSaveLoop , doesPulseExist) ;
-	string descStr = desc ; Loopidity::DbgPad(1 , &descStr) ;
-	PrintScene(DEBUG_TRACE_TAB_MODEL , event.c_str() , isRecording , shouldSaveLoop , doesPulseExist , desc.c_str()) ;
-*/
-/*
-	event = DEBUG_TRACE_VIEW + sender ; Loopidity::DbgPad(DEBUG_TRACE_EVENT , &event) ;
-	char desc[256] ; sprintf(desc , DEBUG_TRACE_VIEW_DESC_FORMAT , scene->loops.size() , histogramImgs.size() , loopImgs.size()) ;
-*/
-/*
-	stringstream descSs ; descSs << "nLoops=" << scene->loops.size() << " nHistogramImgs=" << histogramImgs.size() << " nLoopImgs=" << loopImgs.size() ;
-	string desc = descSs.str() ; Loopidity::DbgPad(DEBUG_TRACE_DESC , &desc) ;
-*/
-
-	return (isEq) ;
-#else // #if DEBUG_TRACE
-	return (Loopidity::SanityCheck(scene->sceneN)) ;
-#endif // #if DEBUG_TRACE
-}
-// DEBUG end
-
-#if DRAW_DEBUG_TEXT
-void Loopidity::SetDbgTextL() { char dbg[255] ; sprintf(dbg , "NextSceneN=%d SceneN=%d nLoops=%d PeakN=%d" , NextSceneN , CurrentSceneN , Scenes[CurrentSceneN]->loops.size() , Scenes[CurrentSceneN]->getCurrentPeakN()) ; LoopiditySdl::SetStatusL(dbg) ; }
-void Loopidity::SetDbgTextR() { char dbg[255] ; sprintf(dbg , "%d%d%d %d%d%d" , Scenes[CurrentSceneN]->isRolling , Scenes[CurrentSceneN]->shouldSaveLoop , Scenes[CurrentSceneN]->doesPulseExist , Scenes[CurrentSceneN]->loops.size() , SdlScenes[CurrentSceneN]->histogramImgs.size() , SdlScenes[CurrentSceneN]->loopImgs.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
-#endif // #if DRAW_DEBUG_TEXT

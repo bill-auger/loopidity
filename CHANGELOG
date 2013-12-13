@@ -1,0 +1,66 @@
+loopidity changelog
+
+
+2013-12-13
+  CURRENT
+    Trace class handles most debugging
+
+2012-08-20
+  b6dc2a778e
+    addLoop and sceneChanged are event driven
+
+2012-08-15
+  1f4a24856e
+    allow auto scene changing (disabled via cmd line arg)
+
+2012-08-15
+  62462b595d
+    histograms draw to a cached image upon creation (as loops) - histograms and loops draw gradient by default and greyscale when muted (mute nyi)
+
+2012-08-13
+  d143389428
+    added nextScene indicator (scene borders)
+
+2012-08-13
+  1799e7ebc8
+    scopes draw (unmask) gradient image
+
+2012-08-13
+  612b05e64e
+    input scope active before recording begins
+
+2012-08-12
+  279e700df9
+    added progress bar , input peaks on pending loop , and armed status indicator
+
+2012-08-11
+  0749a1d8b7
+    added transient peaks and progress for pending loop
+
+2012-08-11
+  b8a195a6b6
+    reimplemented drawing loops
+
+2012-08-10
+  3106a5e5fc
+    reimplemented scopes
+
+2012-08-10
+  46e7484d0e
+    reimplemented inactive scenes
+
+2012-08-08
+  ff34b08b21
+    reimplemented scene peak bars
+
+2012-08-08
+  8768a5cda7
+    reimplemented loop peak rings
+
+2012-08-08
+  b36f92dc9b
+    reimplemented histograms
+
+2012-08-08
+  0ce1210610
+    merged JackIO and implemented drawText

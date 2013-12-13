@@ -42,37 +42,39 @@ bool JackIO::ShouldMonitorInputs = true ;
 
 // setup
 
-unsigned int JackIO::Init(Scene* currentScene , unsigned int currentSceneN , bool shouldMonitorInputs)
+unsigned int JackIO::Init(Scene* currentScene , unsigned int currentSceneN ,
+													bool shouldMonitorInputs , unsigned int recordBufferSize)
 {
-if (! INIT_JACK) return JACK_INIT_SUCCESS ;
+if (!INIT_JACK) return JACK_INIT_SUCCESS ;
 
 	// set initial state
 	Reset(currentScene , currentSceneN) ; ShouldMonitorInputs = shouldMonitorInputs ;
 
 	// initialize event structs
-	EventLoopCreation.type = SDL_USEREVENT ;
-	EventLoopCreation.user.code = EVT_NEW_LOOP ;
+	EventLoopCreation.type       = SDL_USEREVENT ;
+	EventLoopCreation.user.code  = EVT_NEW_LOOP ;
 	EventLoopCreation.user.data1 = &EventLoopCreationSceneN ;
 	EventLoopCreation.user.data2 = &NewLoop ;
-	EventSceneChange.type = SDL_USEREVENT ;
-	EventSceneChange.user.code = EVT_SCENE_CHANGED ;
-	EventSceneChange.user.data1 = &EventSceneChangeSceneN ;
-	EventSceneChange.user.data2 = 0 ; // unused
-
-	// initialize record buffers
-	if (!RecordBufferSize) RecordBufferSize = DEFAULT_BUFFER_SIZE ;
-	if (!(Buffer1 = new (nothrow) SAMPLE[RecordBufferSize]())) return JACK_MEM_FAIL ;
-	if (!(Buffer2 = new (nothrow) SAMPLE[RecordBufferSize]())) return JACK_MEM_FAIL ;
+	EventSceneChange.type        = SDL_USEREVENT ;
+	EventSceneChange.user.code   = EVT_SCENE_CHANGED ;
+	EventSceneChange.user.data1  = &EventSceneChangeSceneN ;
+	EventSceneChange.user.data2  = 0 ; // unused
 
 	// initialize JACK client
-	const char* client_name = APP_NAME ;
-	jack_options_t options = JackNullOption ;
-	jack_status_t status ;
 	const char* server_name = NULL ;
+	const char* client_name = APP_NAME ;
+	jack_options_t options  = JackNullOption ;
+	jack_status_t status ;
 
 	// register client
 	Client = jack_client_open(client_name , options , &status , server_name) ;
 	if (!Client) return JACK_FAIL ;
+
+	// initialize record buffers
+	RecordBufferSize = (recordBufferSize)?
+			recordBufferSize / JackIO::GetFrameSize() : DEFAULT_BUFFER_SIZE ;
+	if (!(Buffer1 = new (nothrow) SAMPLE[RecordBufferSize]())) return JACK_MEM_FAIL ;
+	if (!(Buffer2 = new (nothrow) SAMPLE[RecordBufferSize]())) return JACK_MEM_FAIL ;
 
 	// assign callbacks
 	jack_set_process_callback(Client , ProcessCallback , 0) ;
@@ -80,8 +82,8 @@ if (! INIT_JACK) return JACK_INIT_SUCCESS ;
 	jack_on_shutdown(Client , ShutdownCallback , 0) ;
 
 	// register ports and activate client
-	PortInput1 = jack_port_register(Client , "input1" , JACK_DEFAULT_AUDIO_TYPE , JackPortIsInput , 0) ;
-	PortInput2 = jack_port_register(Client , "input2" , JACK_DEFAULT_AUDIO_TYPE , JackPortIsInput , 0) ;
+	PortInput1  = jack_port_register(Client , "input1"  , JACK_DEFAULT_AUDIO_TYPE , JackPortIsInput  , 0) ;
+	PortInput2  = jack_port_register(Client , "input2"  , JACK_DEFAULT_AUDIO_TYPE , JackPortIsInput  , 0) ;
 	PortOutput1 = jack_port_register(Client , "output1" , JACK_DEFAULT_AUDIO_TYPE , JackPortIsOutput , 0) ;
 	PortOutput2 = jack_port_register(Client , "output2" , JACK_DEFAULT_AUDIO_TYPE , JackPortIsOutput , 0) ;
 	if (PortInput1 == NULL || PortInput2 == NULL || PortOutput1 == NULL || PortOutput2 == NULL ||
@@ -103,18 +105,12 @@ SAMPLE* JackIO::GetBuffer1() { return Buffer1 ; }
 
 SAMPLE* JackIO::GetBuffer2() { return Buffer2 ; }
 
-bool JackIO::SetRecordBufferSize(unsigned int recordBufferSize)
-{
-	if (RecordBufferSize || !recordBufferSize) return false ;
-	else { RecordBufferSize = recordBufferSize  / JackIO::GetFrameSize() ; return true ; }
-}
-
 unsigned int JackIO::GetRecordBufferSize()
 	{ return (RecordBufferSize)? RecordBufferSize : DEFAULT_BUFFER_SIZE ; }
 
 unsigned int JackIO::GetNFramesPerPeriod() { return NFramesPerPeriod ; }
 
-const unsigned int JackIO::GetFrameSize() { return FRAME_SIZE ; }
+unsigned int JackIO::GetFrameSize() { return FRAME_SIZE ; }
 
 unsigned int JackIO::GetSampleRate() { return SampleRate ; }
 
