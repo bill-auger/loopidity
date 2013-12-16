@@ -12,15 +12,15 @@ unsigned int Scene::NFramesPerPeriod = 0 ;
 
 /* Loop Class public functions */
 
-SAMPLE Loop::getPeakFine(unsigned int peakN) { return peaksFine[peakN] ; }
+Sample Loop::getPeakFine(unsigned int peakN) { return peaksFine[peakN] ; }
 
-SAMPLE Loop::getPeakCourse(unsigned int peakN) { return peaksCourse[peakN] ; }
+Sample Loop::getPeakCourse(unsigned int peakN) { return peaksCourse[peakN] ; }
 
 
 /* Loop Class private functions */
 
 Loop::Loop(unsigned int nFrames) : peaksFine() , peaksCourse() , vol(1.0) , isMuted(false)
-	{ buffer1 = new SAMPLE[nFrames] ; buffer2 = new SAMPLE[nFrames] ; }
+	{ buffer1 = new Sample[nFrames] ; buffer2 = new Sample[nFrames] ; }
 
 Loop::~Loop() { delete buffer1 ; delete buffer2 ; }
 
@@ -70,8 +70,8 @@ DEBUG_TRACE_SCENE_DELETELOOP_IN
 	if (loops.empty()) { reset() ; return ; }
 	if (loopN >= loops.size()) return ;
 
-	list<Loop*>::iterator loop = loops.begin() ; while (loopN--) ++loop ;
-	loops.erase(loop) ; rescanPeaks() ;
+	list<Loop*>::iterator loopIter = loops.begin() ; while (loopN--) ++loopIter ;
+	loops.erase(loopIter) ; rescanPeaks() ;
 
 DEBUG_TRACE_SCENE_DELETELOOP_IN
 }
@@ -109,7 +109,7 @@ DEBUG_TRACE_SCENE_SCANPEAKS_IN
 		return ;}
 
 	// fill fine peaks arrays
-	SAMPLE* peaks = loop->peaksFine ; unsigned int peakN , framen ; SAMPLE peak1 , peak2 ;
+	Sample* peaks = loop->peaksFine ; unsigned int peakN , framen ; Sample peak1 , peak2 ;
 	for (peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
 	{
 		framen = nFramesPerPeak * peakN ;
@@ -127,7 +127,7 @@ DEBUG_TRACE_SCENE_SCANPEAKS_IN
 	if (highestScenePeak < hiLoopPeaks[loopN]) highestScenePeak = hiLoopPeaks[loopN] ;
 
 	// fill course peaks array
-	SAMPLE* peaksCourse = loop->peaksCourse ;
+	Sample* peaksCourse = loop->peaksCourse ;
 	float nPeaksAsFloat = (float)N_PEAKS_FINE / (float)N_PEAKS_COURSE ;
 	unsigned int nPeaksAsInt = (unsigned int)nPeaksAsFloat ;
 	for (unsigned int histPeakN = 0 ; histPeakN < N_PEAKS_COURSE ; ++histPeakN)
@@ -148,9 +148,9 @@ DEBUG_TRACE_SCENE_RESCANPEAKS_IN
 	unsigned int peakN = N_PEAKS_FINE ; while (peakN--) hiScenePeaks[peakN] = 0.0 ;
 //	unsigned int loopN = N_LOOPS ; while (loopN--)
 
-	list<Loop*>::iterator aLoopBegin = loops.begin() , aLoop ; unsigned int loopN = 0 ;
-	for (aLoop = aLoopBegin ; aLoop != loops.end() ; ++aLoop)
-		{ hiLoopPeaks[loopN] = 0.0 ; scanPeaks(*aLoop , loopN) ; ++loopN ; }
+	list<Loop*>::iterator loopIter ; unsigned int loopN = 0 ;
+	for (loopIter = loops.begin() ; loopIter != loops.end() ; ++loopIter)
+		{ hiLoopPeaks[loopN] = 0.0 ; scanPeaks(*loopIter , loopN) ; ++loopN ; }
 
 DEBUG_TRACE_SCENE_RESCANPEAKS_OUT
 }

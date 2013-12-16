@@ -4,6 +4,10 @@
 
 
 #if DEBUG_TRACE
+#define TRACE_EVS   Trace::TraceEvs
+#define TRACE_IN    Trace::TraceIn
+#define TRACE_OUT   Trace::TraceOut
+#define TRACE_SCENE Trace::TraceScene
 #define DEBUG_TRACE_LOOPIDITY_TOGGLESTATE_IN        if (TRACE_EVS(CurrentSceneN))   printf("\nUSER: SDLK_SPACE --> Loopidity::ToggleState(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ToggleState(%d)  IN" , Scenes[CurrentSceneN])) return ;
 #define DEBUG_TRACE_LOOPIDITY_TOGGLESTATE_OUT       if (TRACE_OUT(CurrentSceneN))   TRACE_SCENE("Loopidity::ToggleState(%d) OUT" , Scenes[CurrentSceneN]) ;
 #define DEBUG_TRACE_LOOPIDITY_TOGGLESCENE_IN        if (TRACE_EVS(CurrentSceneN))   printf("\nUSER: SDLK_KP0 --> Loopidity::ToggleScene(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ToggleScene(%d)  IN" , Scenes[CurrentSceneN])) return ;
@@ -35,7 +39,7 @@
 #define DEBUG_TRACE_SCENE_SCANPEAKS_IN              if (TRACE_IN(sceneN)        && !TRACE_SCENE("Scene::scanPeaks(%d)  IN" , this)) return ;
 #define DEBUG_TRACE_SCENE_SCANPEAKS_OUT             if (TRACE_OUT(sceneN))          TRACE_SCENE("Scene::scanPeaks(%d) OUT" , this) ;
 #define DEBUG_TRACE_SCENE_RESCANPEAKS_IN            if (TRACE_IN(sceneN)        && !TRACE_SCENE("Scene::rescanPeaks(%d)  IN" , this)) return ;
-#define DEBUG_TRACE_SCENE_RESCANPEAKS_OUT           if (TRACE_OUT)                  TRACE_SCENE("Scene::rescanPeaks(%d) OUT" , this) ;
+#define DEBUG_TRACE_SCENE_RESCANPEAKS_OUT           if (TRACE_OUT(sceneN))          TRACE_SCENE("Scene::rescanPeaks(%d) OUT" , this) ;
 #define DEBUG_TRACE_SCENE_TOGGLESTATE_IN            if (TRACE_IN(sceneN)        && !TRACE_SCENE("Scene::toggleState(%d)      IN" , this)) return ;
 #define DEBUG_TRACE_SCENE_TOGGLESTATE_OUT           if (TRACE_OUT(sceneN))          TRACE_SCENE("Scene::toggleState(%d)     OUT" , this) ;
 #define DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN        if (TRACE_IN(scene->sceneN))    TRACE_SCENE("SceneSdl::updateState(%d)   IN" , scene) ;

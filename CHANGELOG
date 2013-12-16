@@ -1,17 +1,9 @@
 loopidity changelog
 
 
-2013-12-13
-  CURRENT
-    Trace class handles most debugging
-
-2012-08-20
-  b6dc2a778e
-    addLoop and sceneChanged are event driven
-
 2012-08-15
   1f4a24856e
-    allow auto scene changing (disabled via cmd line arg)
+    allows auto scene changing (disabled via cmd line arg)
 
 2012-08-15
   62462b595d
@@ -63,4 +55,4 @@ loopidity changelog
 
 2012-08-08
   0ce1210610
-    merged JackIO and implemented drawText
+    merged JackIO from LoopidityUPP and implemented drawText

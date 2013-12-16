@@ -47,11 +47,13 @@ bool Trace::SanityCheck(unsigned int sceneN)
   return (nLoops == nHistogramImgs && nLoops == nLoopImgs) ;
 }
 
+#if DEBUG_TRACE
 bool Trace::TraceEvs(unsigned int sceneN) { return (DEBUG_TRACE_EVS || !SanityCheck(sceneN)) ; }
 
 bool Trace::TraceIn(unsigned int sceneN)  { return (DEBUG_TRACE_IN  || !SanityCheck(sceneN)) ; }
 
 bool Trace::TraceOut(unsigned int sceneN) { return (DEBUG_TRACE_OUT || !SanityCheck(sceneN)) ; }
+#endif // #if DEBUG_TRACE
 
 bool Trace::TraceScene(const char* senderTemplate , Scene* scene)
 {

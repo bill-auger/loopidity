@@ -46,16 +46,12 @@
 #define DRAW_DEBUG_TEXT_R ;
 #endif // #if DRAW_DEBUG_TEXT
 
-// transition to Trace class
+// Trace class features
 #if DEBUG_TRACE
 #define DEBUG_TRACE_EVS   1
 #define DEBUG_TRACE_IN    1
 #define DEBUG_TRACE_OUT   1
 #define DEBUG_TRACE_CLASS 0
-#define TRACE_EVS         Trace::TraceEvs
-#define TRACE_IN          Trace::TraceIn
-#define TRACE_OUT         Trace::TraceOut
-#define TRACE_SCENE       Trace::TraceScene
 #endif // #if DEBUG_TRACE
 
 
@@ -63,9 +59,9 @@
 #define DEFAULT_BUFFER_SIZE 33554432 // 2^25 (approx 3 min @ 48k)
 //#define DEFAULT_BUFFER_SIZE 25165824 // 1024 * 1024 * 24 (approx 135 sec @ 48k)
 //#define DEFAULT_BUFFER_SIZE 16777216 // 2^24 (approx 90 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 8388608 // 2^23 (approx 45 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 2097152 // 2^21 (approx 10 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 1048576 // 2^20 (approx 5 sec @ 48k)
+//#define DEFAULT_BUFFER_SIZE 8388608  // 2^23 (approx 45 sec @ 48k)
+//#define DEFAULT_BUFFER_SIZE 2097152  // 2^21 (approx 10 sec @ 48k)
+//#define DEFAULT_BUFFER_SIZE 1048576  // 2^20 (approx 5 sec @ 48k)
 
 // TODO: implement setting N_CHANNELS via cmd line arg - GetTransientPeaks and updateVUMeters are especially brittle now
 #define N_INPUT_CHANNELS  2 // TODO: nyi - only used for memory check and scope cache
@@ -82,6 +78,9 @@
 
 // string constants
 #define APP_NAME                "Loopidity"
+#define INIT_MSG                "\nINIT:  Loopidity::Main(): init\n\n"
+#define INIT_SUCCESS_MSG        "\nINIT:  Loopidity::Main(): init success - entering sdl loop\n\n"
+#define INIT_FAIL_MSG           "\nERROR: Loopidity::Main(): init failed - quitting\n\n"
 //#define CONNECT_ARG             "--connect"
 #define MONITOR_ARG             "--nomon"
 #define SCENE_CHANGE_ARG        "--noautoscenechange"
@@ -102,9 +101,6 @@
 #define JACK_BUFF_FAIL    2
 #define JACK_MEM_FAIL     3
 
-// aliases
-#define SAMPLE jack_default_audio_sample_t
-
 
 // dependencies
 
@@ -121,11 +117,12 @@
 #include <SDL_ttf.h>
 #include <X11/Xlib.h>
 
-#include "jack_io.h"
+#include "jack_io.h"       // must be first Sample typedef declared here
 #include "loopidity_sdl.h"
 #include "scene.h"
 #include "scene_sdl.h"
 #include "trace.h"
+
 
 using namespace std ;
 
@@ -138,8 +135,8 @@ class Loopidity
   public:
 
     // init
-    static SceneSdl** Init(           bool isMonitorInputs , bool isAutoSceneChange ,
-                                      unsigned int recordBufferSize) ;
+    static bool Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
+										 unsigned int recordBufferSize) ;
 
     // user actions
     static void ToggleAutoSceneChange(void) ;
@@ -159,17 +156,14 @@ class Loopidity
     // getters/setters
     static unsigned int    GetCurrentSceneN(      void) ;
     static unsigned int    GetNextSceneN(         void) ;
-    static unsigned int    GetLoopPos(            void) ;
+//    static unsigned int    GetLoopPos(            void) ;
 //    static bool            GetIsRolling(          void) ;
-    static bool            GetShouldSaveLoop(     void) ;
-    static bool            GetDoesPulseExist(     void) ;
+//    static bool            GetShouldSaveLoop(     void) ;
+//    static bool            GetDoesPulseExist(     void) ;
     static void            SetNFramesPerPeriod(   unsigned int nFrames) ;
-    static vector<SAMPLE>* GetPeaksInCache(       void) ;
-    static vector<SAMPLE>* GetPeaksOutCache(      void) ;
-    static SAMPLE*         GetTransientPeaksCache(void) ;
-    static SAMPLE*         GetTransientPeakIn(    void) ;
-    static SAMPLE*         GetTransientPeakOut(   void) ;
-    static SAMPLE          GetPeak(               SAMPLE* buffer , unsigned int nFrames) ;
+    static Sample*         GetTransientPeakIn(    void) ;
+//    static Sample*         GetTransientPeakOut(   void) ;
+    static Sample          GetPeak(               Sample* buffer , unsigned int nFrames) ;
 
     // event handlers
     static void OnLoopCreation(unsigned int sceneN , Loop* newLoop) ;
@@ -179,6 +173,10 @@ class Loopidity
     static void ScanTransientPeaks(void) ;
     static void UpdateView(        unsigned int sceneN) ;
     static void OOM(               void) ;
+
+		// main
+		static int Main(int argc , char** argv) ;
+
 
   private:
 
@@ -198,13 +196,13 @@ class Loopidity
     static unsigned int NFramesPerGuiInterval ;
 
     // transient sample data
-    static SAMPLE*        Buffer1 ;
-    static SAMPLE*        Buffer2 ;
-    static vector<SAMPLE> PeaksIn ;
-    static vector<SAMPLE> PeaksOut ;
-    static SAMPLE         TransientPeaks[N_PORTS] ;
-    static SAMPLE         TransientPeakInMix ;
-    static SAMPLE         TransientPeakOutMix ;
+    static Sample*        Buffer1 ;
+    static Sample*        Buffer2 ;
+    static vector<Sample> PeaksIn ;
+    static vector<Sample> PeaksOut ;
+    static Sample         TransientPeaks[N_PORTS] ;
+    static Sample         TransientPeakInMix ;
+    static Sample         TransientPeakOutMix ;
 } ;
 
 

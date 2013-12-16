@@ -18,8 +18,8 @@ friend class SceneSdl ;
 
 	public:
 
-		SAMPLE getPeakFine(unsigned int peakN) ;
-		SAMPLE getPeakCourse(unsigned int peakN) ;
+		Sample getPeakFine(unsigned int peakN) ;
+		Sample getPeakCourse(unsigned int peakN) ;
 
 	private:
 
@@ -27,12 +27,12 @@ friend class SceneSdl ;
 		~Loop() ;
 
 		// audio data
-		SAMPLE* buffer1 ;
-		SAMPLE* buffer2 ;
+		Sample* buffer1 ;
+		Sample* buffer2 ;
 
 		// peaks cache
-		SAMPLE peaksFine[N_PEAKS_FINE] ;
-		SAMPLE peaksCourse[N_PEAKS_COURSE] ;
+		Sample peaksFine[N_PEAKS_FINE] ;
+		Sample peaksCourse[N_PEAKS_COURSE] ;
 
 		// loop state
 		float vol ;
