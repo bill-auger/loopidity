@@ -4,6 +4,8 @@
 using namespace std ;
 
 
+/* Trace class side public constants */
+
 /* constants */
 
 const char* Trace::MODEL     = DEBUG_TRACE_MODEL ;
@@ -23,6 +25,8 @@ const unsigned int Trace::STATE_LEN = DEBUG_TRACE_STATE_LEN ;
 const unsigned int Trace::DESC_LEN  = DEBUG_TRACE_DESC_LEN ;
 
 
+/* Trace class side private variables */
+
 /* buffers */
 
 char Trace::Event[EVENT_LEN + 1] = {0} ;
@@ -34,6 +38,8 @@ unsigned int Trace::SenderLen = 0 ;
 unsigned int Trace::StateLen  = 0 ;
 unsigned int Trace::DescLen   = 0 ;
 
+
+/* Trace class side public functions */
 
 bool Trace::SanityCheck(unsigned int sceneN)
 {
@@ -80,7 +86,7 @@ bool Trace::TraceScene(const char* senderTemplate , Scene* scene)
   // view state dump
   Trace::TraceState(viewEvent , sender , Trace::VIEW_STATE_FMT , viewDescFormat ,
       scene->loops.size() , sdlScene->histogramImgs.size() , sdlScene->loopImgs.size() , isEq) ;
-	cout << endl ;
+  cout << endl ;
 
   return isEq ;
 }

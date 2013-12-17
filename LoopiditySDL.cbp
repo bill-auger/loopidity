@@ -30,10 +30,12 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
 			<Add option="`sdl-config --cflags`" />
 		</Compiler>
 		<Linker>
 			<Add option="`sdl-config --libs`" />
+			<Add option="`pkg-config  x11 --libs`" />
 			<Add library="/usr/lib/i386-linux-gnu/libSDL_gfx.so" />
 			<Add library="/usr/lib/i386-linux-gnu/libSDL_image.so" />
 			<Add library="/usr/lib/i386-linux-gnu/libSDL_ttf.so" />
@@ -43,12 +45,14 @@
 		<Unit filename="jack_io.h" />
 		<Unit filename="loopidity.cpp" />
 		<Unit filename="loopidity.h" />
+		<Unit filename="loopidity_sdl.cpp" />
 		<Unit filename="loopidity_sdl.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="scene.cpp" />
 		<Unit filename="scene.h" />
 		<Unit filename="scene_sdl.cpp" />
 		<Unit filename="scene_sdl.h" />
+		<Unit filename="trace.cpp" />
 		<Unit filename="trace.h" />
 		<Extensions>
 			<code_completion />

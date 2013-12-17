@@ -16,27 +16,34 @@ class Loop
   friend class Scene ;
 friend class SceneSdl ;
 
-	public:
+    /* instance side public functions */
 
-		Sample getPeakFine(unsigned int peakN) ;
-		Sample getPeakCourse(unsigned int peakN) ;
+  public:
 
-	private:
+    Sample getPeakFine(  unsigned int peakN) ;
+    Sample getPeakCourse(unsigned int peakN) ;
 
-		Loop(unsigned int nFrames) ;
-		~Loop() ;
+  private:
 
-		// audio data
-		Sample* buffer1 ;
-		Sample* buffer2 ;
+    /* class side private funcrtions  */
 
-		// peaks cache
-		Sample peaksFine[N_PEAKS_FINE] ;
-		Sample peaksCourse[N_PEAKS_COURSE] ;
+    Loop(unsigned int nFrames) ;
+    ~Loop() ;
 
-		// loop state
-		float vol ;
-		bool isMuted ;
+
+    /* instance side private varables */
+
+    // audio data
+    Sample* buffer1 ;
+    Sample* buffer2 ;
+
+    // peaks cache
+    Sample peaksFine[N_PEAKS_FINE] ;
+    Sample peaksCourse[N_PEAKS_COURSE] ;
+
+    // loop state
+    float vol ;
+    bool  isMuted ;
 } ;
 
 
@@ -48,66 +55,87 @@ class Scene
   friend class SceneSdl ;
   friend class Trace ;
 
-	public:
+  public:
 
-		// scene progress
-		unsigned int getCurrentPeakN() ;
-		float getCurrentSeconds() ;
-		float getTotalSeconds() ;
+    /* instance side public functions */
 
-	private:
+    // getters/setters
+    unsigned int getCurrentPeakN() ;
+//    float        getCurrentSeconds() ;
+//    float        getTotalSeconds() ;
 
-		typedef Scene CLASSNAME ;
-		Scene(unsigned int scenen , unsigned int recordBufferSize) ;
-		virtual ~Scene() {}
 
-		// identity
-		unsigned int sceneN ;
+  private:
 
-		// audio data
-		list<Loop*> loops ;
+    /* class side private varables */
 
-		// peaks cache
-		float hiScenePeaks[N_PEAKS_FINE] ; // the loudest of the currently playing samples in the current scene
-		float hiLoopPeaks[N_LOOPS] ; // the loudest sample for each loop of the current scene
-		float highestScenePeak ; // the loudest of all samples in all loops of the current scene (nyi)
+    // sample metedata
+    static unsigned int RecordBufferSize ;
+    static unsigned int SampleRate ;
+    static unsigned int FrameSize ;
+    static unsigned int NFramesPerPeriod ;
 
-		// sample metedata
-		static unsigned int RecordBufferSize ;
-		static unsigned int SampleRate ;
-		static unsigned int FrameSize ;
-		static unsigned int NFramesPerPeriod ;
 
-		// buffer iteration
-		unsigned int nFrames ;
-		unsigned int nFramesPerPeak ;
-		unsigned int frameN ;
-		unsigned int nBytes ;
+    /* class side private functions */
 
-		// scene state
-		bool isRolling ;
-		bool shouldSaveLoop ;
-		bool doesPulseExist ;
-		bool isMuted ;
+    // setup
+    typedef Scene CLASSNAME ;
+    Scene(unsigned int sceneNum , unsigned int recordBufferSize) ;
 
-		// audio data
-		bool addLoop(Loop* newLoop) ;
-		void deleteLoop(unsigned int loopN) ;
-		void startRolling() ;
-		void reset() ;
+    // getters/setters
+    static void  SetMetaData( unsigned int sampleRate , unsigned int frameSize ,
+                              unsigned int nFramesPerPeriod) ;
 
-		// peaks cache
-		void scanPeaks(Loop* loop , unsigned int loopN) ;
-		void rescanPeaks() ;
 
-		// scene state
-    void toggleState() ;
+    /* instance side private varables */
 
-		// getters/setters
-		static void SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod) ;
-		Loop* getLoop(unsigned int loopN) ;
-		bool getIsRolling() ;
-    unsigned int getLoopPos() ;
+    // identity
+    unsigned int sceneN ;
+
+    // audio data
+    list<Loop*> loops ;
+
+    // peaks cache
+    float hiScenePeaks[N_PEAKS_FINE] ; // the loudest of the currently playing samples in the current scene
+    float hiLoopPeaks[N_LOOPS] ;       // the loudest sample for each loop of the current scene
+    float highestScenePeak ;           // the loudest of all samples in all loops of the current scene (nyi)
+
+    // buffer iteration
+    unsigned int frameN ;
+#if SCENE_NFRAMES_EDITABLE
+unsigned int beginFrameN ;
+unsigned int endFrameN ;
+#endif // #if SCENE_NFRAMES_EDITABLE
+    unsigned int nFrames ;
+    unsigned int nFramesPerPeak ;
+    unsigned int nBytes ;
+
+    // scene state
+    bool isRolling ;
+    bool shouldSaveLoop ;
+    bool doesPulseExist ;
+    bool isMuted ;
+
+
+    /* instance side private functions */
+
+    // scene state
+    void startRolling(void) ;
+    void toggleState(void) ;
+
+    // audio data
+    bool addLoop(     Loop* newLoop) ;
+    void deleteLoop(  unsigned int loopN) ;
+    void reset(       void) ;
+
+    // peaks cache
+    void scanPeaks(  Loop* loop , unsigned int loopN) ;
+    void rescanPeaks(void) ;
+
+    // getters/setters
+    Loop*        getLoop(     unsigned int loopN) ;
+    bool         getIsRolling(void) ;
+    unsigned int getLoopPos(  void) ;
 } ;
 
 

@@ -16,6 +16,8 @@ class JackIO
 
   private:
 
+    /* class side private varables */
+
     // JACK handles
     static jack_client_t* Client ;
     static jack_port_t*   PortInput1 ;
@@ -50,7 +52,9 @@ class JackIO
     static bool ShouldMonitorInputs ;
 
 
-public:
+  public:
+
+    /* class side public functions */
 
     // setup
     static unsigned int Init(Scene* currentScene , unsigned int currentSceneN ,
@@ -69,6 +73,8 @@ public:
     static void         SetNextScene(       Scene* nextScene , unsigned int nextSceneN) ;
 
 private:
+
+    /* class side private functions */
 
     // JACK callbacks
     static int  ProcessCallback(      jack_nframes_t nframes , void* arg) ;

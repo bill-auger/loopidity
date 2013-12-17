@@ -2,7 +2,7 @@
 #include "jack_io.h"
 
 
-/* JackIO class private varables */
+/* JackIO class side private varables */
 
 // JACK handles
 jack_client_t* JackIO::Client      = 0 ;
@@ -38,7 +38,7 @@ unsigned int       JackIO::BytesPerSecond   = FRAME_SIZE * SampleRate ;
 bool JackIO::ShouldMonitorInputs = true ;
 
 
-/* JackIO class public functions */
+/* JackIO class side public functions */
 
 // setup
 
@@ -124,12 +124,14 @@ void JackIO::SetNextScene(Scene* nextScene , unsigned int nextSceneN)
   { NextScene = nextScene ; NextSceneN = nextSceneN ; }
 
 
-/* JackIO class private functions */
+/* JackIO class side private functions */
 
 // JACK callbacks
 
 int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 {
+//unsigned int DbgOffset = nFrames * 200 ;
+
   // get JACK buffers
 Sample* in1  = (Sample*)jack_port_get_buffer(PortInput1  , nFrames) ;
 Sample* out1 = (Sample*)jack_port_get_buffer(PortOutput1 , nFrames) ;
@@ -139,19 +141,21 @@ Sample* out2 = (Sample*)jack_port_get_buffer(PortOutput2 , nFrames) ;
   // index into the record buffers and mix out
 unsigned int currFrameN = CurrentScene->frameN , frameN , frameIdx ;
 list<Loop*>::iterator loopsBeginIter = CurrentScene->loops.begin() ;
-list<Loop*>::iterator loopsEndIter = CurrentScene->loops.end() ;
+list<Loop*>::iterator loopsEndIter   = CurrentScene->loops.end() ;
 list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
   for (frameN = 0 ; frameN < nFrames ; ++frameN)
   {
-    frameIdx = CurrentScene->frameN + frameN ;
+    frameIdx = currFrameN + frameN ;//+ DbgOffset ;
 
     // write input to outputs mix buffers
     if (!ShouldMonitorInputs) Buffer1[frameIdx] = Buffer2[frameIdx] = 0 ;
     else { Buffer1[frameIdx] = in1[frameN] ; Buffer2[frameIdx] = in2[frameN] ; }
 
     // mix unmuted tracks into outputs mix buffers
-		for (loopIter = loopsBeginIter ; loopIter != loopsEndIter ; ++loopIter)
+    for (loopIter = loopsBeginIter ; loopIter != loopsEndIter ; ++loopIter)
     {
+//if (frameIdx >= CurrentScene->nFrames) continue ;
+
       if (CurrentScene->isMuted && (*loopIter)->isMuted) continue ;
 
       aLoop = *loopIter ; vol = aLoop->vol ;
@@ -166,7 +170,11 @@ list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
   memcpy(buf1 , in1  , PeriodSize)    ; memcpy(buf2 , in2  , PeriodSize) ;
 
   // increment sample rollover
+#if SCENE_NFRAMES_EDITABLE && 0
+if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->endFrameN))// && CurrentScene->nFrames == RecordBufferSize ;
+#else
   if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->nFrames))
+#endif // #if SCENE_NFRAMES_EDITABLE
   {
     // unmute 'paused' loops
     CurrentScene->isMuted = false ;
@@ -176,12 +184,19 @@ list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
     {
       if ((NewLoop = new (nothrow) Loop(CurrentScene->nFrames)))
       {
+#if SCENE_NFRAMES_EDITABLE && 0
+memcpy(NewLoop->buffer1 , Buffer1 + CurrentScene->beginFrameN , CurrentScene->nBytes) ;
+memcpy(NewLoop->buffer2 , Buffer2 + CurrentScene->beginFrameN , CurrentScene->nBytes) ;
+#else
         memcpy(NewLoop->buffer1 , Buffer1 , CurrentScene->nBytes) ;
         memcpy(NewLoop->buffer2 , Buffer2 , CurrentScene->nBytes) ;
+#endif // #if SCENE_NFRAMES_EDITABLE
         EventLoopCreationSceneN = CurrentSceneN ; SDL_PushEvent(&EventLoopCreation) ;
       }
       else Loopidity::OOM() ;
     }
+
+//CurrentScene->beginFrameN = 0 ; CurrentScene->endFrameN -= CurrentScene->beginFrameN ;
 
     // switch to NextScene if necessary
     if (CurrentScene != NextScene)

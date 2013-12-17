@@ -2,7 +2,41 @@
 #include "scene_sdl.h"
 
 
-/* SceneSdl class private constants */
+/* LoopSdl class side private functions */
+
+LoopSdl::LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Sint16 x , Sint16 y)
+{
+  // drawing backbuffers
+  playingSurface = playingImg ;
+  mutedSurface   = mutedImg ;
+  currentSurface = playingImg ;
+
+  // drawing coordinates
+  loopL = x ;
+  loopC = x + PEAK_RADIUS ;
+  rect  = { x , y , 0 , 0 } ;
+}
+
+LoopSdl::~LoopSdl() { SDL_FreeSurface(playingSurface) ; SDL_FreeSurface(mutedSurface) ; }
+
+
+/* LoopSdl instance side private functions */
+
+// loop state
+
+void LoopSdl::setStatus(Uint16 loopStatus)
+{
+  switch (loopStatus)
+  {
+    case STATE_LOOP_PLAYING: currentSurface = playingSurface ; break ;
+    case STATE_LOOP_PENDING: currentSurface = mutedSurface ;   break ;
+    case STATE_LOOP_MUTED:   currentSurface = mutedSurface ;   break ;
+    default:                                                   break ;
+  }
+}
+
+
+/* SceneSdl class side private constants */
 
 Sint16       SceneSdl::HistogramsT     = HISTOGRAMS_T + ((HISTOGRAMS_B - HISTOGRAMS_T) / 2) ;
 Sint16       SceneSdl::HistogramsB     = HistogramsT ; // reset()
@@ -31,38 +65,10 @@ const Uint16 SceneSdl::SceneFrameR     = SCENE_FRAME_R ;
 const float  SceneSdl::PieSliceDegrees = PIE_SLICE_DEGREES ;
 const Uint8  SceneSdl::BytesPerPixel   = PIXEL_DEPTH / 8 ;
 
-/* LoopSdl class private functions */
 
-LoopSdl::LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Sint16 x , Sint16 y)
-{
-  playingSurface = playingImg ;
-  mutedSurface   = mutedImg ;
-  currentSurface = playingImg ;
-  loopL          = x ;
-  loopC          = x + PEAK_RADIUS ;
-  rect           = { x , y , 0 , 0 } ;
-}
+/* SceneSdl class side private functions */
 
-LoopSdl::~LoopSdl() { SDL_FreeSurface(playingSurface) ; SDL_FreeSurface(mutedSurface) ; }
-
-
-// loop state
-
-void LoopSdl::setStatus(Uint16 loopStatus)
-{
-  switch (loopStatus)
-  {
-    case STATE_LOOP_PLAYING: currentSurface = playingSurface ; break ;
-    case STATE_LOOP_PENDING: currentSurface = mutedSurface ;   break ;
-    case STATE_LOOP_MUTED:   currentSurface = mutedSurface ;   break ;
-    default:                                                   break ;
-  }
-}
-
-
-/* SceneSdl class private functions */
-
-SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN , Uint32 frameColor) :
+SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN) :
   // constants
   sceneT(      SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,
@@ -74,7 +80,7 @@ SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN , Uint32 frameColor) :
 
   // drawScene() instance variables
   loopFrameColor  = STATE_IDLE_COLOR ;
-  sceneFrameColor = frameColor ;
+  sceneFrameColor = (!sceneN)? STATE_PLAYING_COLOR : STATE_IDLE_COLOR ;
 
   // drawScene() , drawHistogram() , and drawRecordingLoop() 'local' variables
   currentPeakN  = 0 ;
@@ -108,6 +114,17 @@ SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN , Uint32 frameColor) :
   SDL_SetAlpha(inactiveSceneSurface , SDL_SRCALPHA | SDL_RLEACCEL , 128) ;
   drawScene(inactiveSceneSurface , 0 , 0) ;
 }
+
+void SceneSdl::PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel)
+{
+  Uint8 r , g , b , lum ; SDL_GetRGB(*pixel , fmt , &r , &g , &b) ;
+  lum = (r * 0.3) + (g * 0.59) + (b * 0.11) ; *pixel = SDL_MapRGB(fmt , lum , lum , lum) ;
+}
+
+Sint16 SceneSdl::GetLoopL(Uint16 loopN) { return LoopsL + (LoopW * loopN) ; }
+
+
+/* SceneSdl instance side private functions */
 
 
 // getters/setters
@@ -362,11 +379,3 @@ DEBUG_TRACE_SCENESDL_DELETELOOP_IN
 
 DEBUG_TRACE_SCENESDL_DELETELOOP_OUT
 }
-
-void SceneSdl::PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel)
-{
-  Uint8 r , g , b , lum ; SDL_GetRGB(*pixel , fmt , &r , &g , &b) ;
-  lum = (r * 0.3) + (g * 0.59) + (b * 0.11) ; *pixel = SDL_MapRGB(fmt , lum , lum , lum) ;
-}
-
-Sint16 SceneSdl::GetLoopL(Uint16 loopN) { return LoopsL + (LoopW * loopN) ; }

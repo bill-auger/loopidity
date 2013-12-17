@@ -6,10 +6,9 @@ Uint16 LoopiditySdl::DbgFramerateTs = 0 ;
 // DEBUG end
 
 
-/* LoopiditySdl class public variables */
+/* LoopiditySdl class side private variables */
 
 // window
-Uint16       LoopiditySdl::GuiLongCount = 0 ;
 SDL_Surface* LoopiditySdl::Screen       = 0 ;
 SDL_Rect     LoopiditySdl::WinRect      = WIN_RECT ;
 Uint32       LoopiditySdl::WinBgColor   = 0 ;
@@ -53,14 +52,14 @@ Sample*         LoopiditySdl::PeaksTransient = 0 ;
 Uint16       LoopiditySdl::CurrentSceneN = 0 ;
 Uint16       LoopiditySdl::NextSceneN    = 0 ;
 Uint32       LoopiditySdl::CurrentPeakN  = 0 ;
-Uint16       LoopiditySdl::LoopProgress  = 0 ;
+Uint16       LoopiditySdl::SceneProgress  = 0 ;
 Uint16       LoopiditySdl::SceneN        = 0 ;
 SceneSdl*    LoopiditySdl::SdlScene      = 0 ;
 SDL_Surface* LoopiditySdl::SceneSurface  = 0 ;
 SDL_Rect*    LoopiditySdl::SceneRect     = 0 ;
 
 
-/* LoopiditySdl class public functions */
+/* LoopiditySdl class side private functions */
 
 // setup
 
@@ -132,59 +131,11 @@ void LoopiditySdl::Cleanup()
 }
 
 
-// event handlers
-
-void LoopiditySdl::HandleKeyEvent(SDL_Event* event)
-{
-DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT
-
-  switch (event->key.keysym.sym)
-  {
-    case SDLK_SPACE: Loopidity::ToggleState() ; break ;
-    case SDLK_KP0: Loopidity::ToggleScene() ; break ;
-    case SDLK_KP_ENTER: Loopidity::ToggleSceneIsMuted() ; break ;
-    case SDLK_ESCAPE:
-      switch (event->key.keysym.mod)
-      {
-        case KMOD_RCTRL: Loopidity::Reset() ; break ;
-        case KMOD_RSHIFT: Loopidity::ResetCurrentScene() ; break ;
-        default: Loopidity::DeleteLastLoop() ; break ;
-      }
-    default: break ;
-  }
-}
-
-void LoopiditySdl::HandleMouseEvent(SDL_Event* event)
-{
-  Sint16 x = event->button.x , y = event->button.y ;
-  if (x < MOUSE_SCENES_L || x > MOUSE_SCENES_R ||
-      y < MOUSE_SCENES_T || y > MOUSE_SCENES_B) return ;
-
-  Uint16 sceneN = (y - MOUSE_SCENES_T) / SCENE_H , loopN = (x - MOUSE_SCENES_L) / LOOP_W ;
-  switch (event->button.button)
-  {
-    case SDL_BUTTON_LEFT: Loopidity::ToggleLoopIsMuted(sceneN , loopN) ; break ;
-    case SDL_BUTTON_MIDDLE: Loopidity::DeleteLoop(sceneN , loopN) ; break ;
-    case SDL_BUTTON_RIGHT: break ;
-    case SDL_BUTTON_WHEELUP: Loopidity::IncLoopVol(sceneN , loopN , true) ; break ;
-    case SDL_BUTTON_WHEELDOWN: Loopidity::IncLoopVol(sceneN , loopN , false) ; break ;
-    default: break ;
-  }
-}
-
-void LoopiditySdl::HandleUserEvent(SDL_Event* event)
-{
-  unsigned int sceneN = *((Uint8*)event->user.data1) ;
-  switch (event->user.code)
-  {
-    case EVT_NEW_LOOP:      Loopidity::OnLoopCreation(sceneN , *((Loop**)event->user.data2)) ; break ;
-    case EVT_SCENE_CHANGED: Loopidity::OnSceneChange(sceneN) ; break ;
-    default: break ;
-  }
-}
-
-
 // drawing
+
+void LoopiditySdl::BlankScreen() { SDL_FillRect(Screen , 0 , WinBgColor) ; }
+
+void LoopiditySdl::DrawHeader() { DrawText(HEADER_TEXT , Screen , HeaderFont , &HeaderRectC , &HeaderRectDim , HeaderColor) ; }
 
 void LoopiditySdl::DrawScenes()
 {
@@ -198,12 +149,12 @@ void LoopiditySdl::DrawScenes()
     {
       SceneSurface = SdlScene->activeSceneSurface ;
       CurrentPeakN = SdlScene->scene->getCurrentPeakN() ;
-      LoopProgress = ((float)CurrentPeakN / (float)N_PEAKS_FINE) * 100 ;
-      SdlScene->drawScene(SceneSurface , CurrentPeakN , LoopProgress) ;
+      SceneProgress = ((float)CurrentPeakN / (float)N_PEAKS_FINE) * (PEAK_RADIUS * 2) ;
+      SdlScene->drawScene(SceneSurface , CurrentPeakN , SceneProgress) ;
 
 #if DRAW_RECORDING_LOOP
       if (SdlScene->scene->loops.size() < N_LOOPS)
-        SdlScene->drawRecordingLoop(SceneSurface , LoopProgress) ;
+        SdlScene->drawRecordingLoop(SceneSurface , SceneProgress) ;
 #endif
     }
     else SceneSurface = SdlScene->inactiveSceneSurface ;
@@ -219,21 +170,63 @@ DRAW_DEBUG_TEXT_L
 
 void LoopiditySdl::DrawScopes()
 {
+#if SCENE_NFRAMES_EDITABLE
+  if (Loopidity::GetIsEditMode() || 1)
+  {
+#  if DRAW_EDIT_HISTOGRAM
+    SDL_FillRect(Screen , &ScopeRect , WinBgColor) ;
+
+    CurrentSceneN       = Loopidity::GetCurrentSceneN() ;
+    Scene* currentScene = SdlScenes[CurrentSceneN]->scene ;
+    Loop* baseLoop      = currentScene->getLoop(0) ;
+    if (baseLoop)
+    {
+      const Uint16 scopeL = (WIN_CENTER - (N_PEAKS_FINE / 2)) ;
+      CurrentPeakN        = SdlScenes[CurrentSceneN]->scene->getCurrentPeakN() ;
+      SceneProgress       = ((float)CurrentPeakN / N_PEAKS_FINE) * N_PEAKS_FINE ;
+      for (Uint16 peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
+      {
+        // histogram
+        Sint16 histogramH = (Uint16)(baseLoop->getPeakFine(peakN) * ScopePeakH) ;
+        MaskRect.y        = (Sint16)ScopePeakH - histogramH ;
+        MaskRect.h        = (histogramH * 2) + 1 ;
+        GradientRect.x    = scopeL + peakN ;
+        GradientRect.y    = Scope0 - histogramH ;
+        SDL_BlitSurface(LoopiditySdl::ScopeGradient , &MaskRect , Screen , &GradientRect) ;
+
+        if (peakN != CurrentPeakN) continue ;
+
+        // progress
+        Sint16 progressX = scopeL + SceneProgress ;
+        Sint16 progressT = Scope0 - ScopePeakH ;
+        Sint16 progressB = Scope0 + ScopePeakH ;
+        vlineColor(Screen , progressX , progressT , progressB , PEAK_CURRENT_COLOR) ;
+      }
+    }
+#  endif // #if DRAW_EDIT_HISTOGRAM
+    return ;
+  }
+#endif // #if SCENE_NFRAMES_EDITABLE
+
 #if DRAW_SCOPES
   SDL_FillRect(Screen , &ScopeRect , WinBgColor) ;
   for (Uint16 peakN = 0 ; peakN < N_PEAKS_TRANSIENT ; ++peakN)
   {
-    Sint16 inX = ScopeR - peakN , outX = WinCenter - peakN ;
-    Sint16 inH = (Uint16)((*PeaksIn)[peakN] * ScopePeakH) ;
+    Sint16 inX  = ScopeR - peakN , outX = WinCenter - peakN ;
+    Sint16 inH  = (Uint16)((*PeaksIn)[peakN] * ScopePeakH) ;
     Sint16 outH = (Uint16)((*PeaksOut)[peakN] * ScopePeakH) ;
-    MaskRect.y = (Sint16)ScopePeakH - inH ; MaskRect.h = (inH * 2) + 1 ;
+
+    // input scope
+    MaskRect.y     = (Sint16)ScopePeakH - inH ; MaskRect.h = (inH * 2) + 1 ;
     GradientRect.x = inX ; GradientRect.y = Scope0 - inH ;
     SDL_BlitSurface(LoopiditySdl::ScopeGradient , &MaskRect , Screen , &GradientRect) ;
-    MaskRect.y = (Sint16)ScopePeakH - outH ; MaskRect.h = (outH * 2) + 1 ;
+
+    // output scope
+    MaskRect.y     = (Sint16)ScopePeakH - outH ; MaskRect.h = (outH * 2) + 1 ;
     GradientRect.x = outX ; GradientRect.y = Scope0 - outH ;
     SDL_BlitSurface(LoopiditySdl::ScopeGradient , &MaskRect , Screen , &GradientRect) ;
   }
-#endif
+#endif // #if DRAW_SCOPES
 }
 
 void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* screenRect , SDL_Rect* cropRect , SDL_Color fgColor)
@@ -249,21 +242,21 @@ void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font 
 #endif // #if DRAW_STATUS
 }
 
-void LoopiditySdl::DrawHeader() { DrawText(HEADER_TEXT , Screen , HeaderFont , &HeaderRectC , &HeaderRectDim , HeaderColor) ; }
-
-void LoopiditySdl::DrawStatusText()
+void LoopiditySdl::DrawStatusArea()
 {
 // DEBUG begin
 Uint16 now = SDL_GetTicks() ;
 Uint16 elapsed = now - DbgFramerateTs ; DbgFramerateTs = now ;
-char s[9] ; snprintf(s , 9 , "FPS: %1f" , (GUI_LONGCOUNT / (elapsed / 1000.0))) ;
-SetStatusC(s) ;
+char s[9] ; snprintf(s , 9 , "FPS: %1f" , (GUI_UPDATE_LOW_PRIORITY_NICE / (elapsed / 1000.0))) ;
+//SetStatusC(s) ;
 // DEBUG end
 
   DrawText(StatusTextL , Screen , StatusFont , &StatusRectL , &StatusRectDim , StatusColor) ;
   DrawText(StatusTextC , Screen , StatusFont , &StatusRectC , &StatusRectDim , StatusColor) ;
   DrawText(StatusTextR , Screen , StatusFont , &StatusRectR , &StatusRectDim , StatusColor) ;
 }
+
+void LoopiditySdl::FlipScreen() { SDL_Flip(Screen) ; }
 
 void LoopiditySdl::Alert(const char* msg) { printf("%s" , msg) ; }
 

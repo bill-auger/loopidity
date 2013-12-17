@@ -10,8 +10,8 @@ using namespace std ;
 
 
 // intervals
-#define GUI_UPDATE_INTERVAL_SHORT 125
-#define GUI_LONGCOUNT             8
+#define GUI_UPDATE_INTERVAL          125
+#define GUI_UPDATE_LOW_PRIORITY_NICE 8   // n high priority updates to pass
 
 // window magnitudes
 #define SCREEN_W        1024 // minimum screen resolution
@@ -103,10 +103,15 @@ using namespace std ;
 
 class LoopiditySdl
 {
-  public:
+  friend class Loopidity ;
+  friend class SceneSdl ;
+  friend class Trace ;
+
+  private:
+
+    /* class side private variables */
 
     // window
-    static Uint16       GuiLongCount ;
     static SDL_Surface* Screen ;
     static SDL_Rect     WinRect ;
     static Uint32       WinBgColor ;
@@ -150,45 +155,43 @@ class LoopiditySdl
     static Uint16       CurrentSceneN ;
     static Uint16       NextSceneN ;
     static Uint32       CurrentPeakN ;
-    static Uint16       LoopProgress ;
+    static Uint16       SceneProgress ;
     static Uint16       SceneN ;
     static SceneSdl*    SdlScene ;
     static SDL_Surface* SceneSurface ;
     static SDL_Rect*    SceneRect ;
+
+
+    /* class side private functions */
 
     // setup
     static bool Init(    SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
                          vector<Sample>* peaksOut , Sample* peaksTransient) ;
     static void SdlError(const char* functionName) ;
     static void TtfError(const char* functionName) ;
-    static void Cleanup() ;
-
-    // events SDL_Event JackIO::EventLoopCreation ;
-
-    // event handlers
-    static void HandleKeyEvent(  SDL_Event* event) ;
-    static void HandleMouseEvent(SDL_Event* event) ;
-    static void HandleUserEvent( SDL_Event* event) ;
+    static void Cleanup( void) ;
 
     // drawing
-    static void DrawScenes() ;
-    static void DrawScopes() ;
-    static void DrawText(      string text , SDL_Surface* surface , TTF_Font* font ,
-                               SDL_Rect* screenRect , SDL_Rect* cropRect ,
-                               SDL_Color fgColor) ;
-    static void DrawHeader() ;
-    static void DrawStatusText() ;
-    static void Alert(         const char* msg) ;
+    static void DrawHeader(     void) ;
+    static void BlankScreen(    void) ;
+    static void DrawScenes(     void) ;
+    static void DrawScopes(     void) ;
+    static void DrawText(       string text , SDL_Surface* surface , TTF_Font* font ,
+                                SDL_Rect* screenRect , SDL_Rect* cropRect ,
+                                SDL_Color fgColor) ;
+    static void DrawStatusArea( void) ;
+    static void FlipScreen(     void) ;
+    static void Alert(          const char* msg) ;
 
     // getters/settters
-    static void SetStatusL(string msg) ;
-    static void SetStatusC(string msg) ;
-    static void SetStatusR(string msg) ;
+    static void   SetStatusL(string msg) ;
+    static void   SetStatusC(string msg) ;
+    static void   SetStatusR(string msg) ;
 /*
     static string MakeTime(Uint16 seconds) ;
     static Uint32 GetAvailableMemory() ;
     static void UpdateMemory() ;
-    static void UpdateLoopProgress() ;
+    static void UpdateSceneProgress() ;
     static void UpdateVUMeters() ;
 */
 

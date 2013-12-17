@@ -4,8 +4,6 @@
 
 
 // magnitudes
-#define PEAK_RADIUS             SDL_PEAK_RADIUS
-#define LOOP_DIAMETER           SDL_LOOP_DIAMETER
 #define X_PADDING               10
 #define Y_PADDING               18
 #define BORDER_PAD              5
@@ -64,6 +62,7 @@
 #define STATE_LOOP_PENDING 2
 #define STATE_LOOP_MUTED   3
 
+
 #include "loopidity.h"
 class Loop ;
 class Scene ;
@@ -74,25 +73,32 @@ using namespace std ;
 
 class LoopSdl
 {
-	friend class SceneSdl ;
+  friend class SceneSdl ;
 
-	private:
+  private:
 
-		LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Sint16 x , Sint16 y) ;
-		~LoopSdl() ;
+    /* class side private functions */
 
-		// drawing backbuffers
-		SDL_Surface* playingSurface ;
-		SDL_Surface* mutedSurface ;
-		SDL_Surface* currentSurface ;
+    LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Sint16 x , Sint16 y) ;
+    ~LoopSdl() ;
 
-		// drawing coordinates
-		Sint16   loopL ;
-		Sint16   loopC ;
-		SDL_Rect rect ;
 
-		// loop state
-		void setStatus(Uint16 loopStatus) ;
+    /* instance side private varables */
+
+    // drawing backbuffers
+    SDL_Surface* playingSurface ;
+    SDL_Surface* mutedSurface ;
+    SDL_Surface* currentSurface ;
+
+    // drawing coordinates
+    Sint16   loopL ;
+    Sint16   loopC ;
+    SDL_Rect rect ;
+
+    /* instance side private functions */
+
+    // loop state
+    void setStatus(Uint16 loopStatus) ;
 } ;
 
 
@@ -104,9 +110,9 @@ class SceneSdl
 
   private:
 
-    SceneSdl(Scene* aScene , Uint16 sceneN , Uint32 frameColor) ;
+    /* class side private constants */
 
-    // drawing constants
+    // drawing coordinates
     // TODO: some of these Uint16 have caused conversion warnings (perhaps all should be Sint16)
     static Sint16       HistogramsT ;  // drawRecordingLoop()
     static Sint16       HistogramsB ;  // drawRecordingLoop()
@@ -134,10 +140,30 @@ class SceneSdl
     static const Uint16 SceneFrameR ;
     static const float  PieSliceDegrees ;
     static const Uint8  BytesPerPixel ;
-    const Sint16        sceneT ;
-    const Uint16        sceneFrameT ;
-    const Uint16        sceneFrameB ;
-    const SDL_Rect      sceneRect ; // will not change but cannot be const
+
+
+    /* class side private functions */
+
+    // setup
+    SceneSdl(Scene* aScene , Uint16 sceneN) ;
+
+    // helpers
+    static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
+
+    // getters/setters
+    static Sint16 GetLoopL(Uint16 loopN) ;
+
+
+    /* instance side private constants */
+
+    // drawing coordinates
+    const Sint16   sceneT ;
+    const Uint16   sceneFrameT ;
+    const Uint16   sceneFrameB ;
+    const SDL_Rect sceneRect ;
+
+
+    /* instance side private varables */
 
     // model
     Scene* scene ;
@@ -179,6 +205,8 @@ class SceneSdl
     SDL_Surface* inactiveSceneSurface ;
 
 
+    /* instance side private functions */
+
     // getters/setters
     LoopSdl* getLoop( list<LoopSdl*>* imgs , unsigned int loopN) ;
     void updateStatus(void) ;
@@ -199,8 +227,6 @@ class SceneSdl
     SDL_Surface*  createSwSurface(   Sint16 w , Sint16 h) ;
     void          addLoop(           Loop* newLoop , Uint16 nLoops) ;
     void          deleteLoop(        unsigned int loopN) ;
-    static void   PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
-    static Sint16 GetLoopL(          Uint16 loopN) ;
 } ;
 
 

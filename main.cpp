@@ -1,13 +1,13 @@
 /*
 Loopidity MVC classes:
-Loopidity    - controller class
-LoopiditySDL - main view class
-Scene        - scene model class
-SceneSDL     - scene view class
-Loop         - loop model class
-LoopSDL      - loop view class
-JackIO       - JACK audio i/o wrapper class
-Trace        - debug trace class
+Loopidity    - main  controller class (== 0                  instances)
+LoopiditySDL - main  view       class (== 0                  instances)
+Scene        - scene model      class (== N_SCENES           instances)
+SceneSDL     - scene view       class (== N_SCENES           instances)
+Loop         - loop  model      class (<= N_SCENES * N_LOOPS instances)
+LoopSDL      - loop  view       class (<= N_SCENES * N_LOOPS instances)
+JackIO       - JACK  wrapper    class (== 0                  instances)
+Trace        - debug trace      class (== 0                  instances)
 */
 
 #include "loopidity.h"
