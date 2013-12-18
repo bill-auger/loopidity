@@ -132,22 +132,30 @@ Sint16 SceneSdl::GetLoopL(Uint16 loopN) { return LoopsL + (LoopW * loopN) ; }
 
 /* SceneSdl instance side private functions */
 
+// setup
+
+void SceneSdl::reset()
+{
+  HistogramsT    = HistogramsB     = HISTOGRAMS_T + ((HISTOGRAMS_B - HISTOGRAMS_T) / 2) ;
+  loopFrameColor = sceneFrameColor = STATE_IDLE_COLOR ;
+  histogramImgs.clear() ; loopImgs.clear() ; Loopidity::UpdateView(scene->sceneN) ;
+}
+
+void SceneSdl::cleanup() { SDL_FreeSurface(activeSceneSurface) ; SDL_FreeSurface(inactiveSceneSurface) ; }
+
+
 // getters/setters
 
-LoopSdl* SceneSdl::getLoop(list<LoopSdl*>* imgs , unsigned int loopN)
-{
-  if (loopN >= imgs->size()) return NULL ;
-
-  list<LoopSdl*>::iterator loopIter = imgs->begin() ; while (loopN--) ++loopIter ;
-  return (*loopIter) ;
-}
+void SceneSdl::startRolling() { HistogramsT = HISTOGRAMS_T ; HistogramsB = HISTOGRAMS_B ; }
 
 void SceneSdl::updateStatus()
 {
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN
 
-  sceneFrameColor = (scene->sceneN == Loopidity::GetCurrentSceneN())?
-      STATE_PLAYING_COLOR : (scene->sceneN == Loopidity::GetNextSceneN())?
+  bool isCurrentScene = scene->sceneN == Loopidity::GetCurrentSceneN() ;
+  bool isNextScene    = scene->sceneN == Loopidity::GetNextSceneN() ;
+  sceneFrameColor     = (isCurrentScene)?
+      STATE_PLAYING_COLOR : (isNextScene)?
           STATE_PENDING_COLOR : STATE_IDLE_COLOR ;
 
   loopFrameColor = (!scene->isRolling)? STATE_IDLE_COLOR :
@@ -162,20 +170,19 @@ DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN
     getLoop(&loopImgs , loopN)->setStatus(loopState) ;
   }
 
+  if (isCurrentScene) LoopiditySdl::SetStatusL(makeDurationStatusText()) ;
+
 DRAW_DEBUG_TEXT_R
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT
 }
 
-void SceneSdl::startRolling() { HistogramsT = HISTOGRAMS_T ; HistogramsB = HISTOGRAMS_B ; }
-
-void SceneSdl::reset()
+LoopSdl* SceneSdl::getLoop(list<LoopSdl*>* imgs , unsigned int loopN)
 {
-  HistogramsT    = HistogramsB     = HISTOGRAMS_T + ((HISTOGRAMS_B - HISTOGRAMS_T) / 2) ;
-  loopFrameColor = sceneFrameColor = STATE_IDLE_COLOR ;
-  histogramImgs.clear() ; loopImgs.clear() ; Loopidity::UpdateView(scene->sceneN) ;
-}
+  if (loopN >= imgs->size()) return NULL ;
 
-void SceneSdl::cleanup() { SDL_FreeSurface(activeSceneSurface) ; SDL_FreeSurface(inactiveSceneSurface) ; }
+  list<LoopSdl*>::iterator loopIter = imgs->begin() ; while (loopN--) ++loopIter ;
+  return (*loopIter) ;
+}
 
 
 // drawing
@@ -332,7 +339,7 @@ void SceneSdl::drawRecordingLoop(SDL_Surface* surface , Uint16 sceneProgress)
 
   vlineColor(surface , loopL + sceneProgress , HistogramsT , HistogramsB , PEAK_CURRENT_COLOR) ;
 
-  loopC = loopL + PEAK_RADIUS ; ringR = *Loopidity::GetTransientPeakIn() * (float)PEAK_RADIUS ;
+  loopC = loopL + PEAK_RADIUS ; ringR = *JackIO::GetTransientPeakIn() * (float)PEAK_RADIUS ;
   circleColor(surface , loopC , Loops0 , ringR , PEAK_CURRENT_COLOR) ;
 #endif
 }
@@ -370,7 +377,7 @@ DEBUG_TRACE_SCENESDL_ADDLOOP_IN
 DEBUG_TRACE_SCENESDL_ADDLOOP_OUT
 }
 
-void SceneSdl::deleteLoop(unsigned int loopN)
+void SceneSdl::deleteLoop(Uint8 loopN)
 {
 DEBUG_TRACE_SCENESDL_DELETELOOP_IN
 
@@ -383,4 +390,15 @@ DEBUG_TRACE_SCENESDL_DELETELOOP_IN
   if (!loopImgs.empty())      loopImgs.erase(loopImgIter) ;
 
 DEBUG_TRACE_SCENESDL_DELETELOOP_OUT
+}
+
+string SceneSdl::makeDurationStatusText()
+{
+  Uint32 nSeconds = scene->nSeconds ; Uint32 sceneN = scene->sceneN ;
+  Uint32 h        = nSeconds / 3600 ; Uint32 m      = (nSeconds / 60) % 60 ;
+  Uint32 s        = nSeconds % 60 ;
+  return string("Scene: "           + to_string(sceneN) + " - " +
+                                      to_string(h)      + ":"   +
+                ((m > 9)? "" : "0") + to_string(m)      + ":"   +
+                ((s > 9)? "" : "0") + to_string(s)) ;
 }

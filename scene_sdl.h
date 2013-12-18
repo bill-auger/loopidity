@@ -47,7 +47,7 @@
 
 // colors
 #define SCOPE_PEAK_MAX_COLOR  0x800000ff
-#define SCOPE_PEAK_ZERO_COLOR 0x808080ff
+#define SCOPE_PEAK_ZERO_COLOR 0x008000ff
 #define STATE_RECORDING_COLOR 0xff0000ff
 #define STATE_PENDING_COLOR   0xffff00ff
 #define STATE_PLAYING_COLOR   0x00ff00ff
@@ -207,12 +207,14 @@ class SceneSdl
 
     /* instance side private functions */
 
+    // setup
+    void reset(  void) ;
+    void cleanup(void) ;
+
     // getters/setters
-    LoopSdl* getLoop( list<LoopSdl*>* imgs , unsigned int loopN) ;
-    void updateStatus(void) ;
     void startRolling(void) ;
-    void reset(       void) ;
-    void cleanup(     void) ;
+    void updateStatus(void) ;
+    LoopSdl* getLoop(     list<LoopSdl*>* imgs , unsigned int loopN) ;
 
     // drawing
     void     drawScene(              SDL_Surface* screen , unsigned int currentPeakN ,
@@ -223,10 +225,11 @@ class SceneSdl
     void     drawSceneStateIndicator(SDL_Surface* surface) ;
 
     // helpers
-    SDL_Surface*  createHwSurface(   Sint16 w , Sint16 h) ;
-    SDL_Surface*  createSwSurface(   Sint16 w , Sint16 h) ;
-    void          addLoop(           Loop* newLoop , Uint16 nLoops) ;
-    void          deleteLoop(        unsigned int loopN) ;
+    SDL_Surface*  createHwSurface(       Sint16 w , Sint16 h) ;
+    SDL_Surface*  createSwSurface(       Sint16 w , Sint16 h) ;
+    void          addLoop(               Loop* newLoop , Uint16 nLoops) ;
+    void          deleteLoop(            Uint8 loopN) ;
+    string        makeDurationStatusText(void) ;
 } ;
 
 

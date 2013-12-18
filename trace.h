@@ -152,7 +152,7 @@ class Trace
                             bool bool0 , bool bool1 , bool bool2 , bool isEq) ;
 
 #if DRAW_DEBUG_TEXT
-    static void SetDbgTextL() ; public: static void SetDbgTextR() ;
+    static void SetDbgTextC() ; public: static void SetDbgTextR() ;
 #endif // #if DRAW_DEBUG_TEXT
 } ;
 

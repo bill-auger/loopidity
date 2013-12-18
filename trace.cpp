@@ -131,6 +131,6 @@ cout << "Trace::TraceState(): Desc("  << strlen(Desc)  << ")='" << Desc  << "'" 
 }
 
 #if DRAW_DEBUG_TEXT
-void Trace::SetDbgTextL() { char dbg[255] ; unsigned int sceneN = Loopidity::CurrentSceneN ; sprintf(dbg , "NextSceneN=%d SceneN=%d PeakN=%d" , Loopidity::NextSceneN , sceneN , Loopidity::Scenes[sceneN]->getCurrentPeakN()) ; LoopiditySdl::SetStatusL(dbg) ; }
+void Trace::SetDbgTextC() { char dbg[255] ; unsigned int sceneN = Loopidity::CurrentSceneN ; sprintf(dbg , "NextSceneN=%d SceneN=%d PeakN=%d" , Loopidity::NextSceneN , sceneN , Loopidity::Scenes[sceneN]->getCurrentPeakN()) ; LoopiditySdl::SetStatusC(dbg) ; }
 void Trace::SetDbgTextR() { char dbg[255] ; unsigned int sceneN = Loopidity::CurrentSceneN ; sprintf(dbg , "%d%d%d %d%d%d" , Loopidity::Scenes[sceneN]->isRolling , Loopidity::Scenes[sceneN]->shouldSaveLoop , Loopidity::Scenes[sceneN]->doesPulseExist , Loopidity::Scenes[sceneN]->loops.size() , Loopidity::SdlScenes[sceneN]->histogramImgs.size() , Loopidity::SdlScenes[sceneN]->loopImgs.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
 #endif // #if DRAW_DEBUG_TEXT

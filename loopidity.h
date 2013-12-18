@@ -3,6 +3,7 @@
 #define _LOOPIDITY_H_
 
 
+// DEBUG begin
 //#define MEMORY_CHECK              1 // if 0 choose DEFAULT_BUFFER_SIZE wisely
 // setup features
 //#define INIT_LOOPIDITY            1
@@ -15,13 +16,14 @@
 #define HANDLE_KEYBOARD_EVENTS    1
 #define HANDLE_MOUSE_EVENTS       0
 #define HANDLE_USER_EVENTS        1
+#define SCAN_LOOP_PEAKS_DATA      1
+#define SCAN_TRANSIENT_PEAKS_DATA 1
+#define SCAN_PEAKS                1
 #define DRAW_STATUS               1
 #define DRAW_SCENES               1
 #define DRAW_SCOPES               1
 #define DRAW_EDIT_HISTOGRAM       SCENE_NFRAMES_EDITABLE && 1
 #define DRAW_DEBUG_TEXT           1
-#define SCAN_LOOP_PEAKS_DATA      1
-#define SCAN_TRANSIENT_PEAKS_DATA 1
 #define DEBUG_TRACE               1
 
 #if DRAW_STATUS
@@ -46,7 +48,7 @@
 #endif // #if DRAW_SCENES
 
 #if DRAW_DEBUG_TEXT
-#  define DRAW_DEBUG_TEXT_L Trace::SetDbgTextL() ;
+#  define DRAW_DEBUG_TEXT_L Trace::SetDbgTextC() ;
 #  define DRAW_DEBUG_TEXT_R Trace::SetDbgTextR() ;
 #else
 #  define DRAW_DEBUG_TEXT_L ;
@@ -60,7 +62,7 @@
 #  define DEBUG_TRACE_OUT   1
 #  define DEBUG_TRACE_CLASS 0
 #endif // #if DEBUG_TRACE
-
+// DEBUG end
 
 // quantities
 #define DEFAULT_BUFFER_SIZE 33554432 // 2^25 (approx 3 min @ 48k)
@@ -122,13 +124,17 @@
 #include <string>
 #include <vector>
 
+#include <jack/jack.h>
 #include <SDL.h>
 #include <SDL_gfxPrimitives.h>
 #include <SDL_rotozoom.h>
 #include <SDL_ttf.h>
 #include <X11/Xlib.h>
 
-#include "jack_io.h"       // must be first Sample typedef declared here
+typedef jack_default_audio_sample_t Sample ;
+
+// local includes
+#include "jack_io.h"
 #include "loopidity_sdl.h"
 #include "scene.h"
 #include "scene_sdl.h"
@@ -155,20 +161,9 @@ class Loopidity
 
 static bool IsEditMode ;
 
-    // audio data
+    // models and views
     static Scene*       Scenes[N_SCENES] ;
     static SceneSdl*    SdlScenes[N_SCENES] ;
-    static unsigned int NFramesPerPeriod ;
-    static unsigned int NFramesPerGuiInterval ;
-
-    // transient sample data
-    static Sample*        Buffer1 ;
-    static Sample*        Buffer2 ;
-    static vector<Sample> PeaksIn ;
-    static vector<Sample> PeaksOut ;
-    static Sample         TransientPeaks[N_PORTS] ;
-    static Sample         TransientPeakInMix ;
-    static Sample         TransientPeakOutMix ;
 
   public:
 
@@ -182,12 +177,9 @@ static bool IsEditMode ;
     static unsigned int    GetCurrentSceneN(      void) ;
     static unsigned int    GetNextSceneN(         void) ;
 //    static unsigned int    GetLoopPos(            void) ;
-//    static bool            GetIsRolling(          void) ;
 //    static bool            GetShouldSaveLoop(     void) ;
 //    static bool            GetDoesPulseExist(     void) ;
-    static bool            GetIsEditMode(         void) ;
-    static Sample*         GetTransientPeakIn(    void) ;
-//    static Sample*         GetTransientPeakOut(   void) ;
+//    static bool            GetIsEditMode(         void) ;
 
 
     /* class side private functions */
@@ -224,7 +216,6 @@ static bool IsEditMode ;
                             unsigned int nFramesPerPeriod) ;
 
     // helpers
-    static void ScanTransientPeaks(void) ;
     static void UpdateView(        unsigned int sceneN) ;
     static void OOM(               void) ;
 } ;

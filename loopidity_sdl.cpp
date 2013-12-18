@@ -69,6 +69,7 @@ bool LoopiditySdl::Init(SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
                         vector<Sample>* peaksOut , Sample* peaksTransient)
 {
   if (IsInitialized()) return false ;
+  if (!sdlScenes || !peaksIn || !peaksOut || !peaksTransient) return false ;
 
   // set handles to view instances and VU scopes/peaks caches
   SdlScenes      = sdlScenes ;
@@ -168,63 +169,63 @@ void LoopiditySdl::DrawScenes()
 //SDL_FillRect(Screen , SceneRect , WinBgColor) ;
 DRAW_DEBUG_TEXT_L
 #endif // #if DRAW_SCENES
-} // void LoopiditySdl::DrawScenes()
+}
 
-void LoopiditySdl::DrawScopes()
-{
 #if SCENE_NFRAMES_EDITABLE
-  if (Loopidity::GetIsEditMode() || 1)
-  {
+void LoopiditySdl::DrawEditScopes()
+{
 #  if DRAW_EDIT_HISTOGRAM
-    SDL_FillRect(Screen , &ScopeRect , WinBgColor) ;
+  SDL_FillRect(Screen , &ScopeRect , WinBgColor) ;
 
-    CurrentSceneN       = Loopidity::GetCurrentSceneN() ;
-    Scene* currentScene = SdlScenes[CurrentSceneN]->scene ;
-    Loop* baseLoop      = currentScene->getLoop(0) ;
-    if (baseLoop)
+  CurrentSceneN       = Loopidity::GetCurrentSceneN() ;
+  Scene* currentScene = SdlScenes[CurrentSceneN]->scene ;
+  Loop* baseLoop      = currentScene->getLoop(0) ;
+  if (baseLoop)
+  {
+    const Uint16 scopeL = (WIN_CENTER - (N_PEAKS_FINE / 2)) ;
+    CurrentPeakN        = currentScene->getCurrentPeakN() ;
+    SceneProgress       = ((float)CurrentPeakN / N_PEAKS_FINE) * N_PEAKS_FINE ;
+    for (Uint16 peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
     {
-      const Uint16 scopeL = (WIN_CENTER - (N_PEAKS_FINE / 2)) ;
-      CurrentPeakN        = currentScene->getCurrentPeakN() ;
-      SceneProgress       = ((float)CurrentPeakN / N_PEAKS_FINE) * N_PEAKS_FINE ;
-      for (Uint16 peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
-      {
-        // histogram
-        Sint16 histogramH = (Uint16)(baseLoop->getPeakFine(peakN) * ScopePeakH) ;
-        MaskRect.y        = (Sint16)ScopePeakH - histogramH ;
-        MaskRect.h        = (histogramH * 2) + 1 ;
-        GradientRect.x    = scopeL + peakN ;
-        GradientRect.y    = Scope0 - histogramH ;
-        SDL_BlitSurface(LoopiditySdl::ScopeGradient , &MaskRect , Screen , &GradientRect) ;
+      // histogram
+      Sint16 histogramH = (Uint16)(baseLoop->getPeakFine(peakN) * ScopePeakH) ;
+      MaskRect.y        = (Sint16)ScopePeakH - histogramH ;
+      MaskRect.h        = (histogramH * 2) + 1 ;
+      GradientRect.x    = scopeL + peakN ;
+      GradientRect.y    = Scope0 - histogramH ;
+      SDL_BlitSurface(ScopeGradient , &MaskRect , Screen , &GradientRect) ;
 
-        if (peakN != CurrentPeakN) continue ;
+      if (peakN != CurrentPeakN) continue ;
 
-        // progress
-        Sint16 progressX = scopeL + SceneProgress ;
-        Sint16 progressT = Scope0 - ScopePeakH ;
-        Sint16 progressB = Scope0 + ScopePeakH ;
-        vlineColor(Screen , progressX , progressT , progressB , PEAK_CURRENT_COLOR) ;
-      }
-#define EDIT_SCOPE_GRADUATIONS_GRANULARITY 10
-#define EDIT_SCOPE_GRADUATION_H            12
-      unsigned int nFrames        = currentScene->nFrames ;
-      unsigned int nFramesPerPeak = currentScene->nFramesPerPeak ;
-      // graduations
-      for (Uint16 frameN = 0 ; frameN < nFrames ; frameN = frameN + 10)
+      // progress
+      Sint16 progressX = scopeL + SceneProgress ;
+      Sint16 progressT = Scope0 - ScopePeakH ;
+      Sint16 progressB = Scope0 + ScopePeakH ;
+      vlineColor(Screen , progressX , progressT , progressB , PEAK_CURRENT_COLOR) ;
+    }
+
+    // graduations
+    Uint32 nFrames        = currentScene->nFrames ;
+    Uint32 nFramesPerPeak = currentScene->nFramesPerPeak ;
+    for (Uint32 frameN = 0 ; frameN < nFrames ; frameN = frameN + 10)
+    {
+      if (!(frameN % EDIT_HISTOGRAM_GRADUATIONS_GRANULARITY))
       {
-        if (!(frameN % EDIT_SCOPE_GRADUATIONS_GRANULARITY))
-        {
-          Sint16 gradX = scopeL + (frameN / nFramesPerPeak) ;
-          Sint16 gradT = Scope0 + ScopePeakH - EDIT_SCOPE_GRADUATION_H ;
-          Sint16 gradB = Scope0 + ScopePeakH ;
-          vlineColor(Screen , gradX , gradT , gradB , SCOPE_PEAK_ZERO_COLOR) ;
-        }
+        Sint16 gradX = scopeL + (frameN / nFramesPerPeak) ;
+        Sint16 gradT = Scope0 + ScopePeakH - EDIT_HISTOGRAM_GRADUATION_H ;
+        Sint16 gradB = Scope0 + ScopePeakH ;
+        vlineColor(Screen , gradX , gradT , gradB , SCOPE_PEAK_ZERO_COLOR) ;
       }
     }
-#  endif // #if DRAW_EDIT_HISTOGRAM
-    return ;
   }
-#endif // #if SCENE_NFRAMES_EDITABLE
+#  endif // #if DRAW_EDIT_HISTOGRAM
+}
 
+void LoopiditySdl::DrawTransientScopes()
+#else
+void LoopiditySdl::DrawScopes()
+#endif // #if SCENE_NFRAMES_EDITABLE
+{
 #if DRAW_SCOPES
   SDL_FillRect(Screen , &ScopeRect , WinBgColor) ;
   for (Uint16 peakN = 0 ; peakN < N_PEAKS_TRANSIENT ; ++peakN)
@@ -236,12 +237,12 @@ void LoopiditySdl::DrawScopes()
     // input scope
     MaskRect.y     = (Sint16)ScopePeakH - inH ; MaskRect.h = (inH * 2) + 1 ;
     GradientRect.x = inX ; GradientRect.y = Scope0 - inH ;
-    SDL_BlitSurface(LoopiditySdl::ScopeGradient , &MaskRect , Screen , &GradientRect) ;
+    SDL_BlitSurface(ScopeGradient , &MaskRect , Screen , &GradientRect) ;
 
     // output scope
     MaskRect.y     = (Sint16)ScopePeakH - outH ; MaskRect.h = (outH * 2) + 1 ;
     GradientRect.x = outX ; GradientRect.y = Scope0 - outH ;
-    SDL_BlitSurface(LoopiditySdl::ScopeGradient , &MaskRect , Screen , &GradientRect) ;
+    SDL_BlitSurface(ScopeGradient , &MaskRect , Screen , &GradientRect) ;
   }
 #endif // #if DRAW_SCOPES
 }
@@ -252,7 +253,7 @@ void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font 
   if (!text.size()) return ;
 
   SDL_Surface* textSurface = TTF_RenderText_Solid(font , text.c_str() , fgColor) ;
-  if (!textSurface) { TtfError("TTF_Init") ; return ; }
+  if (!textSurface) { TtfError(TTF_INIT_ERROR_MSG) ; return ; }
 
   SDL_FillRect(surface , screenRect , WinBgColor) ;
   SDL_BlitSurface(textSurface , cropRect , surface , screenRect) ; SDL_FreeSurface(textSurface) ;
@@ -261,12 +262,7 @@ void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font 
 
 void LoopiditySdl::DrawStatusArea()
 {
-// DEBUG begin
-Uint16 now = SDL_GetTicks() ;
-Uint16 elapsed = now - DbgFramerateTs ; DbgFramerateTs = now ;
-char s[9] ; snprintf(s , 9 , "FPS: %1f" , (GUI_UPDATE_LOW_PRIORITY_NICE / (elapsed / 1000.0))) ;
-//SetStatusC(s) ;
-// DEBUG end
+// TODO: DrawMemory() ;
 
   DrawText(StatusTextL , Screen , StatusFont , &StatusRectL , &StatusRectDim , StatusColor) ;
   DrawText(StatusTextC , Screen , StatusFont , &StatusRectC , &StatusRectDim , StatusColor) ;

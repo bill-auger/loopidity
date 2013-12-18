@@ -10,6 +10,9 @@ class Loop ;
 class Scene ;
 
 
+using namespace std ;
+
+
 class JackIO
 {
 //  friend class Loopidity ;
@@ -25,14 +28,24 @@ class JackIO
     static jack_port_t*   PortOutput1 ;
     static jack_port_t*   PortOutput2 ;
 
-    // audio data
+    // app state
     static Scene*       CurrentScene ;
     static Scene*       NextScene ;
     static unsigned int CurrentSceneN ;
     static unsigned int NextSceneN ;
-    static Sample*      Buffer1 ;
-    static Sample*      Buffer2 ;
-    static unsigned int RecordBufferSize ;
+
+    // audio data
+    static Sample*            Buffer1 ;
+    static Sample*            Buffer2 ;
+    static vector<Sample>     PeaksIn ;
+    static vector<Sample>     PeaksOut ;
+    static const unsigned int N_TRANSIENT_PEAKS ;
+    static Sample             TransientPeaks[N_PORTS] ;
+    static Sample             TransientPeakInMix ;
+//    static Sample             TransientPeakOutMix ;
+    static unsigned int       RecordBufferSize ;
+    static const unsigned int GUI_UPDATE_IVL ;
+    static unsigned int       NFramesPerGuiInterval ;
 
     // event structs
     static SDL_Event    EventLoopCreation ;
@@ -62,18 +75,24 @@ class JackIO
     static void Reset(       Scene* currentScene , unsigned int currentSceneN) ;
 
     // getters/setters
-    static Sample*      GetBuffer1(         void) ;
-    static Sample*      GetBuffer2(         void) ;
-    static unsigned int GetRecordBufferSize(void) ;
-    static unsigned int GetNFramesPerPeriod(void) ;
-    static unsigned int GetFrameSize(       void) ;
-    static unsigned int GetSampleRate(      void) ;
-    static unsigned int GetBytesPerSecond(  void) ;
-    static void         SetCurrentScene(    Scene* currentScene , unsigned int currentSceneN) ;
-    static void         SetNextScene(       Scene* nextScene , unsigned int nextSceneN) ;
+    static unsigned int    GetRecordBufferSize(void) ;
+/*
+    static unsigned int    GetNFramesPerPeriod(void) ;
+    static unsigned int    GetFrameSize(       void) ;
+    static unsigned int    GetSampleRate(      void) ;
+*/
+    static unsigned int    GetBytesPerSecond(  void) ;
+    static void            SetCurrentScene(   Scene* currentScene) ;
+    static void            SetNextScene(      Scene* nextScene) ;
+    static vector<Sample>* GetPeaksIn() ;
+    static vector<Sample>* GetPeaksOut() ;
+    static Sample*         GetTransientPeaks() ;
+    static Sample*         GetTransientPeakIn(void) ;
+//    static Sample*         GetTransientPeakOut(   void) ;
 
     // helpers
-    static Sample       GetPeak(Sample* buffer , unsigned int nFrames) ;
+    static void   ScanTransientPeaks(void) ;
+    static Sample GetPeak(           Sample* buffer , unsigned int nFrames) ;
 
 private:
 

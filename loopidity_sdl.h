@@ -34,6 +34,20 @@ using namespace std ;
 #define HEADER_RECT_DIM  { 0 , 0 , HEADER_W , HEADER_H }
 #define HEADER_RECT_C    { (Sint16)HEADER_X , 0 , 0 , 0 }
 
+// scope magnitudes
+#define N_PEAKS_TRANSIENT 480 // TODO: maybe set this to scene width/2
+#define SCOPE_W           (N_PEAKS_TRANSIENT * 2)
+#define SCOPE_H           (PEAK_RADIUS * 2)
+#define SCOPE_L           (WIN_CENTER - N_PEAKS_TRANSIENT)
+#define SCOPE_R           (WIN_CENTER + N_PEAKS_TRANSIENT)
+//#define SCOPE_T           (WinRect.h - (STATUS_H * 2) - SCOPE_H)
+#define SCOPE_T           (HEADER_H + Y_PADDING + (SCENE_H * N_SCENES))
+#define SCOPE_0           (SCOPE_T + (SCOPE_H / 2)) ;
+#define SCOPE_PEAK_H      ((float)SCOPE_H / 2.0)
+#define SCOPE_RECT        { (Sint16)SCOPE_L , (Sint16)SCOPE_T , SCOPE_W + 1 , SCOPE_H + 1 }
+#define SCOPE_LOUD        0.95
+#define SCOPE_OPTIMAL     0.8
+
 // status magnitudes
 #define STATUS_FONT_SIZE 12
 #define STATUS_H         20  // STATUS_FONT_SIZE 12
@@ -53,19 +67,9 @@ using namespace std ;
 #define MOUSE_SCENES_T (HEADER_H - (Y_PADDING / 2))
 #define MOUSE_SCENES_B (MOUSE_SCENES_T + (SCENE_H * N_SCENES))
 
-// scope magnitudes
-#define N_PEAKS_TRANSIENT 480 // TODO: maybe set this to scene width/2
-#define SCOPE_W           (N_PEAKS_TRANSIENT * 2)
-#define SCOPE_H           (PEAK_RADIUS * 2)
-#define SCOPE_L           (WIN_CENTER - N_PEAKS_TRANSIENT)
-#define SCOPE_R           (WIN_CENTER + N_PEAKS_TRANSIENT)
-//#define SCOPE_T           (WinRect.h - (STATUS_H * 2) - SCOPE_H)
-#define SCOPE_T           (HEADER_H + Y_PADDING + (SCENE_H * N_SCENES))
-#define SCOPE_0           (SCOPE_T + (SCOPE_H / 2)) ;
-#define SCOPE_PEAK_H      ((float)SCOPE_H / 2.0)
-#define SCOPE_RECT        { (Sint16)SCOPE_L , (Sint16)SCOPE_T , SCOPE_W + 1 , SCOPE_H + 1 }
-#define SCOPE_LOUD        0.95
-#define SCOPE_OPTIMAL     0.8
+// edit histogram magnitudes
+#define EDIT_HISTOGRAM_GRADUATIONS_GRANULARITY 500
+#define EDIT_HISTOGRAM_GRADUATION_H            12
 
 // fonts and colors
 #define INSCOPE_QUIET_COLOR    0x00ff00ff
@@ -173,28 +177,29 @@ class LoopiditySdl
     static void Cleanup(      void) ;
 
     // drawing
-    static void DrawHeader(     void) ;
-    static void BlankScreen(    void) ;
-    static void DrawScenes(     void) ;
-    static void DrawScopes(     void) ;
-    static void DrawText(       string text , SDL_Surface* surface , TTF_Font* font ,
-                                SDL_Rect* screenRect , SDL_Rect* cropRect ,
-                                SDL_Color fgColor) ;
-    static void DrawStatusArea( void) ;
-    static void FlipScreen(     void) ;
-    static void Alert(          const char* msg) ;
+    static void DrawHeader(           void) ;
+    static void BlankScreen(          void) ;
+    static void DrawScenes(           void) ;
+#if SCENE_NFRAMES_EDITABLE
+    static void DrawEditScopes(       void) ;
+    static void DrawTransientScopes(  void) ;
+#else
+    static void DrawScopes(           void) ;
+#endif // #if SCENE_NFRAMES_EDITABLE
+    static void DrawText(             string text , SDL_Surface* surface , TTF_Font* font ,
+                                      SDL_Rect* screenRect , SDL_Rect* cropRect ,
+                                      SDL_Color fgColor) ;
+    static void DrawStatusArea(       void) ;
+    static void FlipScreen(           void) ;
+    static void Alert(                const char* msg) ;
 
     // getters/settters
-    static void   SetStatusL(string msg) ;
-    static void   SetStatusC(string msg) ;
-    static void   SetStatusR(string msg) ;
-/*
-    static string MakeTime(Uint16 seconds) ;
-    static Uint32 GetAvailableMemory() ;
-    static void UpdateMemory() ;
-    static void UpdateSceneProgress() ;
-    static void UpdateVUMeters() ;
-*/
+    static void SetStatusL(string msg) ;
+    static void SetStatusC(string msg) ;
+    static void SetStatusR(string msg) ;
+
+//    static Uint32 GetAvailableMemory() ;
+
 
 // DEBUG begin
 static Uint16 DbgFramerateTs ;

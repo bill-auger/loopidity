@@ -108,6 +108,7 @@ unsigned int endFrameN ;
     unsigned int nFrames ;
     unsigned int nFramesPerPeak ;
     unsigned int nBytes ;
+    unsigned int nSeconds ;
 
     // scene state
     bool isRolling ;
@@ -128,13 +129,13 @@ unsigned int endFrameN ;
     void reset(       void) ;
 
     // peaks cache
-    void   scanPeaks(  Loop* loop , unsigned int loopN) ;
-    void   rescanPeaks(void) ;
+    void scanPeaks(  Loop* loop , unsigned int loopN) ;
+    void rescanPeaks(void) ;
 
     // getters/setters
     Loop*        getLoop(     unsigned int loopN) ;
-    bool         getIsRolling(void) ;
-    unsigned int getLoopPos(  void) ;
+//    bool         getIsRolling(void) ;
+//    unsigned int getLoopPos(  void) ;
 } ;
 
 

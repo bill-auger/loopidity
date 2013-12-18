@@ -12,18 +12,9 @@ bool Loopidity::ShouldSceneAutoChange = false ;
 
 bool Loopidity::IsEditMode = false ;
 
-// audio data
+// models and views
 Scene*         Loopidity::Scenes[N_SCENES]        = {0} ;
 SceneSdl*      Loopidity::SdlScenes[N_SCENES]     = {0} ;
-unsigned int   Loopidity::NFramesPerPeriod        = 0 ;
-unsigned int   Loopidity::NFramesPerGuiInterval   = 0 ;
-Sample*        Loopidity::Buffer1                 = 0 ;
-Sample*        Loopidity::Buffer2                 = 0 ;
-vector<Sample> Loopidity::PeaksIn ;
-vector<Sample> Loopidity::PeaksOut ;
-Sample         Loopidity::TransientPeaks[N_PORTS] = {0} ;
-Sample         Loopidity::TransientPeakInMix      = 0 ;
-Sample         Loopidity::TransientPeakOutMix     = 0 ;
 
 
 /* Loopidity class side public functions */
@@ -55,8 +46,12 @@ cout << INIT_MSG << endl ;
   // initialize Loopidity (controller) and instantiate Scenes (models and SdlScenes (views))
   if (!Init(isMonitorInputs , isAutoSceneChange , bufferSize)) return EXIT_FAILURE ;
 
+vector<Sample>* peaksIn  = JackIO::GetPeaksIn() ;
+vector<Sample>* peaksOut = JackIO::GetPeaksOut() ;
+Sample* transientPeaks   = JackIO::GetTransientPeaks() ;
+
   // initialize LoopiditySdl (view)
-  if (!LoopiditySdl::Init(SdlScenes , &PeaksIn , &PeaksOut , TransientPeaks))
+  if (!LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , transientPeaks))
     return EXIT_FAILURE ;
 
 #if DEBUG_TRACE
@@ -96,13 +91,18 @@ if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
     else { SDL_Delay(1) ; continue ; }
 
     // draw high priority
-    ScanTransientPeaks() ; //updateVUMeters() ;
+    JackIO::ScanTransientPeaks() ;
     LoopiditySdl::DrawScenes() ;
+#if SCENE_NFRAMES_EDITABLE
+    if (IsEditMode || 1) LoopiditySdl::DrawEditScopes() ;
+    else LoopiditySdl::DrawTransientScopes() ;
+#else
     LoopiditySdl::DrawScopes() ;
+#endif // #if SCENE_NFRAMES_EDITABLE
 
     // draw low priority
     if (!(guiLongCount = (guiLongCount + 1) % GUI_UPDATE_LOW_PRIORITY_NICE))
-      LoopiditySdl::DrawStatusArea() ; // TODO: DrawMemory() ;
+      LoopiditySdl::DrawStatusArea() ;
 
     LoopiditySdl::FlipScreen() ;
   } // while (!done)
@@ -119,17 +119,11 @@ unsigned int Loopidity::GetNextSceneN() { return NextSceneN ; }
 
 //unsigned int Loopidity::GetLoopPos() { return Scenes[CurrentSceneN]->getLoopPos() ; }
 
-//bool Loopidity::GetIsRolling() { return IsRolling ; }
-
 //bool Loopidity::GetShouldSaveLoop() { return Scenes[CurrentSceneN]->shouldSaveLoop ; }
 
 //bool Loopidity::GetDoesPulseExist() { return Scenes[CurrentSceneN]->doesPulseExist ; }
 
-bool Loopidity::GetIsEditMode() { return IsEditMode ; }
-
-Sample* Loopidity::GetTransientPeakIn() { return &TransientPeakInMix ; }
-
-//Sample* Loopidity::GetTransientPeakOut() { return &TransientPeakOutMix ; }
+//bool Loopidity::GetIsEditMode() { return IsEditMode ; }
 
 
 /* Loopidity class side private functions */
@@ -164,13 +158,6 @@ bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
     case JACK_MEM_FAIL:  errMsg = INSUFFICIENT_MEMORY_MSG ;
                           LoopiditySdl::Alert(errMsg.c_str()) ; return false ;
   }
-
-  // initialize scope/VU peaks cache
-  for (unsigned int peakN = 0 ; peakN < N_PEAKS_TRANSIENT ; ++peakN)
-    { PeaksIn.push_back(0.0) ; PeaksOut.push_back(0.0) ; }
-
-  // get handles on JACK buffers for scope/VU peaks
-  Buffer1 = JackIO::GetBuffer1() ; Buffer2 = JackIO::GetBuffer2() ;
 
   return initStatus ;
 }
@@ -231,15 +218,6 @@ void Loopidity::HandleMouseEvent(SDL_Event* event)
 void Loopidity::HandleUserEvent(SDL_Event* event)
 {
 #if HANDLE_USER_EVENTS
-/*
-  unsigned int sceneN = *((Uint8*)event->user.data1) ;
-  switch (event->user.code)
-  {
-    case EVT_NEW_LOOP:      OnLoopCreation(sceneN , *((Loop**)event->user.data2)) ; break ;
-    case EVT_SCENE_CHANGED: OnSceneChange(sceneN) ;                                 break ;
-    default:                                                                        break ;
-  }
-*/
   void* data1 = event->user.data1 ; void* data2 = event->user.data2 ;
   switch (event->user.code)
   {
@@ -263,15 +241,16 @@ DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_IN
 DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_OUT
 }
 
-void Loopidity::OnSceneChange(unsigned int* sceneNum)
+void Loopidity::OnSceneChange(unsigned int* nextSceneN)
 {
-DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN //else { Scenes[CurrentSceneN]->startRolling() ; SdlScenes[CurrentSceneN]->startRolling() ; }
+DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN
 
 //  if (!Scenes[CurrentSceneN]->isRolling) { Scenes[CurrentSceneN]->reset() ; }
+//else { Scenes[CurrentSceneN]->startRolling() ; SdlScenes[CurrentSceneN]->startRolling() ; }
 
-  unsigned int prevSceneN       = CurrentSceneN ; CurrentSceneN = NextSceneN = *sceneNum ;
-  SceneSdl* prevSdlScene        = SdlScenes[prevSceneN] ;
-  Scene* nextScene              = Scenes[NextSceneN] ;
+  unsigned int prevSceneN = CurrentSceneN ; CurrentSceneN = NextSceneN = *nextSceneN ;
+  SceneSdl* prevSdlScene  = SdlScenes[prevSceneN] ;
+  Scene* nextScene        = Scenes[NextSceneN] ;
   prevSdlScene->drawScene(prevSdlScene->inactiveSceneSurface , 0 , 0) ;
   UpdateView(prevSceneN) ; UpdateView(NextSceneN) ;
 
@@ -302,14 +281,14 @@ DEBUG_TRACE_LOOPIDITY_TOGGLESCENE_IN
 
   unsigned int prevSceneN = NextSceneN ; NextSceneN = (NextSceneN + 1) % N_SCENES ;
   UpdateView(prevSceneN) ; UpdateView(NextSceneN) ;
-  JackIO::SetNextScene(Scenes[NextSceneN] , NextSceneN) ;
+  JackIO::SetNextScene(Scenes[NextSceneN]) ;
 
   if (!Scenes[CurrentSceneN]->isRolling)
   {
     prevSceneN = CurrentSceneN ; CurrentSceneN = NextSceneN ;
     Scenes[prevSceneN]->reset() ; // SdlScenes[prevSceneN]->reset() ;
     UpdateView(prevSceneN) ; UpdateView(NextSceneN) ;
-    JackIO::SetCurrentScene(Scenes[NextSceneN] , NextSceneN) ;
+    JackIO::SetCurrentScene(Scenes[NextSceneN]) ;
   }
 
 DEBUG_TRACE_LOOPIDITY_TOGGLESCENE_OUT
@@ -385,52 +364,10 @@ DEBUG_TRACE_LOOPIDITY_RESET_OUT
 // getters/setters
 
 void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
-{
-  float interval = (float)GUI_UPDATE_INTERVAL * 0.001 ;
-  NFramesPerGuiInterval = (unsigned int)(sampleRate * interval) ;
-
-  Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ;
-  LoopiditySdl::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ;
-}
+  { Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ; }
 
 
 // helpers
-
-void Loopidity::ScanTransientPeaks()
-{
-#if SCAN_TRANSIENT_PEAKS_DATA
-  Scene* currentScene = Scenes[CurrentSceneN] ; unsigned int frameN = currentScene->frameN ;
-// TODO; first NFramesPerGuiInterval duplicated
-  unsigned int currentFrameN = (frameN < NFramesPerGuiInterval)? 0 : frameN - NFramesPerGuiInterval ;
-
-  // initialize with inputs
-  Sample peakIn1 = JackIO::GetPeak(&(Buffer1[currentFrameN]) , NFramesPerGuiInterval) ;
-  Sample peakIn2 = JackIO::GetPeak(&(Buffer2[currentFrameN]) , NFramesPerGuiInterval) ;
-
-  // add in unmuted tracks
-  Sample peakOut1 = 0.0 , peakOut2 = 0.0 ; unsigned int nLoops = currentScene->loops.size() ;
-  for (unsigned int loopN = 0 ; loopN < nLoops ; ++loopN)
-  {
-    Loop* loop = currentScene->getLoop(loopN) ; if (currentScene->isMuted && loop->isMuted) continue ;
-
-    peakOut1 += JackIO::GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerGuiInterval) * loop->vol ;
-    peakOut2 += JackIO::GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerGuiInterval) * loop->vol ;
-  }
-
-  Sample peakIn  = (peakIn1 + peakIn2)   / N_INPUT_CHANNELS ;
-  Sample peakOut = (peakOut1 + peakOut2) / N_OUTPUT_CHANNELS ;
-  if (peakOut > 1.0) peakOut = 1.0 ;
-
-  // load scope peaks (mono mix)
-  PeaksIn.pop_back()  ; PeaksIn.insert(PeaksIn.begin()   , peakIn) ;
-  PeaksOut.pop_back() ; PeaksOut.insert(PeaksOut.begin() , peakOut) ;
-
-  // load VU peaks (per channel)
-  TransientPeakInMix = peakIn ;   TransientPeakOutMix = peakOut ;
-  TransientPeaks[0]  = peakIn1 ;  TransientPeaks[1]   = peakIn2 ;
-  TransientPeaks[2]  = peakOut1 ; TransientPeaks[3]   = peakOut2 ;
-#endif // #if SCAN_TRANSIENT_PEAKS_DATA
-}
 
 void Loopidity::UpdateView(unsigned int sceneN) { SdlScenes[sceneN]->updateStatus() ; }
 // { if (Scenes[sceneN]->isRolling) SdlScenes[sceneN]->updateStatus() ; }

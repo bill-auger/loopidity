@@ -11,14 +11,24 @@ jack_port_t*   JackIO::PortInput2  = 0 ;
 jack_port_t*   JackIO::PortOutput1 = 0 ;
 jack_port_t*   JackIO::PortOutput2 = 0 ;
 
-// audio data
+// app state
 Scene*       JackIO::CurrentScene     = 0 ;
 Scene*       JackIO::NextScene        = 0 ;
 unsigned int JackIO::CurrentSceneN    = 0 ;
 unsigned int JackIO::NextSceneN       = 0 ;
-Sample*      JackIO::Buffer1          = 0 ;
-Sample*      JackIO::Buffer2          = 0 ;
-unsigned int JackIO::RecordBufferSize = 0 ;
+
+// audio data
+Sample*            JackIO::Buffer1                 = 0 ;
+Sample*            JackIO::Buffer2                 = 0 ;
+vector<Sample>     JackIO::PeaksIn ;
+vector<Sample>     JackIO::PeaksOut ;
+const unsigned int JackIO::N_TRANSIENT_PEAKS       = N_PEAKS_TRANSIENT ;
+Sample             JackIO::TransientPeaks[N_PORTS] = {0} ;
+Sample             JackIO::TransientPeakInMix      = 0 ;
+//Sample             JackIO::TransientPeakOutMix     = 0 ;
+unsigned int       JackIO::RecordBufferSize        = 0 ;
+const unsigned int JackIO::GUI_UPDATE_IVL          = GUI_UPDATE_INTERVAL ;
+unsigned int       JackIO::NFramesPerGuiInterval   = 0 ;
 
 // event structs
 SDL_Event    JackIO::EventLoopCreation ;
@@ -32,7 +42,7 @@ jack_nframes_t     JackIO::NFramesPerPeriod = 0 ;
 const unsigned int JackIO::FRAME_SIZE       = sizeof(Sample) ;
 unsigned int       JackIO::PeriodSize       = 0 ;
 jack_nframes_t     JackIO::SampleRate       = 0 ;
-unsigned int       JackIO::BytesPerSecond   = FRAME_SIZE * SampleRate ;
+unsigned int       JackIO::BytesPerSecond   = 0 ;
 
 // misc flags
 bool JackIO::ShouldMonitorInputs = true ;
@@ -97,34 +107,89 @@ void JackIO::Reset(Scene* currentScene , unsigned int currentSceneN)
   CurrentScene  = NextScene        = currentScene ;
   CurrentSceneN = NextSceneN       = currentSceneN ;
   PeriodSize    = NFramesPerPeriod = 0 ;
+
+  // initialize scope/VU peaks cache
+  for (unsigned int peakN = 0 ; peakN < N_TRANSIENT_PEAKS ; ++peakN)
+    { PeaksIn.push_back(0.0) ; PeaksOut.push_back(0.0) ; }
 }
 
 
 // getters/setters
 
-Sample* JackIO::GetBuffer1() { return Buffer1 ; }
-
-Sample* JackIO::GetBuffer2() { return Buffer2 ; }
-
 unsigned int JackIO::GetRecordBufferSize()
   { return (RecordBufferSize)? RecordBufferSize : DEFAULT_BUFFER_SIZE ; }
-
+/*
 unsigned int JackIO::GetNFramesPerPeriod() { return NFramesPerPeriod ; }
 
 unsigned int JackIO::GetFrameSize() { return FRAME_SIZE ; }
 
 unsigned int JackIO::GetSampleRate() { return SampleRate ; }
-
+*/
 unsigned int JackIO::GetBytesPerSecond() { return BytesPerSecond ; }
 
-void JackIO::SetCurrentScene(Scene* currentScene , unsigned int currentSceneN)
-  { CurrentScene = currentScene ; CurrentSceneN = currentSceneN ; }
+void JackIO::SetCurrentScene(Scene* currentScene)
+  { CurrentScene = currentScene ; CurrentSceneN = currentScene->sceneN ; }
 
-void JackIO::SetNextScene(Scene* nextScene , unsigned int nextSceneN)
-  { NextScene = nextScene ; NextSceneN = nextSceneN ; }
+void JackIO::SetNextScene(Scene* nextScene)
+  { NextScene = nextScene ; NextSceneN = nextScene->sceneN ; }
+
+vector<Sample>* JackIO::GetPeaksIn() { return &PeaksIn ; }
+
+vector<Sample>* JackIO::GetPeaksOut() { return &PeaksOut ; }
+
+Sample* JackIO::GetTransientPeaks() { return TransientPeaks ; }
+
+Sample* JackIO::GetTransientPeakIn() { return &TransientPeakInMix ; }
+
+//Sample* JackIO::GetTransientPeakOut() { return &TransientPeakOutMix ; }
+
+
+// helpers
+
+void JackIO::ScanTransientPeaks()
+{
+#if SCAN_TRANSIENT_PEAKS_DATA
+// TODO; first NFramesPerGuiInterval duplicated?
+  unsigned int frameN = CurrentScene->frameN ;
+  frameN = (frameN < NFramesPerGuiInterval)? 0 : frameN - NFramesPerGuiInterval ;
+
+  // initialize with inputs
+  Sample peakIn1 = GetPeak(&(Buffer1[frameN]) , NFramesPerGuiInterval) ;
+  Sample peakIn2 = GetPeak(&(Buffer2[frameN]) , NFramesPerGuiInterval) ;
+
+  // add in unmuted tracks
+  Sample peakOut1     = 0.0 ; Sample peakOut2 = 0.0 ;
+  unsigned int nLoops = CurrentScene->loops.size() ;
+  for (unsigned int loopN = 0 ; loopN < nLoops ; ++loopN)
+  {
+    Loop* loop = CurrentScene->getLoop(loopN) ;
+    if (CurrentScene->isMuted && loop->isMuted) continue ;
+
+    peakOut1 += GetPeak(&(loop->buffer1[frameN]) , NFramesPerGuiInterval) * loop->vol ;
+    peakOut2 += GetPeak(&(loop->buffer2[frameN]) , NFramesPerGuiInterval) * loop->vol ;
+  }
+
+  Sample peakIn  = (peakIn1 + peakIn2)   / N_INPUT_CHANNELS ;
+  Sample peakOut = (peakOut1 + peakOut2) / N_OUTPUT_CHANNELS ;
+  if (peakOut > 1.0) peakOut = 1.0 ;
+
+  // load scope peaks (mono mix)
+  PeaksIn.pop_back()  ; PeaksIn.insert(PeaksIn.begin()   , peakIn) ;
+  PeaksOut.pop_back() ; PeaksOut.insert(PeaksOut.begin() , peakOut) ;
+
+  // load VU peaks (per channel)
+  TransientPeakInMix = peakIn ;   //TransientPeakOutMix = peakOut ;
+  TransientPeaks[0]  = peakIn1 ;  TransientPeaks[1]   = peakIn2 ;
+  TransientPeaks[2]  = peakOut1 ; TransientPeaks[3]   = peakOut2 ;
+#endif // #if SCAN_TRANSIENT_PEAKS_DATA
+}
 
 Sample JackIO::GetPeak(Sample* buffer , unsigned int nFrames)
 {
+#if !SCAN_PEAKS
+  return 0.0 ;
+#endif // #if SCAN_PEAKS
+
   Sample peak = 0.0 ;
   try // TODO: this function is unsafe
   {
@@ -223,8 +288,9 @@ memcpy(NewLoop->buffer2 , Buffer2 + CurrentScene->beginFrameN , CurrentScene->nB
 
 int JackIO::SetBufferSizeCallback(jack_nframes_t nFrames , void* arg)
 {
-  PeriodSize     = FRAME_SIZE * (NFramesPerPeriod = nFrames) ;
-  BytesPerSecond = FRAME_SIZE * (SampleRate = jack_get_sample_rate(Client)) ;
+  PeriodSize            = FRAME_SIZE * (NFramesPerPeriod = nFrames) ;
+  BytesPerSecond        = FRAME_SIZE * (SampleRate = jack_get_sample_rate(Client)) ;
+  NFramesPerGuiInterval = (unsigned int)(SampleRate * (float)GUI_UPDATE_IVL * 0.001) ;
   Loopidity::SetMetaData(SampleRate , FRAME_SIZE , nFrames) ; return 0 ;
 }
 

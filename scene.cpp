@@ -70,6 +70,7 @@ endFrameN        = RecordBufferSize = recordBufferSize ;
   nFrames          = RecordBufferSize = recordBufferSize ;
   nFramesPerPeak   = nFrames / N_PEAKS_FINE ;
   nBytes           = 0 ;
+  nSeconds         = 0 ;
 
   // recording state
   isRolling      = false ;
@@ -109,11 +110,13 @@ DEBUG_TRACE_SCENE_TOGGLESTATE_IN
   {
 #if SCENE_NFRAMES_EDITABLE && 0
 endFrameN = frameN + NFramesPerPeriod ; nFrames = endFrameN - beginFrameN ;
-                                          nFramesPerPeak = nFrames / N_PEAKS_FINE ;
+                                           nFramesPerPeak = nFrames / N_PEAKS_FINE ;
 #else
-    nFrames = frameN + NFramesPerPeriod ; nFramesPerPeak = nFrames / N_PEAKS_FINE ;
+    nFrames  = frameN + NFramesPerPeriod ; nFramesPerPeak = nFrames / N_PEAKS_FINE ;
 #endif // #if SCENE_NFRAMES_EDITABLE
-    nBytes  = FrameSize * nFrames ;       shouldSaveLoop = doesPulseExist = true ;
+    nBytes   = FrameSize * nFrames ;       shouldSaveLoop = doesPulseExist = true ;
+    nSeconds = nBytes / JackIO::GetBytesPerSecond() ;
+    Loopidity::UpdateView(sceneN) ;
   }
   else shouldSaveLoop = !shouldSaveLoop ;
 
@@ -166,17 +169,15 @@ void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 DEBUG_TRACE_SCENE_SCANPEAKS_IN
 
 #if SCAN_LOOP_PEAKS_DATA
-  if (!loop || loopN >= N_LOOPS)
-{printf("Scene::scanPeaks WTF\n");
-                                  return ; }
+  if (!loop || loopN >= N_LOOPS) return ;
 
   // fill fine peaks arrays
-  Sample* peaks = loop->peaksFine ; unsigned int peakN , framen ; Sample peak1 , peak2 ;
+  Sample* peaks = loop->peaksFine ; unsigned int peakN , frameNum ; Sample peak1 , peak2 ;
   for (peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
   {
-    framen       = nFramesPerPeak * peakN ;
-    peak1        = JackIO::GetPeak(&(loop->buffer1[framen]) , nFramesPerPeak) ;
-    peak2        = JackIO::GetPeak(&(loop->buffer2[framen]) , nFramesPerPeak) ;
+    frameNum     = nFramesPerPeak * peakN ;
+    peak1        = JackIO::GetPeak(&(loop->buffer1[frameNum]) , nFramesPerPeak) ;
+    peak2        = JackIO::GetPeak(&(loop->buffer2[frameNum]) , nFramesPerPeak) ;
     peaks[peakN] = (peak1 + peak2) / N_INPUT_CHANNELS ;
 
     // find the loudest peak for this loop
@@ -228,6 +229,6 @@ Loop* Scene::getLoop(unsigned int loopN)
   return (*aLoop) ;
 }
 
-bool Scene::getIsRolling() { return isRolling ; }
+//bool Scene::getIsRolling() { return isRolling ; }
 
-unsigned int Scene::getLoopPos() { return (frameN * 1000) / nFrames ; }
+//unsigned int Scene::getLoopPos() { return (frameN * 1000) / nFrames ; }
