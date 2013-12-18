@@ -123,6 +123,18 @@ void JackIO::SetCurrentScene(Scene* currentScene , unsigned int currentSceneN)
 void JackIO::SetNextScene(Scene* nextScene , unsigned int nextSceneN)
   { NextScene = nextScene ; NextSceneN = nextSceneN ; }
 
+Sample JackIO::GetPeak(Sample* buffer , unsigned int nFrames)
+{
+  Sample peak = 0.0 ;
+  try // TODO: this function is unsafe
+  {
+    for (unsigned int frameN = 0 ; frameN < nFrames ; ++frameN)
+      { Sample sample = fabs(buffer[frameN]) ; if (peak < sample) peak = sample ; }
+  }
+  catch(int ex) { printf(GETPEAK_ERROR_MSG) ; }
+  return peak ;
+}
+
 
 /* JackIO class side private functions */
 

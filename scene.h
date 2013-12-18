@@ -79,12 +79,11 @@ class Scene
     /* class side private functions */
 
     // setup
-    typedef Scene CLASSNAME ;
     Scene(unsigned int sceneNum , unsigned int recordBufferSize) ;
 
     // getters/setters
-    static void  SetMetaData( unsigned int sampleRate , unsigned int frameSize ,
-                              unsigned int nFramesPerPeriod) ;
+    static void SetMetaData(unsigned int sampleRate , unsigned int frameSize ,
+                            unsigned int nFramesPerPeriod) ;
 
 
     /* instance side private varables */
@@ -129,8 +128,8 @@ unsigned int endFrameN ;
     void reset(       void) ;
 
     // peaks cache
-    void scanPeaks(  Loop* loop , unsigned int loopN) ;
-    void rescanPeaks(void) ;
+    void   scanPeaks(  Loop* loop , unsigned int loopN) ;
+    void   rescanPeaks(void) ;
 
     // getters/setters
     Loop*        getLoop(     unsigned int loopN) ;

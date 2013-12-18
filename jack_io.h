@@ -72,6 +72,9 @@ class JackIO
     static void         SetCurrentScene(    Scene* currentScene , unsigned int currentSceneN) ;
     static void         SetNextScene(       Scene* nextScene , unsigned int nextSceneN) ;
 
+    // helpers
+    static Sample       GetPeak(Sample* buffer , unsigned int nFrames) ;
+
 private:
 
     /* class side private functions */

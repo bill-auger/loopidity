@@ -63,7 +63,7 @@ Scene::Scene(unsigned int sceneNum , unsigned int recordBufferSize)
 
   // buffer iteration
   frameN           = 0 ;
-#if SCENE_NFRAMES_EDITABLE
+#if SCENE_NFRAMES_EDITABLE && 0
 beginFrameN      = 0 ;
 endFrameN        = RecordBufferSize = recordBufferSize ;
 #endif // #if SCENE_NFRAMES_EDITABLE
@@ -91,7 +91,7 @@ void Scene::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsig
 void Scene::startRolling()
 {
 DEBUG_TRACE_SCENE_RESET_IN
-#if SCENE_NFRAMES_EDITABLE
+#if SCENE_NFRAMES_EDITABLE && 0
 beginFrameN = frameN ;
 #else
 frameN = 0 ;
@@ -175,8 +175,8 @@ DEBUG_TRACE_SCENE_SCANPEAKS_IN
   for (peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
   {
     framen       = nFramesPerPeak * peakN ;
-    peak1        = Loopidity::GetPeak(&(loop->buffer1[framen]) , nFramesPerPeak) ;
-    peak2        = Loopidity::GetPeak(&(loop->buffer2[framen]) , nFramesPerPeak) ;
+    peak1        = JackIO::GetPeak(&(loop->buffer1[framen]) , nFramesPerPeak) ;
+    peak2        = JackIO::GetPeak(&(loop->buffer2[framen]) , nFramesPerPeak) ;
     peaks[peakN] = (peak1 + peak2) / N_INPUT_CHANNELS ;
 
     // find the loudest peak for this loop
@@ -195,7 +195,7 @@ DEBUG_TRACE_SCENE_SCANPEAKS_IN
   for (unsigned int histPeakN = 0 ; histPeakN < N_PEAKS_COURSE ; ++histPeakN)
   {
     peakN                  = (unsigned int)(nPeaksAsFloat * (float)histPeakN) ;
-    peaksCourse[histPeakN] = Loopidity::GetPeak(&peaks[peakN] , nPeaksAsInt) ;
+    peaksCourse[histPeakN] = JackIO::GetPeak(&peaks[peakN] , nPeaksAsInt) ;
   }
 #endif // #if SCAN_LOOP_PEAKS_DATA
 

@@ -24,10 +24,10 @@
 #  define DEBUG_TRACE_LOOPIDITY_RESETSCENE_OUT        if (DEBUG_TRACE_OUT)            TRACE_SCENE("Loopidity::ResetScene(%d) OUT" , Scenes[sceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_RESET_IN              if (TRACE_EVS(CurrentSceneN))   printf("\nUSER: KMOD_RCTRL+SDLK_ESCAPE --> Loopidity::Reset(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::Reset(%d)  IN" , Scenes[CurrentSceneN])) return ;
 #  define DEBUG_TRACE_LOOPIDITY_RESET_OUT             if (TRACE_OUT(CurrentSceneN))   TRACE_SCENE("Loopidity::Reset(%d) OUT" , Scenes[CurrentSceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_IN     if (TRACE_EVS(sceneN))          printf("\nUSER: EVT_NEW_LOOP --> Loopidity::OnLoopCreation(%d)\n\n" , sceneN) ; if (TRACE_IN(sceneN) && !TRACE_SCENE("Loopidity::OnLoopCreation(%d)  IN" , Scenes[sceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_IN     if (TRACE_EVS(*sceneNum))          printf("\nUSER: EVT_NEW_LOOP --> Loopidity::OnLoopCreation(%d)\n\n" , *sceneNum) ; if (TRACE_IN(*sceneNum) && !TRACE_SCENE("Loopidity::OnLoopCreation(%d)  IN" , Scenes[*sceneNum])) return ;
 #  define DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_OUT    if (TRACE_OUT(sceneN))          TRACE_SCENE("Loopidity::OnLoopCreation(%d) OUT" , Scenes[sceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN      if (TRACE_EVS(CurrentSceneN))   printf("\nUSER: EVT_SCENE_CHANGED --> Loopidity::OnSceneChange(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::OnSceneChange(%d)  IN" , Scenes[CurrentSceneN])) return ;
-#  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT     if (TRACE_OUT(nextSceneN))      TRACE_SCENE("Loopidity::OnSceneChange(%d)  OUT" , Scenes[nextSceneN]) ;
+#  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT     if (TRACE_OUT(NextSceneN))      TRACE_SCENE("Loopidity::OnSceneChange(%d)  OUT" , nextScene) ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                                                TRACE_SCENE("Loopidity::OOM(%d)   IN" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT     if (DEBUG_TRACE_EVS)            switch (event->key.keysym.sym) { case SDLK_SPACE: printf("\nKEY: SDLK_SPACE\n") ; break ; case SDLK_KP0: printf("\nKEY: SDLK_KP0\n") ; break ; case SDLK_KP_ENTER: printf("\nKEY: SDLK_KP_ENTER\n") ; break ; case SDLK_ESCAPE: printf("\nKEY: SDLK_ESCAPE\n") ;  break ; default: break ; }
 #  define DEBUG_TRACE_SCENE_ADDLOOP_IN                if (TRACE_IN(sceneN)        && !TRACE_SCENE("Scene::addLoop(%d)  IN" , this)) return false ;

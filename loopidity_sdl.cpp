@@ -63,10 +63,12 @@ SDL_Rect*    LoopiditySdl::SceneRect     = 0 ;
 
 // setup
 
+bool LoopiditySdl::IsInitialized() { return !!Screen ; }
+
 bool LoopiditySdl::Init(SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
                         vector<Sample>* peaksOut , Sample* peaksTransient)
 {
-  if (Screen) return false ; // we only want to do this once
+  if (IsInitialized()) return false ;
 
   // set handles to view instances and VU scopes/peaks caches
   SdlScenes      = sdlScenes ;
@@ -182,7 +184,7 @@ void LoopiditySdl::DrawScopes()
     if (baseLoop)
     {
       const Uint16 scopeL = (WIN_CENTER - (N_PEAKS_FINE / 2)) ;
-      CurrentPeakN        = SdlScenes[CurrentSceneN]->scene->getCurrentPeakN() ;
+      CurrentPeakN        = currentScene->getCurrentPeakN() ;
       SceneProgress       = ((float)CurrentPeakN / N_PEAKS_FINE) * N_PEAKS_FINE ;
       for (Uint16 peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
       {
@@ -201,6 +203,21 @@ void LoopiditySdl::DrawScopes()
         Sint16 progressT = Scope0 - ScopePeakH ;
         Sint16 progressB = Scope0 + ScopePeakH ;
         vlineColor(Screen , progressX , progressT , progressB , PEAK_CURRENT_COLOR) ;
+      }
+#define EDIT_SCOPE_GRADUATIONS_GRANULARITY 10
+#define EDIT_SCOPE_GRADUATION_H            12
+      unsigned int nFrames        = currentScene->nFrames ;
+      unsigned int nFramesPerPeak = currentScene->nFramesPerPeak ;
+      // graduations
+      for (Uint16 frameN = 0 ; frameN < nFrames ; frameN = frameN + 10)
+      {
+        if (!(frameN % EDIT_SCOPE_GRADUATIONS_GRANULARITY))
+        {
+          Sint16 gradX = scopeL + (frameN / nFramesPerPeak) ;
+          Sint16 gradT = Scope0 + ScopePeakH - EDIT_SCOPE_GRADUATION_H ;
+          Sint16 gradB = Scope0 + ScopePeakH ;
+          vlineColor(Screen , gradX , gradT , gradB , SCOPE_PEAK_ZERO_COLOR) ;
+        }
       }
     }
 #  endif // #if DRAW_EDIT_HISTOGRAM

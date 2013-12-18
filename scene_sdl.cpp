@@ -115,17 +115,22 @@ SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN) :
   drawScene(inactiveSceneSurface , 0 , 0) ;
 }
 
+
+// helpers
+
 void SceneSdl::PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel)
 {
   Uint8 r , g , b , lum ; SDL_GetRGB(*pixel , fmt , &r , &g , &b) ;
   lum = (r * 0.3) + (g * 0.59) + (b * 0.11) ; *pixel = SDL_MapRGB(fmt , lum , lum , lum) ;
 }
 
+
+// getters/setters
+
 Sint16 SceneSdl::GetLoopL(Uint16 loopN) { return LoopsL + (LoopW * loopN) ; }
 
 
 /* SceneSdl instance side private functions */
-
 
 // getters/setters
 

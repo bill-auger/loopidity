@@ -4,12 +4,17 @@
 
 
 //#define MEMORY_CHECK              1 // if 0 choose DEFAULT_BUFFER_SIZE wisely
+// setup features
 //#define INIT_LOOPIDITY            1
 #define INIT_JACK                 1
-//#define LOOP_COUNTER              1
-//#define DSP                       1
 #define USER_DEFINED_BUFFER       1 // TODO: user defined buffer sizes
 #define SCENE_NFRAMES_EDITABLE    1
+// runtime features
+//#define LOOP_COUNTER              1
+//#define DSP                       1
+#define HANDLE_KEYBOARD_EVENTS    1
+#define HANDLE_MOUSE_EVENTS       0
+#define HANDLE_USER_EVENTS        1
 #define DRAW_STATUS               1
 #define DRAW_SCENES               1
 #define DRAW_SCOPES               1
@@ -169,10 +174,8 @@ static bool IsEditMode ;
 
     /* class side public functions */
 
-    // setup
-    static bool Init(   bool shouldMonitorInputs , bool shouldAutoSceneChange ,
-                        unsigned int recordBufferSize) ;
-    static void Cleanup(void) ;
+    // main
+    static int Main(int argc , char** argv) ;
 
     // getters/setters
 //    static void            SetNFramesPerPeriod(   unsigned int nFrames) ;
@@ -185,14 +188,22 @@ static bool IsEditMode ;
     static bool            GetIsEditMode(         void) ;
     static Sample*         GetTransientPeakIn(    void) ;
 //    static Sample*         GetTransientPeakOut(   void) ;
-    static Sample          GetPeak(               Sample* buffer , unsigned int nFrames) ;
+
+
+    /* class side private functions */
+
+    // setup
+    static bool IsInitialized(void) ; // TODO: make singleton
+    static bool Init(         bool shouldMonitorInputs , bool shouldAutoSceneChange ,
+                              unsigned int recordBufferSize) ;
+    static void Cleanup(      void) ;
 
     // event handlers
     static void HandleKeyEvent(  SDL_Event* event) ;
     static void HandleMouseEvent(SDL_Event* event) ;
     static void HandleUserEvent( SDL_Event* event) ;
-    static void OnLoopCreation(  unsigned int sceneN , Loop* newLoop) ;
-    static void OnSceneChange(   unsigned int sceneN) ;
+    static void OnLoopCreation(  unsigned int* sceneNum , Loop** newLoop) ;
+    static void OnSceneChange(   unsigned int* sceneNum) ;
 
     // user actions
     static void ToggleAutoSceneChange(void) ;
@@ -208,21 +219,14 @@ static bool IsEditMode ;
     static void ResetCurrentScene(    void) ;
     static void Reset(                void) ;
 
+    // getters/setters
+    static void SetMetaData(unsigned int sampleRate , unsigned int frameSize ,
+                            unsigned int nFramesPerPeriod) ;
+
     // helpers
     static void ScanTransientPeaks(void) ;
     static void UpdateView(        unsigned int sceneN) ;
     static void OOM(               void) ;
-
-    // main
-    static int Main(int argc , char** argv) ;
-
-
-    /* class side private functions */
-
-    // getters/setters
-    static void SetMetaData(unsigned int sampleRate , unsigned int frameSize ,
-                            unsigned int nFramesPerPeriod) ;
 } ;
-
 
 #endif // #ifndef _LOOPIDITY_H_

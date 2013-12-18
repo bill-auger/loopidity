@@ -165,11 +165,12 @@ class LoopiditySdl
     /* class side private functions */
 
     // setup
-    static bool Init(    SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
-                         vector<Sample>* peaksOut , Sample* peaksTransient) ;
-    static void SdlError(const char* functionName) ;
-    static void TtfError(const char* functionName) ;
-    static void Cleanup( void) ;
+    static bool IsInitialized(void) ; // TODO: make singleton
+    static bool Init(         SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
+                              vector<Sample>* peaksOut , Sample* peaksTransient) ;
+    static void SdlError(     const char* functionName) ;
+    static void TtfError(     const char* functionName) ;
+    static void Cleanup(      void) ;
 
     // drawing
     static void DrawHeader(     void) ;

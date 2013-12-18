@@ -28,14 +28,119 @@ Sample         Loopidity::TransientPeakOutMix     = 0 ;
 
 /* Loopidity class side public functions */
 
+/* main */
+
+int Loopidity::Main(int argc , char** argv)
+{
+#if DEBUG_TRACE
+cout << INIT_MSG << endl ;
+#endif // #if DEBUG_TRACE
+
+  // 'singleton' sanity check
+  if (IsInitialized()) return false ;
+
+  // parse command line arguments
+  bool isMonitorInputs = true , isAutoSceneChange = true ; unsigned int bufferSize ;
+  for (int argN = 0 ; argN < argc ; ++argN)
+    if (!strcmp(argv[argN] , MONITOR_ARG)) isMonitorInputs = false ;
+    else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) isAutoSceneChange = false ;
+    // TODO: user defined buffer sizes via command line
+#if USER_DEFINED_BUFFER
+//    else if (!strcmp(argv[argN] , BUFFER_SIZE_ARG)) isAutoSceneChange = bufferSize = arg ;
+  bufferSize = 0 ; // nyi
+#else
+  bufferSize = 0 ;
+#endif // #if DEBUG_STATIC_BUFFER_SIZE
+
+  // initialize Loopidity (controller) and instantiate Scenes (models and SdlScenes (views))
+  if (!Init(isMonitorInputs , isAutoSceneChange , bufferSize)) return EXIT_FAILURE ;
+
+  // initialize LoopiditySdl (view)
+  if (!LoopiditySdl::Init(SdlScenes , &PeaksIn , &PeaksOut , TransientPeaks))
+    return EXIT_FAILURE ;
+
+#if DEBUG_TRACE
+cout << INIT_SUCCESS_MSG << endl ;
+#endif // #if DEBUG_TRACE
+
+  // draw initial
+  LoopiditySdl::BlankScreen() ; LoopiditySdl::DrawHeader() ;
+
+  // main loop
+  bool done           = false ; SDL_Event event ;
+  Uint16 timerStart   = SDL_GetTicks() , elapsed ;
+  Uint16 guiLongCount = 0 ;
+  while (!done)
+  {
+    // poll events and pass them off to our controller
+    while (SDL_PollEvent(&event))
+    {
+      switch (event.type)
+      {
+        case SDL_QUIT:            done = true ;              break ;
+        case SDL_KEYDOWN:         HandleKeyEvent(&event) ;   break ;
+        case SDL_MOUSEBUTTONDOWN: HandleMouseEvent(&event) ; break ;
+        case SDL_USEREVENT:       HandleUserEvent(&event) ;  break ;
+        default:                                             break ;
+      }
+    }
+/*
+Uint64 now = SDL_GetPerformanceCounter() ;
+Uint64 elapsed = (now - DbgMainLoopTs) / SDL_GetPerformanceFrequency() ; DbgMainLoopTs = now ;
+if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
+  cout << "DbgMainLoopTs=" << elapsed << endl ;
+*/
+    // throttle framerate
+    elapsed = SDL_GetTicks() - timerStart ;
+    if (elapsed >= GUI_UPDATE_INTERVAL) timerStart = SDL_GetTicks() ;
+    else { SDL_Delay(1) ; continue ; }
+
+    // draw high priority
+    ScanTransientPeaks() ; //updateVUMeters() ;
+    LoopiditySdl::DrawScenes() ;
+    LoopiditySdl::DrawScopes() ;
+
+    // draw low priority
+    if (!(guiLongCount = (guiLongCount + 1) % GUI_UPDATE_LOW_PRIORITY_NICE))
+      LoopiditySdl::DrawStatusArea() ; // TODO: DrawMemory() ;
+
+    LoopiditySdl::FlipScreen() ;
+  } // while (!done)
+
+  return EXIT_SUCCESS ;
+}
+
+
+// getters/setters
+
+unsigned int Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
+
+unsigned int Loopidity::GetNextSceneN() { return NextSceneN ; }
+
+//unsigned int Loopidity::GetLoopPos() { return Scenes[CurrentSceneN]->getLoopPos() ; }
+
+//bool Loopidity::GetIsRolling() { return IsRolling ; }
+
+//bool Loopidity::GetShouldSaveLoop() { return Scenes[CurrentSceneN]->shouldSaveLoop ; }
+
+//bool Loopidity::GetDoesPulseExist() { return Scenes[CurrentSceneN]->doesPulseExist ; }
+
+bool Loopidity::GetIsEditMode() { return IsEditMode ; }
+
+Sample* Loopidity::GetTransientPeakIn() { return &TransientPeakInMix ; }
+
+//Sample* Loopidity::GetTransientPeakOut() { return &TransientPeakOutMix ; }
+
+
+/* Loopidity class side private functions */
+
 // setup
+
+bool Loopidity::IsInitialized() { return !!Scenes[0] ; }
 
 bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
                      unsigned int recordBufferSize)
 {
-  // sanity check
-  if (Scenes[0]) return false ;
-
   // disable AutoSceneChange if SCENE_CHANGE_ARG given
   if (!shouldAutoSceneChange) ToggleAutoSceneChange() ;
 
@@ -78,43 +183,11 @@ void Loopidity::Cleanup()
 }
 
 
-// getters/setters
-
-unsigned int Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
-
-unsigned int Loopidity::GetNextSceneN() { return NextSceneN ; }
-
-//unsigned int Loopidity::GetLoopPos() { return Scenes[CurrentSceneN]->getLoopPos() ; }
-
-//bool Loopidity::GetIsRolling() { return IsRolling ; }
-
-//bool Loopidity::GetShouldSaveLoop() { return Scenes[CurrentSceneN]->shouldSaveLoop ; }
-
-//bool Loopidity::GetDoesPulseExist() { return Scenes[CurrentSceneN]->doesPulseExist ; }
-
-bool Loopidity::GetIsEditMode() { return IsEditMode ; }
-
-Sample* Loopidity::GetTransientPeakIn() { return &TransientPeakInMix ; }
-
-//Sample* Loopidity::GetTransientPeakOut() { return &TransientPeakOutMix ; }
-
-Sample Loopidity::GetPeak(Sample* buffer , unsigned int nFrames)
-{
-  Sample peak = 0.0 ;
-  try // TODO: this function is unsafe
-  {
-    for (unsigned int frameN = 0 ; frameN < nFrames ; ++frameN)
-      { Sample sample = fabs(buffer[frameN]) ; if (peak < sample) peak = sample ; }
-  }
-  catch(int ex) { printf(GETPEAK_ERROR_MSG) ; }
-  return peak ;
-}
-
-
 // event handlers
 
 void Loopidity::HandleKeyEvent(SDL_Event* event)
 {
+#if HANDLE_KEYBOARD_EVENTS
 DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT
 
   switch (event->key.keysym.sym)
@@ -131,61 +204,78 @@ DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT
     }
     default:                                    break ;
   }
+#endif // #if HANDLE_KEYBOARD_EVENTS
 }
 
 void Loopidity::HandleMouseEvent(SDL_Event* event)
 {
-  Sint16 x = event->button.x , y = event->button.y ;
+#if HANDLE_MOUSE_EVENTS
+  Uint16 x = event->button.x ; Uint16 y = event->button.y ;
   if (x < MOUSE_SCENES_L || x > MOUSE_SCENES_R ||
       y < MOUSE_SCENES_T || y > MOUSE_SCENES_B) return ;
 
-  Uint16 sceneN = (y - MOUSE_SCENES_T) / SCENE_H ;
-  Uint16 loopN  = (x - MOUSE_SCENES_L) / LOOP_W ;
+  unsigned int sceneN = (y - MOUSE_SCENES_T) / SCENE_H ;
+  unsigned int loopN  = (x - MOUSE_SCENES_L) / LOOP_W ;
   switch (event->button.button)
   {
-    case SDL_BUTTON_LEFT:      ToggleLoopIsMuted(sceneN , loopN)  ; break ;
-    case SDL_BUTTON_MIDDLE:    DeleteLoop(sceneN , loopN)         ; break ;
+    case SDL_BUTTON_LEFT:      ToggleLoopIsMuted(sceneN , loopN) ;  break ;
+    case SDL_BUTTON_MIDDLE:    DeleteLoop(sceneN , loopN) ;         break ;
     case SDL_BUTTON_RIGHT:                                          break ;
-    case SDL_BUTTON_WHEELUP:   IncLoopVol(sceneN , loopN , true)  ; break ;
+    case SDL_BUTTON_WHEELUP:   IncLoopVol(sceneN , loopN , true) ;  break ;
     case SDL_BUTTON_WHEELDOWN: IncLoopVol(sceneN , loopN , false) ; break ;
     default:                                                        break ;
   }
+#endif // #if HANDLE_MOUSE_EVENTS
 }
 
 void Loopidity::HandleUserEvent(SDL_Event* event)
 {
+#if HANDLE_USER_EVENTS
+/*
   unsigned int sceneN = *((Uint8*)event->user.data1) ;
   switch (event->user.code)
   {
     case EVT_NEW_LOOP:      OnLoopCreation(sceneN , *((Loop**)event->user.data2)) ; break ;
-    case EVT_SCENE_CHANGED: OnSceneChange(sceneN)                                 ; break ;
-    default: break ;
+    case EVT_SCENE_CHANGED: OnSceneChange(sceneN) ;                                 break ;
+    default:                                                                        break ;
   }
+*/
+  void* data1 = event->user.data1 ; void* data2 = event->user.data2 ;
+  switch (event->user.code)
+  {
+    case EVT_NEW_LOOP:      OnLoopCreation((unsigned int*)data1 , (Loop**)data2) ; break ;
+    case EVT_SCENE_CHANGED: OnSceneChange((unsigned int*)data1) ;                  break ;
+    default:                                                                       break ;
+  }
+#endif // #if HANDLE_USER_EVENTS
 }
 
-void Loopidity::OnLoopCreation(unsigned int sceneN , Loop* newLoop)
+void Loopidity::OnLoopCreation(unsigned int* sceneNum , Loop** newLoop)
 {
 DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_IN
 
-  Scene* scene = Scenes[sceneN] ; SceneSdl* sdlScene = SdlScenes[sceneN] ;
-  if (scene->addLoop(newLoop)) sdlScene->addLoop(newLoop , scene->loops.size() - 1) ;
+  unsigned int sceneN = *sceneNum ;      Loop* aLoop        = *newLoop ;
+  Scene* scene        = Scenes[sceneN] ; SceneSdl* sdlScene = SdlScenes[sceneN] ;
+  if (scene->addLoop(aLoop)) sdlScene->addLoop(aLoop , scene->loops.size() - 1) ;
 
   UpdateView(sceneN) ;
 
 DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_OUT
 }
 
-void Loopidity::OnSceneChange(unsigned int nextSceneN)
+void Loopidity::OnSceneChange(unsigned int* sceneNum)
 {
 DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN //else { Scenes[CurrentSceneN]->startRolling() ; SdlScenes[CurrentSceneN]->startRolling() ; }
 
 //  if (!Scenes[CurrentSceneN]->isRolling) { Scenes[CurrentSceneN]->reset() ; }
 
-  unsigned int prevSceneN = CurrentSceneN ; CurrentSceneN = NextSceneN = nextSceneN ;
-  SdlScenes[prevSceneN]->drawScene(SdlScenes[prevSceneN]->inactiveSceneSurface , 0 , 0) ;
-  UpdateView(prevSceneN) ; UpdateView(nextSceneN) ;
+  unsigned int prevSceneN       = CurrentSceneN ; CurrentSceneN = NextSceneN = *sceneNum ;
+  SceneSdl* prevSdlScene        = SdlScenes[prevSceneN] ;
+  Scene* nextScene              = Scenes[NextSceneN] ;
+  prevSdlScene->drawScene(prevSdlScene->inactiveSceneSurface , 0 , 0) ;
+  UpdateView(prevSceneN) ; UpdateView(NextSceneN) ;
 
-  if (ShouldSceneAutoChange) do ToggleScene() ; while (!Scenes[NextSceneN]->loops.size()) ;
+  if (ShouldSceneAutoChange) do ToggleScene() ; while (!nextScene->loops.size()) ;
 
 DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT
 }
@@ -292,6 +382,18 @@ DEBUG_TRACE_LOOPIDITY_RESET_OUT
 }
 
 
+// getters/setters
+
+void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
+{
+  float interval = (float)GUI_UPDATE_INTERVAL * 0.001 ;
+  NFramesPerGuiInterval = (unsigned int)(sampleRate * interval) ;
+
+  Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ;
+  LoopiditySdl::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ;
+}
+
+
 // helpers
 
 void Loopidity::ScanTransientPeaks()
@@ -302,8 +404,8 @@ void Loopidity::ScanTransientPeaks()
   unsigned int currentFrameN = (frameN < NFramesPerGuiInterval)? 0 : frameN - NFramesPerGuiInterval ;
 
   // initialize with inputs
-  Sample peakIn1 = GetPeak(&(Buffer1[currentFrameN]) , NFramesPerGuiInterval) ;
-  Sample peakIn2 = GetPeak(&(Buffer2[currentFrameN]) , NFramesPerGuiInterval) ;
+  Sample peakIn1 = JackIO::GetPeak(&(Buffer1[currentFrameN]) , NFramesPerGuiInterval) ;
+  Sample peakIn2 = JackIO::GetPeak(&(Buffer2[currentFrameN]) , NFramesPerGuiInterval) ;
 
   // add in unmuted tracks
   Sample peakOut1 = 0.0 , peakOut2 = 0.0 ; unsigned int nLoops = currentScene->loops.size() ;
@@ -311,8 +413,8 @@ void Loopidity::ScanTransientPeaks()
   {
     Loop* loop = currentScene->getLoop(loopN) ; if (currentScene->isMuted && loop->isMuted) continue ;
 
-    peakOut1 += GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerGuiInterval) * loop->vol ;
-    peakOut2 += GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerGuiInterval) * loop->vol ;
+    peakOut1 += JackIO::GetPeak(&(loop->buffer1[currentFrameN]) , NFramesPerGuiInterval) * loop->vol ;
+    peakOut2 += JackIO::GetPeak(&(loop->buffer2[currentFrameN]) , NFramesPerGuiInterval) * loop->vol ;
   }
 
   Sample peakIn  = (peakIn1 + peakIn2)   / N_INPUT_CHANNELS ;
@@ -334,96 +436,3 @@ void Loopidity::UpdateView(unsigned int sceneN) { SdlScenes[sceneN]->updateStatu
 // { if (Scenes[sceneN]->isRolling) SdlScenes[sceneN]->updateStatus() ; }
 
 void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OUT_OF_MEMORY_MSG) ; }
-
-
-/* main */
-
-int Loopidity::Main(int argc , char** argv)
-{
-#if DEBUG_TRACE
-cout << INIT_MSG << endl ;
-#endif // #if DEBUG_TRACE
-
-  // parse command line arguments
-  bool isMonitorInputs = true , isAutoSceneChange = true ; unsigned int bufferSize ;
-  for (int argN = 0 ; argN < argc ; ++argN)
-    if (!strcmp(argv[argN] , MONITOR_ARG)) isMonitorInputs = false ;
-    else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) isAutoSceneChange = false ;
-    // TODO: user defined buffer sizes via command line
-#if USER_DEFINED_BUFFER
-//    else if (!strcmp(argv[argN] , BUFFER_SIZE_ARG)) isAutoSceneChange = bufferSize = arg ;
-  bufferSize = 0 ; // nyi
-#else
-  bufferSize = 0 ;
-#endif // #if DEBUG_STATIC_BUFFER_SIZE
-
-  // initialize Loopidity (controller) and instantiate Scenes (models and SdlScenes (views))
-  if (!Init(isMonitorInputs , isAutoSceneChange , bufferSize)) return EXIT_FAILURE ;
-
-  // initialize LoopiditySdl (view)
-  if (!LoopiditySdl::Init(SdlScenes , &PeaksIn , &PeaksOut , TransientPeaks))
-    return EXIT_FAILURE ;
-
-#if DEBUG_TRACE
-cout << INIT_SUCCESS_MSG << endl ;
-#endif // #if DEBUG_TRACE
-
-  // draw initial
-  LoopiditySdl::BlankScreen() ; LoopiditySdl::DrawHeader() ;
-
-  // main loop
-  bool done           = false ; SDL_Event event ;
-  Uint16 timerStart   = SDL_GetTicks() , elapsed ;
-  Uint16 guiLongCount = 0 ;
-  while (!done)
-  {
-    // poll events and pass them off to our controller
-    while (SDL_PollEvent(&event))
-    {
-      switch (event.type)
-      {
-        case SDL_QUIT: done = true ; break ;
-        case SDL_KEYDOWN: HandleKeyEvent(&event) ; break ;
-//        case SDL_MOUSEBUTTONDOWN: HandleMouseEvent(&event) ; break ;
-        case SDL_USEREVENT: HandleUserEvent(&event) ; break ;
-        default: break ;
-      }
-    }
-/*
-Uint64 now = SDL_GetPerformanceCounter() ;
-Uint64 elapsed = (now - DbgMainLoopTs) / SDL_GetPerformanceFrequency() ; DbgMainLoopTs = now ;
-if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
-  cout << "DbgMainLoopTs=" << elapsed << endl ;
-*/
-    // throttle framerate
-    elapsed = SDL_GetTicks() - timerStart ;
-    if (elapsed >= GUI_UPDATE_INTERVAL) timerStart = SDL_GetTicks() ;
-    else { SDL_Delay(1) ; continue ; }
-
-    // draw high priority
-    ScanTransientPeaks() ; //updateVUMeters() ;
-    LoopiditySdl::DrawScenes() ;
-    LoopiditySdl::DrawScopes() ;
-
-    // draw low priority
-    if (!(guiLongCount = (guiLongCount + 1) % GUI_UPDATE_LOW_PRIORITY_NICE))
-      LoopiditySdl::DrawStatusArea() ; // TODO: DrawMemory() ;
-
-    LoopiditySdl::FlipScreen() ;
-  } // while (!done)
-
-  return EXIT_SUCCESS ;
-}
-
-
-/* Loopidity class side private functions */
-
-// getters/setters
-
-void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
-{
-  float interval = (float)GUI_UPDATE_INTERVAL * 0.001 ;
-  NFramesPerGuiInterval = (unsigned int)(sampleRate * interval) ;
-
-  Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ;
-}
