@@ -187,10 +187,10 @@
 	<math.h>
 	"SDL.h"
 
-1387383868 source:/home/me/src/LoopiditySDL/jack_io.cpp
+1387407643 source:/home/me/src/LoopiditySDL/jack_io.cpp
 	"jack_io.h"
 
-1387383868 /home/me/src/LoopiditySDL/jack_io.h
+1387405451 /home/me/src/LoopiditySDL/jack_io.h
 	<jack/jack.h>
 	"loopidity.h"
 
@@ -213,13 +213,13 @@
 	"scene_sdl.h"
 	"trace.h"
 
-1387394177 /home/me/src/LoopiditySDL/loopidity_sdl.h
+1387408348 /home/me/src/LoopiditySDL/loopidity_sdl.h
 	"loopidity.h"
 
 1387392694 /home/me/src/LoopiditySDL/scene_sdl.h
 	"loopidity.h"
 
-1387394205 source:/home/me/src/LoopiditySDL/loopidity.cpp
+1387408623 source:/home/me/src/LoopiditySDL/loopidity.cpp
 	"loopidity.h"
 
 1346374325 /home/me/src/LoopiditySDL/debug.h
@@ -242,7 +242,7 @@
 	<math.h>
 	"SDL.h"
 
-1387392311 source:/home/me/src/LoopiditySDL/scene.cpp
+1387401253 source:/home/me/src/LoopiditySDL/scene.cpp
 	"jack_io.h"
 
 1345873668 source:/home/me/src/LoopiditySDL/debug.cpp
@@ -257,6 +257,6 @@
 1387388934 source:/home/me/src/LoopiditySDL/trace.cpp
 	"loopidity.h"
 
-1387394176 source:/home/me/src/LoopiditySDL/loopidity_sdl.cpp
+1387395479 source:/home/me/src/LoopiditySDL/loopidity_sdl.cpp
 	"loopidity_sdl.h"
 

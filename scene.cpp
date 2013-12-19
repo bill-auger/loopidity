@@ -63,7 +63,7 @@ Scene::Scene(unsigned int sceneNum , unsigned int recordBufferSize)
 
   // buffer iteration
   frameN           = 0 ;
-#if SCENE_NFRAMES_EDITABLE && 0
+#if SCENE_NFRAMES_EDITABLE
 beginFrameN      = 0 ;
 endFrameN        = RecordBufferSize = recordBufferSize ;
 #endif // #if SCENE_NFRAMES_EDITABLE
@@ -92,7 +92,7 @@ void Scene::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsig
 void Scene::startRolling()
 {
 DEBUG_TRACE_SCENE_RESET_IN
-#if SCENE_NFRAMES_EDITABLE && 0
+#if SCENE_NFRAMES_EDITABLE
 beginFrameN = frameN ;
 #else
 frameN = 0 ;
@@ -108,14 +108,14 @@ DEBUG_TRACE_SCENE_TOGGLESTATE_IN
 
   if (!doesPulseExist)
   {
-#if SCENE_NFRAMES_EDITABLE && 0
+#if SCENE_NFRAMES_EDITABLE
 endFrameN = frameN + NFramesPerPeriod ; nFrames = endFrameN - beginFrameN ;
                                            nFramesPerPeak = nFrames / N_PEAKS_FINE ;
 #else
     nFrames  = frameN + NFramesPerPeriod ; nFramesPerPeak = nFrames / N_PEAKS_FINE ;
 #endif // #if SCENE_NFRAMES_EDITABLE
     nBytes   = FrameSize * nFrames ;       shouldSaveLoop = doesPulseExist = true ;
-    nSeconds = nBytes / JackIO::GetBytesPerSecond() ;
+    nSeconds = nFrames / SampleRate ;
     Loopidity::UpdateView(sceneN) ;
   }
   else shouldSaveLoop = !shouldSaveLoop ;

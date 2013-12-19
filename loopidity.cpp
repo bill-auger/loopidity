@@ -94,7 +94,7 @@ if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
     JackIO::ScanTransientPeaks() ;
     LoopiditySdl::DrawScenes() ;
 #if SCENE_NFRAMES_EDITABLE
-    if (IsEditMode || 1) LoopiditySdl::DrawEditScopes() ;
+    if (IsEditMode) LoopiditySdl::DrawEditScopes() ;
     else LoopiditySdl::DrawTransientScopes() ;
 #else
     LoopiditySdl::DrawScopes() ;

@@ -20,6 +20,12 @@ unsigned int JackIO::NextSceneN       = 0 ;
 // audio data
 Sample*            JackIO::Buffer1                 = 0 ;
 Sample*            JackIO::Buffer2                 = 0 ;
+#if SCENE_NFRAMES_EDITABLE
+Sample*            JackIO::EditBeginBuffer1        = 0 ;
+Sample*            JackIO::EditBeginBuffer2        = 0 ;
+Sample*            JackIO::EditEndBuffer1          = 0 ;
+Sample*            JackIO::EditEndBuffer2          = 0 ;
+#endif // #if SCENE_NFRAMES_EDITABLE
 vector<Sample>     JackIO::PeaksIn ;
 vector<Sample>     JackIO::PeaksOut ;
 const unsigned int JackIO::N_TRANSIENT_PEAKS       = N_PEAKS_TRANSIENT ;
@@ -42,7 +48,7 @@ jack_nframes_t     JackIO::NFramesPerPeriod = 0 ;
 const unsigned int JackIO::FRAME_SIZE       = sizeof(Sample) ;
 unsigned int       JackIO::PeriodSize       = 0 ;
 jack_nframes_t     JackIO::SampleRate       = 0 ;
-unsigned int       JackIO::BytesPerSecond   = 0 ;
+unsigned int       JackIO::NBytesPerSecond  = 0 ;
 
 // misc flags
 bool JackIO::ShouldMonitorInputs = true ;
@@ -83,8 +89,8 @@ if (!INIT_JACK) return JACK_INIT_SUCCESS ;
   // initialize record buffers
   RecordBufferSize = (recordBufferSize)?
       (recordBufferSize / FRAME_SIZE) : DEFAULT_BUFFER_SIZE ;
-  if (!(Buffer1 = new (nothrow) Sample[RecordBufferSize]())) return JACK_MEM_FAIL ;
-  if (!(Buffer2 = new (nothrow) Sample[RecordBufferSize]())) return JACK_MEM_FAIL ;
+  if (!(Buffer1 = new (nothrow) Sample[RecordBufferSize]()) ||
+      !(Buffer2 = new (nothrow) Sample[RecordBufferSize]())) return JACK_MEM_FAIL ;
 
   // assign callbacks
   jack_set_process_callback(Client , ProcessCallback , 0) ;
@@ -124,9 +130,9 @@ unsigned int JackIO::GetNFramesPerPeriod() { return NFramesPerPeriod ; }
 unsigned int JackIO::GetFrameSize() { return FRAME_SIZE ; }
 
 unsigned int JackIO::GetSampleRate() { return SampleRate ; }
-*/
-unsigned int JackIO::GetBytesPerSecond() { return BytesPerSecond ; }
 
+unsigned int JackIO::GetNBytesPerSecond() { return NBytesPerSecond ; }
+*/
 void JackIO::SetCurrentScene(Scene* currentScene)
   { CurrentScene = currentScene ; CurrentSceneN = currentScene->sceneN ; }
 
@@ -207,8 +213,6 @@ Sample JackIO::GetPeak(Sample* buffer , unsigned int nFrames)
 
 int JackIO::ProcessCallback(jack_nframes_t nFrames , void* arg)
 {
-//unsigned int DbgOffset = nFrames * 200 ;
-
   // get JACK buffers
 Sample* in1  = (Sample*)jack_port_get_buffer(PortInput1  , nFrames) ;
 Sample* out1 = (Sample*)jack_port_get_buffer(PortOutput1 , nFrames) ;
@@ -222,7 +226,7 @@ list<Loop*>::iterator loopsEndIter   = CurrentScene->loops.end() ;
 list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
   for (frameN = 0 ; frameN < nFrames ; ++frameN)
   {
-    frameIdx = currFrameN + frameN ;//+ DbgOffset ;
+    frameIdx = currFrameN + frameN ;
 
     // write input to outputs mix buffers
     if (!ShouldMonitorInputs) Buffer1[frameIdx] = Buffer2[frameIdx] = 0 ;
@@ -231,8 +235,6 @@ list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
     // mix unmuted tracks into outputs mix buffers
     for (loopIter = loopsBeginIter ; loopIter != loopsEndIter ; ++loopIter)
     {
-//if (frameIdx >= CurrentScene->nFrames) continue ;
-
       if (CurrentScene->isMuted && (*loopIter)->isMuted) continue ;
 
       aLoop = *loopIter ; vol = aLoop->vol ;
@@ -247,11 +249,46 @@ list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
   memcpy(buf1 , in1  , PeriodSize)    ; memcpy(buf2 , in2  , PeriodSize) ;
 
   // increment sample rollover
-#if SCENE_NFRAMES_EDITABLE && 0
-if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->endFrameN))// && CurrentScene->nFrames == RecordBufferSize ;
+#if SCENE_NFRAMES_EDITABLE
+  if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->endFrameN))// && CurrentScene->nFrames == RecordBufferSize ;
+  {
+    // unmute 'paused' loops
+    CurrentScene->isMuted = false ;
+
+    // create new Loop instance and copy record buffers to it
+    unsigned int nLoops = CurrentScene->loops.size() ;
+    if (CurrentScene->shouldSaveLoop && nLoops < N_LOOPS)
+    {
+      if ((NewLoop = new (nothrow) Loop(CurrentScene->nFrames + (SampleRate * 2))))
+      {
+        unsigned int nBytes      = CurrentScene->nBytes ;
+        if (!nLoops)
+        {
+          unsigned int beginFrameN = CurrentScene->beginFrameN - KLUDGE_OFFSET_N_FRAMES ;
+          CurrentScene->endFrameN  = CurrentScene->nFrames ;
+          Sample* buffer1Begin     = Buffer1 + beginFrameN ;
+          Sample* buffer2Begin     = Buffer2 + beginFrameN ;
+          memcpy(NewLoop->buffer1 , buffer1Begin , nBytes) ;
+          memcpy(NewLoop->buffer2 , buffer2Begin , nBytes) ;
+          // copy leading and trailing seconds to auxiliary buffers for editing seam
+          memcpy(EditBeginBuffer1 , buffer1Begin - SampleRate , NBytesPerSecond) ;
+          memcpy(EditBeginBuffer2 , buffer2Begin - SampleRate , NBytesPerSecond) ;
+          memcpy(EditEndBuffer1   , buffer1Begin + SampleRate , NBytesPerSecond) ;
+          memcpy(EditEndBuffer2   , buffer2Begin + SampleRate , NBytesPerSecond) ;
+        }
+        else
+        {
+          memcpy(NewLoop->buffer1 , Buffer1 , nBytes) ;
+          memcpy(NewLoop->buffer2 , Buffer2 , nBytes) ;
+        }
+        EventLoopCreationSceneN = CurrentSceneN ; SDL_PushEvent(&EventLoopCreation) ;
+      }
+      else Loopidity::OOM() ;
+    }
+//CurrentScene->beginFrameN = 0 ; CurrentScene->endFrameN -= CurrentScene->beginFrameN ;
+//    CurrentScene->frameN = CurrentScene->beginFrameN ;
 #else
   if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->nFrames))
-#endif // #if SCENE_NFRAMES_EDITABLE
   {
     // unmute 'paused' loops
     CurrentScene->isMuted = false ;
@@ -261,19 +298,13 @@ if (!(CurrentScene->frameN = (CurrentScene->frameN + nFrames) % CurrentScene->en
     {
       if ((NewLoop = new (nothrow) Loop(CurrentScene->nFrames)))
       {
-#if SCENE_NFRAMES_EDITABLE && 0
-memcpy(NewLoop->buffer1 , Buffer1 + CurrentScene->beginFrameN , CurrentScene->nBytes) ;
-memcpy(NewLoop->buffer2 , Buffer2 + CurrentScene->beginFrameN , CurrentScene->nBytes) ;
-#else
         memcpy(NewLoop->buffer1 , Buffer1 , CurrentScene->nBytes) ;
         memcpy(NewLoop->buffer2 , Buffer2 , CurrentScene->nBytes) ;
-#endif // #if SCENE_NFRAMES_EDITABLE
         EventLoopCreationSceneN = CurrentSceneN ; SDL_PushEvent(&EventLoopCreation) ;
       }
       else Loopidity::OOM() ;
     }
-
-//CurrentScene->beginFrameN = 0 ; CurrentScene->endFrameN -= CurrentScene->beginFrameN ;
+#endif // #if SCENE_NFRAMES_EDITABLE
 
     // switch to NextScene if necessary
     if (CurrentScene != NextScene)
@@ -289,9 +320,21 @@ memcpy(NewLoop->buffer2 , Buffer2 + CurrentScene->beginFrameN , CurrentScene->nB
 int JackIO::SetBufferSizeCallback(jack_nframes_t nFrames , void* arg)
 {
   PeriodSize            = FRAME_SIZE * (NFramesPerPeriod = nFrames) ;
-  BytesPerSecond        = FRAME_SIZE * (SampleRate = jack_get_sample_rate(Client)) ;
+  NBytesPerSecond       = FRAME_SIZE * (SampleRate = jack_get_sample_rate(Client)) ;
   NFramesPerGuiInterval = (unsigned int)(SampleRate * (float)GUI_UPDATE_IVL * 0.001) ;
-  Loopidity::SetMetaData(SampleRate , FRAME_SIZE , nFrames) ; return 0 ;
+
+#if SCENE_NFRAMES_EDITABLE
+  if ((EditBeginBuffer1 = new (nothrow) Sample[NBytesPerSecond]()) &&
+      (EditBeginBuffer2 = new (nothrow) Sample[NBytesPerSecond]()) &&
+      (EditEndBuffer1   = new (nothrow) Sample[NBytesPerSecond]()) &&
+      (EditEndBuffer2   = new (nothrow) Sample[NBytesPerSecond]()))
+    Loopidity::SetMetaData(SampleRate , FRAME_SIZE , nFrames) ;
+  else printf("ERROR: failed to create edit buffers") ;//TODO: something better than this
+#else
+  Loopidity::SetMetaData(SampleRate , FRAME_SIZE , nFrames) ;
+#endif // #if SCENE_NFRAMES_EDITABLE
+
+  return 0 ;
 }
 
 void JackIO::ShutdownCallback(void* arg)

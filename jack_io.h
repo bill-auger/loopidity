@@ -37,6 +37,12 @@ class JackIO
     // audio data
     static Sample*            Buffer1 ;
     static Sample*            Buffer2 ;
+#if SCENE_NFRAMES_EDITABLE
+    static Sample*            EditBeginBuffer1 ;
+    static Sample*            EditBeginBuffer2 ;
+    static Sample*            EditEndBuffer1 ;
+    static Sample*            EditEndBuffer2 ;
+#endif // #if SCENE_NFRAMES_EDITABLE
     static vector<Sample>     PeaksIn ;
     static vector<Sample>     PeaksOut ;
     static const unsigned int N_TRANSIENT_PEAKS ;
@@ -59,7 +65,7 @@ class JackIO
     static const unsigned int FRAME_SIZE ;
     static unsigned int       PeriodSize ;
     static jack_nframes_t     SampleRate ;
-    static unsigned int       BytesPerSecond ;
+    static unsigned int       NBytesPerSecond ;
 
     // misc flags
     static bool ShouldMonitorInputs ;
@@ -80,8 +86,8 @@ class JackIO
     static unsigned int    GetNFramesPerPeriod(void) ;
     static unsigned int    GetFrameSize(       void) ;
     static unsigned int    GetSampleRate(      void) ;
+    static unsigned int    GetNBytesPerSecond(void) ;
 */
-    static unsigned int    GetBytesPerSecond(  void) ;
     static void            SetCurrentScene(   Scene* currentScene) ;
     static void            SetNextScene(      Scene* nextScene) ;
     static vector<Sample>* GetPeaksIn() ;
