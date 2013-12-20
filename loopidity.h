@@ -4,11 +4,12 @@
 
 
 // DEBUG begin
-//#define MEMORY_CHECK              1 // if 0 choose DEFAULT_BUFFER_SIZE wisely
+//#define MEMORY_CHECK              1 // if 0 choose DEFAULT_AUDIO_BUFFER_SIZE wisely
 // setup features
 //#define INIT_LOOPIDITY            1
 #define INIT_JACK                 1
-#define USER_DEFINED_BUFFER       1 // TODO: user defined buffer sizes
+#define FIXED_N_AUDIO_PORTS       1
+#define FIXED_AUDIO_BUFFER_SIZE   1 // TODO: user defined/adjustable buffer sizes
 #define SCENE_NFRAMES_EDITABLE    1
 // runtime features
 //#define LOOP_COUNTER              1
@@ -65,20 +66,25 @@
 // DEBUG end
 
 // quantities
-#define DEFAULT_BUFFER_SIZE 33554432 // 2^25 (approx 3 min @ 48k)
-//#define DEFAULT_BUFFER_SIZE 25165824 // 1024 * 1024 * 24 (approx 135 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 16777216 // 2^24 (approx 90 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 8388608  // 2^23 (approx 45 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 2097152  // 2^21 (approx 10 sec @ 48k)
-//#define DEFAULT_BUFFER_SIZE 1048576  // 2^20 (approx 5 sec @ 48k)
+#define DEFAULT_AUDIO_BUFFER_SIZE 33554432 // 2^25 (approx 3 min @ 48k)
+//#define DEFAULT_AUDIO_BUFFER_SIZE 25165824 // 1024 * 1024 * 24 (approx 135 sec @ 48k)
+//#define DEFAULT_AUDIO_BUFFER_SIZE 16777216 // 2^24 (approx 90 sec @ 48k)
+//#define DEFAULT_AUDIO_BUFFER_SIZE 8388608  // 2^23 (approx 45 sec @ 48k)
+//#define DEFAULT_AUDIO_BUFFER_SIZE 2097152  // 2^21 (approx 10 sec @ 48k)
+//#define DEFAULT_AUDIO_BUFFER_SIZE 1048576  // 2^20 (approx 5 sec @ 48k)
 
-// TODO: implement setting N_CHANNELS via cmd line arg - GetTransientPeaks and updateVUMeters are especially brittle now
-#define N_INPUT_CHANNELS  2 // TODO: nyi - only used for memory check and scope cache
-#define N_OUTPUT_CHANNELS 2 // TODO: nyi - only used for N_PORTS
-#define N_PORTS           N_INPUT_CHANNELS + N_OUTPUT_CHANNELS // TODO: nyi - only used for scope cache
-#define N_SCENES          3
-#define N_LOOPS           9 // per scene
-#define LOOP_VOL_INC      0.1
+#if FIXED_N_AUDIO_PORTS
+#  define N_INPUT_CHANNELS  2
+#  define N_OUTPUT_CHANNELS 2
+#  define N_AUDIO_PORTS     N_INPUT_CHANNELS + N_OUTPUT_CHANNELS
+#else // TODO: implement setting N_CHANNELS via cmd line arg - GetTransientPeaks and updateVUMeters are especially brittle now
+#  define N_INPUT_CHANNELS  2 // TODO: nyi - only used for memory check and scope cache
+#  define N_OUTPUT_CHANNELS 2 // TODO: nyi - only used for N_AUDIO_PORTS
+#  define N_AUDIO_PORTS     N_INPUT_CHANNELS + N_OUTPUT_CHANNELS // TODO: nyi - only used for scope cache
+#endif // #if FIXED_N_AUDIO_PORTS
+#define N_SCENES            3
+#define N_LOOPS             9 // per scene
+#define LOOP_VOL_INC        0.1
 
 #define PEAK_RADIUS         50
 #define LOOP_DIAMETER       ((PEAK_RADIUS * 2) + 1)
@@ -129,6 +135,7 @@
 #include <SDL_gfxPrimitives.h>
 #include <SDL_rotozoom.h>
 #include <SDL_ttf.h>
+#include <unistd.h>
 #include <X11/Xlib.h>
 
 typedef jack_default_audio_sample_t Sample ;
@@ -152,18 +159,25 @@ class Loopidity
     private:
 
     /* class side private variables */
-
-    // recording state
-    static unsigned int CurrentSceneN ;
-    static unsigned int NextSceneN ;
-//    static bool         IsRolling ;
-    static bool         ShouldSceneAutoChange ;
-
-static bool IsEditMode ;
-
+#if WAIT_FOR_JACK_INIT
+    // setup
+    static int InitJackTimeout ;
+#endif // #if WAIT_FOR_JACK_INIT
     // models and views
     static Scene*       Scenes[N_SCENES] ;
     static SceneSdl*    SdlScenes[N_SCENES] ;
+
+    // runtime state
+    static unsigned int CurrentSceneN ;
+    static unsigned int NextSceneN ;
+
+    // runtime flags
+#if WAIT_FOR_JACK_INIT
+    static bool IsJackReady ;
+#endif // #if WAIT_FOR_JACK_INIT
+    static bool         IsRolling ;
+    static bool ShouldSceneAutoChange ;
+    static bool IsEditMode ;
 
   public:
 
@@ -174,9 +188,10 @@ static bool IsEditMode ;
 
     // getters/setters
 //    static void            SetNFramesPerPeriod(   unsigned int nFrames) ;
-    static unsigned int    GetCurrentSceneN(      void) ;
-    static unsigned int    GetNextSceneN(         void) ;
-//    static unsigned int    GetLoopPos(            void) ;
+    static unsigned int    GetCurrentSceneN(void) ;
+    static unsigned int    GetNextSceneN(   void) ;
+//    static unsigned int    GetLoopPos(    void) ;
+    static bool            GetIsRolling(    void) ;
 //    static bool            GetShouldSaveLoop(     void) ;
 //    static bool            GetDoesPulseExist(     void) ;
 //    static bool            GetIsEditMode(         void) ;
@@ -199,8 +214,8 @@ static bool IsEditMode ;
 
     // user actions
     static void ToggleAutoSceneChange(void) ;
-    static void ToggleState(          void) ;
-    static void ToggleScene(          void) ;
+    static void ToggleRecordingState( void) ;
+    static void ToggleNextScene(      void) ;
     static void DeleteLoop(           unsigned int sceneN , unsigned int loopN) ;
     static void DeleteLastLoop(       void) ;
     static void IncLoopVol(           unsigned int sceneN , unsigned int loopN , bool IsInc) ;

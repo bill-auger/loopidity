@@ -102,8 +102,8 @@ class Scene
     // buffer iteration
     unsigned int frameN ;
 #if SCENE_NFRAMES_EDITABLE
-unsigned int beginFrameN ;
-unsigned int endFrameN ;
+    unsigned int beginFrameN ;
+    unsigned int endFrameN ;
 #endif // #if SCENE_NFRAMES_EDITABLE
     unsigned int nFrames ;
     unsigned int nFramesPerPeak ;
@@ -111,7 +111,6 @@ unsigned int endFrameN ;
     unsigned int nSeconds ;
 
     // scene state
-    bool isRolling ;
     bool shouldSaveLoop ;
     bool doesPulseExist ;
     bool isMuted ;
@@ -120,8 +119,8 @@ unsigned int endFrameN ;
     /* instance side private functions */
 
     // scene state
-    void startRolling(void) ;
-    void toggleState(void) ;
+    void beginRecording(      void) ;
+    void toggleRecordingState(void) ;
 
     // audio data
     bool addLoop(     Loop* newLoop) ;
@@ -133,8 +132,7 @@ unsigned int endFrameN ;
     void rescanPeaks(void) ;
 
     // getters/setters
-    Loop*        getLoop(     unsigned int loopN) ;
-//    bool         getIsRolling(void) ;
+    Loop*        getLoop(unsigned int loopN) ;
 //    unsigned int getLoopPos(  void) ;
 } ;
 

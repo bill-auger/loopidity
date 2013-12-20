@@ -20,9 +20,10 @@ const char* Trace::VIEW_DESC_FMT   = DEBUG_TRACE_VIEW_DESC_FORMAT ;
 const char* Trace::MODEL_ERR_FMT   = DEBUG_TRACE_MODEL_ERROR_FORMAT ;
 const char* Trace::VIEW_ERR_FMT    = DEBUG_TRACE_VIEW_ERROR_FORMAT ;
 
-const unsigned int Trace::EVENT_LEN = DEBUG_TRACE_EVENT_LEN ;
-const unsigned int Trace::STATE_LEN = DEBUG_TRACE_STATE_LEN ;
-const unsigned int Trace::DESC_LEN  = DEBUG_TRACE_DESC_LEN ;
+const unsigned int Trace::EVENT_LEN       = DEBUG_TRACE_EVENT_LEN ;
+const unsigned int Trace::STATE_LEN       = DEBUG_TRACE_STATE_LEN ;
+const unsigned int Trace::DESC_LEN        = DEBUG_TRACE_DESC_LEN ;
+const unsigned int Trace::TRACE_STATE_LEN = DEBUG_TRACE_TRACE_STATE_LEN ;
 
 
 /* Trace class side private variables */
@@ -64,27 +65,27 @@ bool Trace::TraceOut(unsigned int sceneN) { return (DEBUG_TRACE_OUT || !SanityCh
 bool Trace::TraceScene(const char* senderTemplate , Scene* scene)
 {
   unsigned int sceneN = scene->sceneN ; SceneSdl* sdlScene = Loopidity::SdlScenes[sceneN] ;
-  char sender[Trace::EVENT_LEN] ; sprintf(sender , senderTemplate , sceneN) ;
+  char sender[EVENT_LEN] ; snprintf(sender , EVENT_LEN , senderTemplate , sceneN) ;
 
   // mvc sanity checks
   bool isEq = SanityCheck(sceneN) ;
   const char *modelEvent , *modelDescFormat , *viewEvent , *viewDescFormat ;
   if (isEq)
   {
-    modelEvent = Trace::MODEL ; modelDescFormat = Trace::MODEL_DESC_FMT ;
-    viewEvent = Trace::VIEW ; viewDescFormat = Trace::VIEW_DESC_FMT ;
+    modelEvent = MODEL ; modelDescFormat = MODEL_DESC_FMT ;
+    viewEvent = VIEW ;   viewDescFormat  = VIEW_DESC_FMT ;
   }
   else
   {
-    modelEvent = Trace::MODEL_ERR ; modelDescFormat = Trace::MODEL_ERR_FMT ;
-    viewEvent = Trace::VIEW_ERR ; viewDescFormat = Trace::VIEW_ERR_FMT ;
+    modelEvent = MODEL_ERR ; modelDescFormat = MODEL_ERR_FMT ;
+    viewEvent  = VIEW_ERR ;  viewDescFormat  = VIEW_ERR_FMT ;
   }
 
   // model state dump
-  Trace::TraceState(modelEvent , sender , Trace::MODEL_STATE_FMT , modelDescFormat ,
-      scene->isRolling , scene->shouldSaveLoop , scene->doesPulseExist , isEq) ;
+  TraceState(modelEvent , sender , MODEL_STATE_FMT , modelDescFormat ,
+      Loopidity::GetIsRolling() , scene->shouldSaveLoop , scene->doesPulseExist , isEq) ;
   // view state dump
-  Trace::TraceState(viewEvent , sender , Trace::VIEW_STATE_FMT , viewDescFormat ,
+  TraceState(viewEvent , sender , VIEW_STATE_FMT , viewDescFormat ,
       scene->loops.size() , sdlScene->histogramImgs.size() , sdlScene->loopImgs.size() , isEq) ;
   cout << endl ;
 
@@ -95,6 +96,7 @@ void Trace::TraceState(const char* event , const char* sender ,
                        const char* stateFormat , const char* descFormat ,
                        bool bool0 , bool bool1 , bool bool2 , bool isEq)
 {
+
 #if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN
 cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" << bool1 << "bool2=" << bool2 << endl ;
 #endif // #if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN
@@ -131,6 +133,6 @@ cout << "Trace::TraceState(): Desc("  << strlen(Desc)  << ")='" << Desc  << "'" 
 }
 
 #if DRAW_DEBUG_TEXT
-void Trace::SetDbgTextC() { char dbg[255] ; unsigned int sceneN = Loopidity::CurrentSceneN ; sprintf(dbg , "NextSceneN=%d SceneN=%d PeakN=%d" , Loopidity::NextSceneN , sceneN , Loopidity::Scenes[sceneN]->getCurrentPeakN()) ; LoopiditySdl::SetStatusC(dbg) ; }
-void Trace::SetDbgTextR() { char dbg[255] ; unsigned int sceneN = Loopidity::CurrentSceneN ; sprintf(dbg , "%d%d%d %d%d%d" , Loopidity::Scenes[sceneN]->isRolling , Loopidity::Scenes[sceneN]->shouldSaveLoop , Loopidity::Scenes[sceneN]->doesPulseExist , Loopidity::Scenes[sceneN]->loops.size() , Loopidity::SdlScenes[sceneN]->histogramImgs.size() , Loopidity::SdlScenes[sceneN]->loopImgs.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
+void Trace::SetDbgTextC() { char dbg[TRACE_STATE_LEN] ; unsigned int sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "NextSceneN=%d SceneN=%d PeakN=%d" , Loopidity::NextSceneN , sceneN , Loopidity::Scenes[sceneN]->getCurrentPeakN()) ; LoopiditySdl::SetStatusC(dbg) ; }
+void Trace::SetDbgTextR() { char dbg[TRACE_STATE_LEN] ; unsigned int sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "%d%d%d %d%d%d" , Loopidity::GetIsRolling() , Loopidity::Scenes[sceneN]->shouldSaveLoop , Loopidity::Scenes[sceneN]->doesPulseExist , Loopidity::Scenes[sceneN]->loops.size() , Loopidity::SdlScenes[sceneN]->histogramImgs.size() , Loopidity::SdlScenes[sceneN]->loopImgs.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
 #endif // #if DRAW_DEBUG_TEXT

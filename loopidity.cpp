@@ -4,17 +4,27 @@
 
 /* Loopidity class side private varables */
 
-// recording state
-unsigned int Loopidity::CurrentSceneN = 0 ;
-unsigned int Loopidity::NextSceneN    = 0 ;
-//bool Loopidity::IsRolling             = false ;
-bool Loopidity::ShouldSceneAutoChange = false ;
-
-bool Loopidity::IsEditMode = false ;
+// setup
+#if WAIT_FOR_JACK_INIT
+#define INIT_JACK_TIMEOUT 10000 // nSeconds to wait for JACK to initialize
+int Loopidity::InitJackTimeout = INIT_JACK_TIMEOUT ;
+#endif // #if WAIT_FOR_JACK_INIT
 
 // models and views
 Scene*         Loopidity::Scenes[N_SCENES]        = {0} ;
 SceneSdl*      Loopidity::SdlScenes[N_SCENES]     = {0} ;
+
+// runtime state
+unsigned int Loopidity::CurrentSceneN = 0 ;
+unsigned int Loopidity::NextSceneN    = 0 ;
+
+// runtime flags
+#if WAIT_FOR_JACK_INIT
+bool Loopidity::IsJackReady           = false ;
+#endif // #if WAIT_FOR_JACK_INIT
+bool Loopidity::IsRolling             = false ;
+bool Loopidity::ShouldSceneAutoChange = false ;
+bool Loopidity::IsEditMode            = false ;
 
 
 /* Loopidity class side public functions */
@@ -31,26 +41,25 @@ cout << INIT_MSG << endl ;
   if (IsInitialized()) return false ;
 
   // parse command line arguments
-  bool isMonitorInputs = true , isAutoSceneChange = true ; unsigned int bufferSize ;
+  bool isMonitorInputs = true , isAutoSceneChange = true ; unsigned int recordBufferSize ;
   for (int argN = 0 ; argN < argc ; ++argN)
-    if (!strcmp(argv[argN] , MONITOR_ARG)) isMonitorInputs = false ;
+    if      (!strcmp(argv[argN] , MONITOR_ARG))      isMonitorInputs   = false ;
     else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) isAutoSceneChange = false ;
     // TODO: user defined buffer sizes via command line
-#if USER_DEFINED_BUFFER
+#if FIXED_AUDIO_BUFFER_SIZE
 //    else if (!strcmp(argv[argN] , BUFFER_SIZE_ARG)) isAutoSceneChange = bufferSize = arg ;
-  bufferSize = 0 ; // nyi
+  recordBufferSize = 0 ; // nyi
 #else
-  bufferSize = 0 ;
-#endif // #if DEBUG_STATIC_BUFFER_SIZE
+  recordBufferSize = 0 ;
+#endif // #if FIXED_AUDIO_BUFFER_SIZE
 
   // initialize Loopidity (controller) and instantiate Scenes (models and SdlScenes (views))
-  if (!Init(isMonitorInputs , isAutoSceneChange , bufferSize)) return EXIT_FAILURE ;
-
-vector<Sample>* peaksIn  = JackIO::GetPeaksIn() ;
-vector<Sample>* peaksOut = JackIO::GetPeaksOut() ;
-Sample* transientPeaks   = JackIO::GetTransientPeaks() ;
+  if (!Init(isMonitorInputs , isAutoSceneChange , recordBufferSize)) return EXIT_FAILURE ;
 
   // initialize LoopiditySdl (view)
+  vector<Sample>* peaksIn  = JackIO::GetPeaksIn() ;
+  vector<Sample>* peaksOut = JackIO::GetPeaksOut() ;
+  Sample* transientPeaks   = JackIO::GetTransientPeaks() ;
   if (!LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , transientPeaks))
     return EXIT_FAILURE ;
 
@@ -119,6 +128,8 @@ unsigned int Loopidity::GetNextSceneN() { return NextSceneN ; }
 
 //unsigned int Loopidity::GetLoopPos() { return Scenes[CurrentSceneN]->getLoopPos() ; }
 
+bool Loopidity::GetIsRolling() { return IsRolling ; }
+
 //bool Loopidity::GetShouldSaveLoop() { return Scenes[CurrentSceneN]->shouldSaveLoop ; }
 
 //bool Loopidity::GetDoesPulseExist() { return Scenes[CurrentSceneN]->doesPulseExist ; }
@@ -139,14 +150,13 @@ bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
   if (!shouldAutoSceneChange) ToggleAutoSceneChange() ;
 
   // instantiate Scenes (models) and SdlScenes (views)
-  bool initStatus = true ;
   for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
   {
     Scenes[sceneN]    = new Scene(sceneN , JackIO::GetRecordBufferSize()) ;
     SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN] , sceneN) ;
     UpdateView(sceneN) ;
 
-    initStatus = initStatus && !!Scenes[sceneN] && !!SdlScenes[sceneN] ;
+    if (!Scenes[sceneN] || !SdlScenes[sceneN]) return false ;
   }
 
   // initialize JACK
@@ -156,11 +166,24 @@ bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
     case JACK_FAIL:      errMsg = JACK_FAIL_MSG ;
     case JACK_BUFF_FAIL: errMsg = ZERO_BUFFER_SIZE_MSG ;
     case JACK_MEM_FAIL:  errMsg = INSUFFICIENT_MEMORY_MSG ;
-                          LoopiditySdl::Alert(errMsg.c_str()) ; return false ;
+                         LoopiditySdl::Alert(errMsg.c_str()) ; return false ;
   }
-
-  return initStatus ;
+#if WAIT_FOR_JACK_INIT
+  // wait for JACK metadata
+  InitJackTimeout = 0 ;
+  while (!IsJackReady && (InitJackTimeout -= 100) > 0) usleep(100000) ;
+  return IsJackReady ;
+#else
+  return true ;
+#endif // #if WAIT_FOR_JACK_INIT
 }
+
+void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
+#if WAIT_FOR_JACK_INIT
+  { Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ; IsJackReady = true ; }
+#else
+  { Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ; }
+#endif // #if WAIT_FOR_JACK_INIT
 
 void Loopidity::Cleanup()
 {
@@ -179,17 +202,17 @@ DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT
 
   switch (event->key.keysym.sym)
   {
-    case SDLK_SPACE:    ToggleState()         ; break ;
-    case SDLK_KP0:      ToggleScene()         ; break ;
-    case SDLK_KP_ENTER: ToggleSceneIsMuted()  ; break ;
-    case SDLK_RETURN:   ToggleEditMode()      ; break ;
+    case SDLK_SPACE:    ToggleRecordingState() ; break ;
+    case SDLK_KP0:      ToggleNextScene()      ; break ;
+    case SDLK_KP_ENTER: ToggleSceneIsMuted()   ; break ;
+    case SDLK_RETURN:   ToggleEditMode()       ; break ;
     case SDLK_ESCAPE:   switch (event->key.keysym.mod)
     {
-      case KMOD_RCTRL:    Reset()             ; break ;
-      case KMOD_RSHIFT:   ResetCurrentScene() ; break ;
-      default:            DeleteLastLoop()    ; break ;
+      case KMOD_RCTRL:    Reset()              ; break ;
+      case KMOD_RSHIFT:   ResetCurrentScene()  ; break ;
+      default:            DeleteLastLoop()     ; break ;
     }
-    default:                                    break ;
+    default:                                     break ;
   }
 #endif // #if HANDLE_KEYBOARD_EVENTS
 }
@@ -254,7 +277,7 @@ DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN
   prevSdlScene->drawScene(prevSdlScene->inactiveSceneSurface , 0 , 0) ;
   UpdateView(prevSceneN) ; UpdateView(NextSceneN) ;
 
-  if (ShouldSceneAutoChange) do ToggleScene() ; while (!nextScene->loops.size()) ;
+  if (ShouldSceneAutoChange) do ToggleNextScene() ; while (!nextScene->loops.size()) ;
 
 DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT
 }
@@ -264,26 +287,26 @@ DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT
 
 void Loopidity::ToggleAutoSceneChange() { ShouldSceneAutoChange = !ShouldSceneAutoChange ; }
 
-void Loopidity::ToggleState()
+void Loopidity::ToggleRecordingState()
 {
-DEBUG_TRACE_LOOPIDITY_TOGGLESTATE_IN
+//DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN
 
-  if (Scenes[CurrentSceneN]->isRolling) Scenes[CurrentSceneN]->toggleState() ;
-  else { Scenes[CurrentSceneN]->startRolling() ; SdlScenes[CurrentSceneN]->startRolling() ; }
+  if (IsRolling) Scenes[CurrentSceneN]->toggleRecordingState() ;
+  else { IsRolling = true ; Scenes[CurrentSceneN]->beginRecording() ; SdlScenes[CurrentSceneN]->startRolling() ; }
   UpdateView(CurrentSceneN) ;
 
-DEBUG_TRACE_LOOPIDITY_TOGGLESTATE_OUT
+DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_OUT
 }
 
-void Loopidity::ToggleScene()
+void Loopidity::ToggleNextScene()
 {
-DEBUG_TRACE_LOOPIDITY_TOGGLESCENE_IN
+DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_IN
 
   unsigned int prevSceneN = NextSceneN ; NextSceneN = (NextSceneN + 1) % N_SCENES ;
   UpdateView(prevSceneN) ; UpdateView(NextSceneN) ;
   JackIO::SetNextScene(Scenes[NextSceneN]) ;
 
-  if (!Scenes[CurrentSceneN]->isRolling)
+  if (!IsRolling)
   {
     prevSceneN = CurrentSceneN ; CurrentSceneN = NextSceneN ;
     Scenes[prevSceneN]->reset() ; // SdlScenes[prevSceneN]->reset() ;
@@ -291,7 +314,7 @@ DEBUG_TRACE_LOOPIDITY_TOGGLESCENE_IN
     JackIO::SetCurrentScene(Scenes[NextSceneN]) ;
   }
 
-DEBUG_TRACE_LOOPIDITY_TOGGLESCENE_OUT
+DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_OUT
 }
 
 void Loopidity::DeleteLoop(unsigned int sceneN , unsigned int loopN)
@@ -359,12 +382,6 @@ DEBUG_TRACE_LOOPIDITY_RESET_IN
 
 DEBUG_TRACE_LOOPIDITY_RESET_OUT
 }
-
-
-// getters/setters
-
-void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
-  { Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ; }
 
 
 // helpers

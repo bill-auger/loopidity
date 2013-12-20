@@ -62,10 +62,12 @@ Scene::Scene(unsigned int sceneNum , unsigned int recordBufferSize)
   highestScenePeak           = 0.0 ;
 
   // buffer iteration
-  frameN           = 0 ;
 #if SCENE_NFRAMES_EDITABLE
-beginFrameN      = 0 ;
-endFrameN        = RecordBufferSize = recordBufferSize ;
+  frameN           = 0 ;
+  beginFrameN      = 0 ;
+  endFrameN        = recordBufferSize ;
+#else
+  frameN           = 0 ;
 #endif // #if SCENE_NFRAMES_EDITABLE
   nFrames          = RecordBufferSize = recordBufferSize ;
   nFramesPerPeak   = nFrames / N_PEAKS_FINE ;
@@ -73,7 +75,6 @@ endFrameN        = RecordBufferSize = recordBufferSize ;
   nSeconds         = 0 ;
 
   // recording state
-  isRolling      = false ;
   shouldSaveLoop = false ;
   doesPulseExist = false ;
   isMuted        = false ;
@@ -82,45 +83,44 @@ endFrameN        = RecordBufferSize = recordBufferSize ;
 // getters/setters
 
 void Scene::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
-	{ SampleRate = sampleRate ; FrameSize = frameSize ; NFramesPerPeriod = nFramesPerPeriod ; }
+  { SampleRate = sampleRate ; FrameSize = frameSize ; NFramesPerPeriod = nFramesPerPeriod ; }
 
 
 /* Scene instance side private functions */
 
 // scene state
 
-void Scene::startRolling()
+void Scene::beginRecording()
 {
-DEBUG_TRACE_SCENE_RESET_IN
+DEBUG_TRACE_SCENE_BEGINRECORDING_IN
 #if SCENE_NFRAMES_EDITABLE
-beginFrameN = frameN ;
+  beginFrameN = frameN ;
 #else
-frameN = 0 ;
+  frameN = 0 ; Loopidity::UpdateView(sceneN) ;
 #endif // #if SCENE_NFRAMES_EDITABLE
-  isRolling = true ; Loopidity::UpdateView(sceneN) ;
-
-DEBUG_TRACE_SCENE_RESET_OUT
 }
 
-void Scene::toggleState()
+void Scene::toggleRecordingState()
 {
-DEBUG_TRACE_SCENE_TOGGLESTATE_IN
+//DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_IN
 
   if (!doesPulseExist)
   {
 #if SCENE_NFRAMES_EDITABLE
-endFrameN = frameN + NFramesPerPeriod ; nFrames = endFrameN - beginFrameN ;
-                                           nFramesPerPeak = nFrames / N_PEAKS_FINE ;
+    endFrameN      = frameN + NFramesPerPeriod ; nFrames  = endFrameN - beginFrameN ;
+    nBytes         = FrameSize * nFrames ;       nSeconds = nFrames / SampleRate ;
+    nFramesPerPeak = nFrames / N_PEAKS_FINE ;    shouldSaveLoop = doesPulseExist = true ;
 #else
     nFrames  = frameN + NFramesPerPeriod ; nFramesPerPeak = nFrames / N_PEAKS_FINE ;
-#endif // #if SCENE_NFRAMES_EDITABLE
     nBytes   = FrameSize * nFrames ;       shouldSaveLoop = doesPulseExist = true ;
     nSeconds = nFrames / SampleRate ;
+#endif // #if SCENE_NFRAMES_EDITABLE
+
     Loopidity::UpdateView(sceneN) ;
   }
   else shouldSaveLoop = !shouldSaveLoop ;
 
-DEBUG_TRACE_SCENE_TOGGLESTATE_OUT
+DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_OUT
 }
 
 
@@ -154,8 +154,8 @@ void Scene::reset()
 {
 DEBUG_TRACE_SCENE_RESET_IN
 
-  frameN    = 0 ; nFrames   = RecordBufferSize ;
-  isRolling = shouldSaveLoop = doesPulseExist = false ;
+  frameN         = 0 ;     nFrames        = RecordBufferSize ;
+  shouldSaveLoop = false ; doesPulseExist = false ;
   loops.clear() ; Loopidity::UpdateView(sceneN) ;
 
 DEBUG_TRACE_SCENE_RESET_OUT
@@ -178,7 +178,11 @@ DEBUG_TRACE_SCENE_SCANPEAKS_IN
     frameNum     = nFramesPerPeak * peakN ;
     peak1        = JackIO::GetPeak(&(loop->buffer1[frameNum]) , nFramesPerPeak) ;
     peak2        = JackIO::GetPeak(&(loop->buffer2[frameNum]) , nFramesPerPeak) ;
+#  if FIXED_N_AUDIO_PORTS
     peaks[peakN] = (peak1 + peak2) / N_INPUT_CHANNELS ;
+#  else
+    peaks[peakN] = (peak1 + peak2) / N_INPUT_CHANNELS ;
+#  endif // #if FIXED_N_AUDIO_PORTS
 
     // find the loudest peak for this loop
     if (hiLoopPeaks[loopN] < peaks[peakN]) hiLoopPeaks[loopN] = peaks[peakN] ;
@@ -228,7 +232,5 @@ Loop* Scene::getLoop(unsigned int loopN)
   list<Loop*>::iterator aLoop = loops.begin() ; while (loopN--) ++aLoop ;
   return (*aLoop) ;
 }
-
-//bool Scene::getIsRolling() { return isRolling ; }
 
 //unsigned int Scene::getLoopPos() { return (frameN * 1000) / nFrames ; }

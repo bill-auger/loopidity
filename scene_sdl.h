@@ -219,10 +219,12 @@ class SceneSdl
     // drawing
     void     drawScene(              SDL_Surface* screen , unsigned int currentPeakN ,
                                      Uint16 loopProgress) ;
-    LoopSdl* drawHistogram(          Loop* loop) ;
-    LoopSdl* drawLoop(               Loop* loop , Uint16 loopN) ;
-    void     drawRecordingLoop(      SDL_Surface* surface , Uint16 loopProgress) ;
-    void     drawSceneStateIndicator(SDL_Surface* surface) ;
+    void     drawRecordingLoop(      SDL_Surface* aSurface , Uint16 loopProgress) ;
+    void     drawSceneStateIndicator(SDL_Surface* aSurface) ;
+    void     drawFrame(              SDL_Surface* aSurface , Uint16 l , Uint16 t ,
+                                     Uint16 r , Uint16 b , Uint32 color) ;
+    LoopSdl* drawHistogram(          Loop* aLoop) ;
+    LoopSdl* drawLoop(               Loop* aLoop , Uint16 loopN) ;
 
     // helpers
     SDL_Surface*  createHwSurface(       Sint16 w , Sint16 h) ;
