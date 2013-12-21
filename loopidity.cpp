@@ -152,7 +152,12 @@ bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
   // instantiate Scenes (models) and SdlScenes (views)
   for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
   {
+#if WAIT_FOR_JACK_INIT
+    Scenes[sceneN]    = new Scene(sceneN) ;
+#else
     Scenes[sceneN]    = new Scene(sceneN , JackIO::GetRecordBufferSize()) ;
+#endif // #if WAIT_FOR_JACK_INIT
+
     SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN] , sceneN) ;
     UpdateView(sceneN) ;
 
@@ -178,10 +183,17 @@ bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
 #endif // #if WAIT_FOR_JACK_INIT
 }
 
-void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
 #if WAIT_FOR_JACK_INIT
-  { Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ; IsJackReady = true ; }
+void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
+                            unsigned int frameSize , unsigned int recordBufferSize ,
+                            unsigned int rolloverFrameNum) ;
+{
+  Scene::SetMetaData(sampleRate , nFramesPerPeriod , frameSize ,
+                     recordBufferSize , rolloverFrameNum) ;
+  IsJackReady = true ;
+}
 #else
+void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
   { Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ; }
 #endif // #if WAIT_FOR_JACK_INIT
 
@@ -289,7 +301,7 @@ void Loopidity::ToggleAutoSceneChange() { ShouldSceneAutoChange = !ShouldSceneAu
 
 void Loopidity::ToggleRecordingState()
 {
-//DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN
+DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN
 
   if (IsRolling) Scenes[CurrentSceneN]->toggleRecordingState() ;
   else { IsRolling = true ; Scenes[CurrentSceneN]->beginRecording() ; SdlScenes[CurrentSceneN]->startRolling() ; }

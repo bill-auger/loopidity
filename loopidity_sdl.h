@@ -71,7 +71,6 @@ using namespace std ;
 #if SCENE_NFRAMES_EDITABLE
 #  define EDIT_HISTOGRAM_GRADUATIONS_GRANULARITY 500
 #  define EDIT_HISTOGRAM_GRADUATION_H            12
-#  define KLUDGE_OFFSET_N_FRAMES                 (EDIT_HISTOGRAM_GRADUATIONS_GRANULARITY * 3)
 #endif // #if SCENE_NFRAMES_EDITABLE
 
 // fonts and colors

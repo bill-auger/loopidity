@@ -4,28 +4,31 @@
 
 
 // DEBUG begin
-//#define MEMORY_CHECK              1 // if 0 choose DEFAULT_AUDIO_BUFFER_SIZE wisely
 // setup features
-//#define INIT_LOOPIDITY            1
-#define INIT_JACK                 1
-#define FIXED_N_AUDIO_PORTS       1
-#define FIXED_AUDIO_BUFFER_SIZE   1 // TODO: user defined/adjustable buffer sizes
-#define SCENE_NFRAMES_EDITABLE    1
+//#define INIT_LOOPIDITY          1
+#define INIT_JACK               1
+#define WAIT_FOR_JACK_INIT      0
+#define FIXED_N_AUDIO_PORTS     1
+//#define MEMORY_CHECK            1 // if 0 choose DEFAULT_AUDIO_BUFFER_SIZE wisely
+#define FIXED_AUDIO_BUFFER_SIZE 1 // TODO: user defined/adjustable buffer sizes
+#define SCENE_NFRAMES_EDITABLE  1
+
 // runtime features
-//#define LOOP_COUNTER              1
-//#define DSP                       1
-#define HANDLE_KEYBOARD_EVENTS    1
-#define HANDLE_MOUSE_EVENTS       0
-#define HANDLE_USER_EVENTS        1
-#define SCAN_LOOP_PEAKS_DATA      1
-#define SCAN_TRANSIENT_PEAKS_DATA 1
-#define SCAN_PEAKS                1
-#define DRAW_STATUS               1
-#define DRAW_SCENES               1
-#define DRAW_SCOPES               1
-#define DRAW_EDIT_HISTOGRAM       SCENE_NFRAMES_EDITABLE && 1
-#define DRAW_DEBUG_TEXT           1
-#define DEBUG_TRACE               1
+//#define LOOP_COUNTER                  1
+//#define DSP                           1
+#define HANDLE_KEYBOARD_EVENTS        1
+#define HANDLE_MOUSE_EVENTS           0
+#define HANDLE_USER_EVENTS            1
+#define SCAN_LOOP_PEAKS_DATA          1
+#define SCAN_TRANSIENT_PEAKS_DATA     1
+#define SCAN_PEAKS                    1
+#define DRAW_STATUS                   1
+#define DRAW_SCENES                   1
+#define DRAW_SCOPES                   1
+#define DRAW_EDIT_HISTOGRAM           SCENE_NFRAMES_EDITABLE && 1
+#define DRAW_DEBUG_TEXT               1
+#define DEBUG_TRACE                   1
+#define AUTO_UNMUTE_LOOPS_ON_ROLLOVER 1
 
 #if DRAW_STATUS
 #  define DRAW_MODE 0
@@ -72,28 +75,31 @@
 //#define DEFAULT_AUDIO_BUFFER_SIZE 8388608  // 2^23 (approx 45 sec @ 48k)
 //#define DEFAULT_AUDIO_BUFFER_SIZE 2097152  // 2^21 (approx 10 sec @ 48k)
 //#define DEFAULT_AUDIO_BUFFER_SIZE 1048576  // 2^20 (approx 5 sec @ 48k)
-
+#define N_SCENES                   3
+#define N_LOOPS                    9 // per scene
+#define LOOP_VOL_INC               0.1
 #if FIXED_N_AUDIO_PORTS
-#  define N_INPUT_CHANNELS  2
-#  define N_OUTPUT_CHANNELS 2
-#  define N_AUDIO_PORTS     N_INPUT_CHANNELS + N_OUTPUT_CHANNELS
+#  define N_INPUT_CHANNELS         2
+#  define N_OUTPUT_CHANNELS        2
+#  define N_AUDIO_PORTS            N_INPUT_CHANNELS + N_OUTPUT_CHANNELS
 #else // TODO: implement setting N_CHANNELS via cmd line arg - GetTransientPeaks and updateVUMeters are especially brittle now
-#  define N_INPUT_CHANNELS  2 // TODO: nyi - only used for memory check and scope cache
-#  define N_OUTPUT_CHANNELS 2 // TODO: nyi - only used for N_AUDIO_PORTS
-#  define N_AUDIO_PORTS     N_INPUT_CHANNELS + N_OUTPUT_CHANNELS // TODO: nyi - only used for scope cache
+#  define N_INPUT_CHANNELS         2 // TODO: nyi - only used for memory check and scope cache
+#  define N_OUTPUT_CHANNELS        2 // TODO: nyi - only used for N_AUDIO_PORTS
+#  define N_AUDIO_PORTS            N_INPUT_CHANNELS + N_OUTPUT_CHANNELS // TODO: nyi - only used for scope cache
 #endif // #if FIXED_N_AUDIO_PORTS
-#define N_SCENES            3
-#define N_LOOPS             9 // per scene
-#define LOOP_VOL_INC        0.1
-
-#define PEAK_RADIUS         50
-#define LOOP_DIAMETER       ((PEAK_RADIUS * 2) + 1)
-#define N_PEAKS_COURSE      LOOP_DIAMETER
+#if SCENE_NFRAMES_EDITABLE
+#  define BUFFER_MARGIN_SIZE       SampleRate // nFrames
+#  define MIN_LOOP_DURATION        2          // nSeconds
+#  define TRIGGER_LATENCY_N_FRAMES 1500       // kludge to compensate for keyboard delay
+#endif // #if SCENE_NFRAMES_EDITABLE
 #if DRAW_EDIT_HISTOGRAM
-#  define N_PEAKS_FINE      720 // should be divisible into 360
+#  define N_PEAKS_FINE             720 // should be divisible into 360
 #else
-#  define N_PEAKS_FINE      360 // should be divisible into 360
+#  define N_PEAKS_FINE             360 // should be divisible into 360
 #endif // #if DRAW_EDIT_HISTOGRAM
+#define PEAK_RADIUS                50 // TODO: PEAK_RADIUS and LOOP_DIAMETER are GUI specific - should probably be defined elsewhere
+#define LOOP_DIAMETER              ((PEAK_RADIUS * 2) + 1)
+#define N_PEAKS_COURSE             LOOP_DIAMETER
 
 // string constants
 #define APP_NAME                "Loopidity"
@@ -103,7 +109,7 @@
 //#define CONNECT_ARG             "--connect"
 #define MONITOR_ARG             "--nomon"
 #define SCENE_CHANGE_ARG        "--noautoscenechange"
-#define FREEMEM_FAIL_MSG        "ERROR: Could not determine available memory - quitting"
+//#define FREEMEM_FAIL_MSG        "ERROR: Could not determine available memory - quitting"
 #define JACK_FAIL_MSG           "ERROR: Could not register JACK client - quitting"
 #define ZERO_BUFFER_SIZE_MSG    "ERROR: initBufferSize is zero - quitting"
 #define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory - quitting"
@@ -203,6 +209,14 @@ class Loopidity
     static bool IsInitialized(void) ; // TODO: make singleton
     static bool Init(         bool shouldMonitorInputs , bool shouldAutoSceneChange ,
                               unsigned int recordBufferSize) ;
+#if WAIT_FOR_JACK_INIT
+    static void SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
+                            unsigned int frameSize , unsigned int recordBufferSize ,
+                            unsigned int rolloverFrameNum) ;
+#else
+    static void SetMetaData(unsigned int sampleRate , unsigned int frameSize ,
+                            unsigned int nFramesPerPeriod) ;
+#endif // #if WAIT_FOR_JACK_INIT
     static void Cleanup(      void) ;
 
     // event handlers
@@ -225,10 +239,6 @@ class Loopidity
     static void ResetScene(           unsigned int sceneN) ;
     static void ResetCurrentScene(    void) ;
     static void Reset(                void) ;
-
-    // getters/setters
-    static void SetMetaData(unsigned int sampleRate , unsigned int frameSize ,
-                            unsigned int nFramesPerPeriod) ;
 
     // helpers
     static void UpdateView(        unsigned int sceneN) ;

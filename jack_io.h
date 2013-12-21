@@ -38,19 +38,7 @@ class JackIO
     static unsigned int NextSceneN ;
 
     // audio data
-/*
-#if FIXED_N_AUDIO_PORTS
-    static Sample* Buffer1 ;
-    static Sample* Buffer2 ;
-#  if SCENE_NFRAMES_EDITABLE
-    static Sample* EditBeginBuffer1 ;
-    static Sample* EditBeginBuffer2 ;
-    static Sample* EditEndBuffer1 ;
-    static Sample* EditEndBuffer2 ;
-#  endif // #if SCENE_NFRAMES_EDITABLE
-#else // TODO: much
-#endif // #if FIXED_N_AUDIO_PORTS
-*/
+
 #if FIXED_N_AUDIO_PORTS
     static Sample* RecordBuffer1 ;
     static Sample* RecordBuffer2 ;
@@ -83,14 +71,24 @@ class JackIO
     static unsigned int EventSceneChangeSceneN ;
 
     // metadata
-    static jack_nframes_t     NFramesPerPeriod ;
-    static const unsigned int FRAME_SIZE ;
-    static unsigned int       PeriodSize ;
     static jack_nframes_t     SampleRate ;
     static unsigned int       NBytesPerSecond ;
+    static jack_nframes_t     NFramesPerPeriod ;
+    static unsigned int       PeriodSize ;
+    static const unsigned int N_BYTES_PER_FRAME ;
     static unsigned int       RecordBufferSize ;
+#if SCENE_NFRAMES_EDITABLE
+    static unsigned int       BufferMarginSize ;
+    static unsigned int       NMarginBytes ;
+#endif // #if SCENE_NFRAMES_EDITABLE
+#if WAIT_FOR_JACK_INIT
+    static unsigned int       RolloverFrameN ;
+#endif // #if WAIT_FOR_JACK_INIT
     static const unsigned int GUI_UPDATE_IVL ;
     static unsigned int       NFramesPerGuiInterval ;
+#if SCENE_NFRAMES_EDITABLE
+    static unsigned int       TriggerLatencyNFrames ;
+#endif // #if SCENE_NFRAMES_EDITABLE
 
     // misc flags
     static bool ShouldMonitorInputs ;
@@ -106,7 +104,10 @@ class JackIO
     static void Reset(       Scene* currentScene , unsigned int currentSceneN) ;
 
     // getters/setters
+#if WAIT_FOR_JACK_INIT
+#else
     static unsigned int    GetRecordBufferSize(void) ;
+#endif // #if WAIT_FOR_JACK_INIT
 /*
     static unsigned int    GetNFramesPerPeriod(void) ;
     static unsigned int    GetFrameSize(       void) ;
@@ -115,9 +116,9 @@ class JackIO
 */
     static void            SetCurrentScene(   Scene* currentScene) ;
     static void            SetNextScene(      Scene* nextScene) ;
-    static vector<Sample>* GetPeaksIn() ;
-    static vector<Sample>* GetPeaksOut() ;
-    static Sample*         GetTransientPeaks() ;
+    static vector<Sample>* GetPeaksIn(        void) ;
+    static vector<Sample>* GetPeaksOut(       void) ;
+    static Sample*         GetTransientPeaks( void) ;
     static Sample*         GetTransientPeakIn(void) ;
 //    static Sample*         GetTransientPeakOut(   void) ;
 

@@ -16,12 +16,6 @@ class Loop
   friend class Scene ;
 friend class SceneSdl ;
 
-    /* instance side public functions */
-
-  public:
-
-    Sample getPeakFine(  unsigned int peakN) ;
-    Sample getPeakCourse(unsigned int peakN) ;
 
   private:
 
@@ -44,6 +38,14 @@ friend class SceneSdl ;
     // loop state
     float vol ;
     bool  isMuted ;
+
+
+  public:
+
+    /* instance side public functions */
+
+    Sample getPeakFine(  unsigned int peakN) ;
+    Sample getPeakCourse(unsigned int peakN) ;
 } ;
 
 
@@ -55,25 +57,22 @@ class Scene
   friend class SceneSdl ;
   friend class Trace ;
 
-  public:
-
-    /* instance side public functions */
-
-    // getters/setters
-    unsigned int getCurrentPeakN() ;
-//    float        getCurrentSeconds() ;
-//    float        getTotalSeconds() ;
-
 
   private:
+
+    /* Scene class side private constants */
+
+    static const unsigned int MINIMUM_LOOP_DURATION ;
+
 
     /* class side private varables */
 
     // sample metedata
-    static unsigned int RecordBufferSize ;
     static unsigned int SampleRate ;
     static unsigned int FrameSize ;
     static unsigned int NFramesPerPeriod ;
+    static unsigned int RecordBufferSize ;
+    static unsigned int RolloverFrameN ;
 
 
     /* class side private functions */
@@ -82,8 +81,14 @@ class Scene
     Scene(unsigned int sceneNum , unsigned int recordBufferSize) ;
 
     // getters/setters
+#if WAIT_FOR_JACK_INIT
+    static void SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
+                            unsigned int frameSize , unsigned int recordBufferSize ,
+                            unsigned int rolloverFrameN) ;
+#else
     static void SetMetaData(unsigned int sampleRate , unsigned int frameSize ,
                             unsigned int nFramesPerPeriod) ;
+#endif // #if WAIT_FOR_JACK_INIT
 
 
     /* instance side private varables */
@@ -100,7 +105,7 @@ class Scene
     float highestScenePeak ;           // the loudest of all samples in all loops of the current scene (nyi)
 
     // buffer iteration
-    unsigned int frameN ;
+    unsigned int currentFrameN ;
 #if SCENE_NFRAMES_EDITABLE
     unsigned int beginFrameN ;
     unsigned int endFrameN ;
@@ -134,6 +139,16 @@ class Scene
     // getters/setters
     Loop*        getLoop(unsigned int loopN) ;
 //    unsigned int getLoopPos(  void) ;
+
+
+  public:
+
+    /* instance side public functions */
+
+    // getters/setters
+    unsigned int getCurrentPeakN() ;
+//    float        getCurrentSeconds() ;
+//    float        getTotalSeconds() ;
 } ;
 
 

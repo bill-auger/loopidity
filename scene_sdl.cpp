@@ -80,7 +80,7 @@ SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN) :
 
   // drawScene() instance variables
   loopFrameColor  = STATE_IDLE_COLOR ;
-  sceneFrameColor = (!sceneN)? STATE_PLAYING_COLOR : STATE_IDLE_COLOR ;
+  sceneFrameColor = (!scene->sceneN)? STATE_PLAYING_COLOR : STATE_IDLE_COLOR ;
 
   // drawScene() , drawHistogram() , and drawRecordingLoop() 'local' variables
   currentPeakN  = 0 ;
