@@ -2,18 +2,38 @@
 #include "jack_io.h"
 
 
+/* Scene class side public constants */
+
+const unsigned int Scene::N_FINE_PEAKS      = N_PEAKS_FINE ;
+const unsigned int Scene::N_COURSE_PEAKS    = N_PEAKS_COURSE ;
+
+
 /* Scene class side private constants */
 
-const unsigned int Scene::MINIMUM_LOOP_DURATION = MIN_LOOP_DURATION ;
+const InvalidMetadataException* Scene::INVALID_METADATA_EXCEPTION = new InvalidMetadataException() ;
 
 
 /* Scene class side private varables */
 
-unsigned int Scene::SampleRate       = 0 ;
-unsigned int Scene::FrameSize        = 0 ;
-unsigned int Scene::NFramesPerPeriod = 0 ;
-unsigned int Scene::RecordBufferSize = 0 ;
-unsigned int Scene::RolloverFrameN   = 0 ;
+// peaks cache
+float        Scene::FinePeaksPerCoursePeak  = (float)N_FINE_PEAKS / (float)N_COURSE_PEAKS ;
+unsigned int Scene::NFinePeaksPerCoursePeak = (unsigned int)FinePeaksPerCoursePeak ;
+
+// sample metedata
+unsigned int Scene::SampleRate         = 0 ; // SetMetaData()
+unsigned int Scene::FramesPerPeriod    = 0 ; // SetMetaData()
+unsigned int Scene::TriggerLatencySize = 0 ; // SetMetaData()
+#if SCENE_NFRAMES_EDITABLE
+unsigned int Scene::MinLoopSize        = 0 ; // SetMetaData()
+#endif // #if SCENE_NFRAMES_EDITABLE
+#if SCENE_NFRAMES_EDITABLE && INIT_JACK_BEFORE_SCENES
+unsigned int Scene::BytesPerFrame      = 0 ; // SetMetaData()
+unsigned int Scene::BeginFrameN        = 0 ; // SetMetaData()
+unsigned int Scene::EndFrameN          = 0 ; // SetMetaData()
+#endif // #if SCENE_NFRAMES_EDITABLE && INIT_JACK_BEFORE_SCENES
+#if !SCENE_NFRAMES_EDITABLE || !INIT_JACK_BEFORE_SCENES
+unsigned int Scene::RecordBufferSize   = 0 ; // SetMetaData()
+#endif // #if !SCENE_NFRAMES_EDITABLE || !INIT_JACK_BEFORE_SCENES
 
 
 /* Loop class side private functions */
@@ -25,8 +45,8 @@ Loop::Loop(unsigned int nFrames)
   buffer2 = new Sample[nFrames] ;
 
   // peaks cache
-  peaksFine[N_PEAKS_FINE]   = {0.0} ;
-  peaksCourse[N_PEAKS_FINE] = {0.0} ;
+  peaksFine[Scene::N_FINE_PEAKS]   = {0.0} ;
+  peaksCourse[Scene::N_FINE_PEAKS] = {0.0} ;
 
   // loop state
   vol     = 1.0 ;
@@ -41,15 +61,24 @@ Loop::~Loop() { delete buffer1 ; delete buffer2 ; }
 Sample Loop::getPeakFine(unsigned int peakN) { return peaksFine[peakN] ; }
 
 Sample Loop::getPeakCourse(unsigned int peakN) { return peaksCourse[peakN] ; }
-
+//Scene* Scene::DummyScene = new Scene(DUMMY_SCENEN) ;
 
 /* Scene class side private functions */
-#if WAIT_FOR_JACK_INIT
+#if INIT_JACK_BEFORE_SCENES
 Scene::Scene(unsigned int sceneNum)
 #else
+#  if SCENE_NFRAMES_EDITABLE
+Scene::Scene(unsigned int sceneNum , unsigned int endFrameN)
+#  else
 Scene::Scene(unsigned int sceneNum , unsigned int recordBufferSize)
-#  endif // #if WAIT_FOR_JACK_INIT
+#  endif // #if SCENE_NFRAMES_EDITABLE
+#endif // #if INIT_JACK_BEFORE_SCENES
 {
+  if (sceneNum >= Loopidity::N_SCENES ||
+      !EndFrameN || EndFrameN <= BeginFrameN || !FramesPerPeriod ||
+      BeginFrameN % FramesPerPeriod || EndFrameN % FramesPerPeriod)
+    throw INVALID_METADATA_EXCEPTION ;
+
   // identity
   sceneN = sceneNum ;
 
@@ -57,51 +86,76 @@ Scene::Scene(unsigned int sceneNum , unsigned int recordBufferSize)
   list<Loop*> loops ;
 
   // peaks cache
-  hiScenePeaks[N_PEAKS_FINE] = {0.0} ;
-  hiLoopPeaks[N_PEAKS_FINE]  = {0.0} ;
-  highestScenePeak           = 0.0 ;
+  hiScenePeaks[N_FINE_PEAKS] = {0.0} ; // scanPeaks()
+  hiLoopPeaks[NUM_LOOPS]     = {0.0} ; // scanPeaks()
+  highestScenePeak           = 0.0 ;   // scanPeaks()
+  nFramesPerPeak             = 0 ;     // toggleRecordingState()
 
   // buffer iteration
 #if SCENE_NFRAMES_EDITABLE
-  currentFrameN    = 0 ;
-  beginFrameN      = 0 ;
-#  if WAIT_FOR_JACK_INIT
-  endFrameN        = RolloverFrameN ;
+#  if INIT_JACK_BEFORE_SCENES
+  currentFrameN         = BeginFrameN ; // JackIO::ProcessCallback()
+  beginFrameN           = BeginFrameN ; // beginRecording()
+  endFrameN             = EndFrameN ;   // toggleRecordingState()
+  nFrames               = EndFrameN ;   // toggleRecordingState()
 #  else
-  endFrameN        = recordBufferSize ;
-#  endif // #if WAIT_FOR_JACK_INIT
+  currentFrameN         = BUFFER_MARGIN_SIZE ; // KLUDGE
+  beginFrameN           = BUFFER_MARGIN_SIZE ; // KLUDGE
+  endFrameN             = endFrameN ;
+  nFrames               = endFrameN ;
+#  endif // #if INIT_JACK_BEFORE_SCENES
 #else
-  currentFrameN    = 0 ;
+#  if INIT_JACK_BEFORE_SCENES
+  currentFrameN         = 0 ;
+  nFrames               = RecordBufferSize ;
+#else
+  currentFrameN         = 0 ;
+  nFrames               = RecordBufferSize = recordBufferSize ;
+#  endif // #if INIT_JACK_BEFORE_SCENES
 #endif // #if SCENE_NFRAMES_EDITABLE
-#if WAIT_FOR_JACK_INIT
-  nFrames          = RecordBufferSize ;
-#else
-  nFrames          = RecordBufferSize = recordBufferSize ;
-#endif // #if WAIT_FOR_JACK_INIT
-  nFramesPerPeak   = nFrames / N_PEAKS_FINE ;
-  nBytes           = 0 ;
-  nSeconds         = 0 ;
+  nBytes                = 0 ; // toggleRecordingState()
+  nSeconds              = 0 ; // toggleRecordingState()
 
   // recording state
-  shouldSaveLoop = true ;
-  doesPulseExist = false ;
+  shouldSaveLoop = true ;  // toggleRecordingState()
+  doesPulseExist = false ; // toggleRecordingState()
   isMuted        = false ;
 }
 
 // getters/setters
-#if WAIT_FOR_JACK_INIT
+#if INIT_JACK_BEFORE_SCENES
+#  if SCENE_NFRAMES_EDITABLE
 void Scene::SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
-                        unsigned int frameSize , unsigned int recordBufferSize ,
-                        unsigned int rolloverFrameN)
+                        unsigned int bytesPerFrame , unsigned int minLoopSize ,
+                        unsigned int triggerLatencySize ,
+                        unsigned int beginFrameN , unsigned int endFrameN)
 {
-  SampleRate       = sampleRate ;       NFramesPerPeriod = nFramesPerPeriod ;
-  FrameSize        = frameSize ;
-  RecordBufferSize = recordBufferSize ; RolloverFrameN = rolloverFrameN ;
+  SampleRate         = sampleRate ;
+  FramesPerPeriod    = nFramesPerPeriod ;
+  BytesPerFrame      = bytesPerFrame ;
+  MinLoopSize        = minLoopSize ;
+  TriggerLatencySize = triggerLatencySize ;
+  BeginFrameN        = beginFrameN ;
+  EndFrameN          = endFrameN ;
 }
+#  else
+void Scene::SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
+                        unsigned int recordBufferSize)
+{
+  SampleRate             = sampleRate ;       FramesPerPeriod = nFramesPerPeriod ;
+  RecordBufferSize       = recordBufferSize ;
+}
+#  endif // #if SCENE_NFRAMES_EDITABLE
 #else
-void Scene::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
-  { SampleRate = sampleRate ; FrameSize = frameSize ; NFramesPerPeriod = nFramesPerPeriod ; }
-#endif // #if WAIT_FOR_JACK_INIT
+void Scene::SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod)
+{
+  SampleRate         = sampleRate ;
+  FramesPerPeriod    = nFramesPerPeriod ;
+#  if SCENE_NFRAMES_EDITABLE
+  TriggerLatencySize = (TRIGGER_LATENCY_SIZE / nFramesPerPeriod) * nFramesPerPeriod ;
+#  endif // #if SCENE_NFRAMES_EDITABLE
+}
+#endif // #if INIT_JACK_BEFORE_SCENES
 
 
 /* Scene instance side private functions */
@@ -112,7 +166,15 @@ void Scene::beginRecording()
 {
 DEBUG_TRACE_SCENE_BEGINRECORDING_IN
 #if SCENE_NFRAMES_EDITABLE
-  beginFrameN = currentFrameN ; shouldSaveLoop = true ;
+  if (endFrameN - currentFrameN <= MinLoopSize) return ;
+
+  beginFrameN = currentFrameN - TriggerLatencySize ;
+#if INIT_JACK_BEFORE_SCENES
+  if (beginFrameN - BeginFrameN < 0) beginFrameN = BeginFrameN ;
+#else
+  if (beginFrameN - BUFFER_MARGIN_SIZE < 0) beginFrameN = BUFFER_MARGIN_SIZE ;
+#  endif // #if INIT_JACK_BEFORE_SCENES
+  shouldSaveLoop = true ;
 #else
   currentFrameN = 0 ; Loopidity::UpdateView(sceneN) ;
 #endif // #if SCENE_NFRAMES_EDITABLE
@@ -125,22 +187,23 @@ DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_IN
   if (!doesPulseExist)
   {
 #if SCENE_NFRAMES_EDITABLE
-    // disallow scenes shorter than 2 seconds (issue #12)
-    unsigned int endframen = currentFrameN + NFramesPerPeriod ;
-    unsigned int nframes   = endframen     - beginFrameN ;
-    unsigned int nseconds  = nframes       / SampleRate ;
-    if (nseconds < MINIMUM_LOOP_DURATION) return ;
+    // disallow segmented base loop (issue #11) and very short scenes (issue #12)
+    unsigned int endFrameNum = currentFrameN + FramesPerPeriod ;
+    if (endFrameNum <= beginFrameN + MinLoopSize) return ;
 
-    endFrameN = endframen ; doesPulseExist = true ;
-    nFrames   = nframes ;   nBytes         = FrameSize * nFrames ;
-    nSeconds  = nseconds ;  nFramesPerPeak = nFrames   / N_PEAKS_FINE ;
-#  if WAIT_FOR_JACK_INIT
-    if (endFrameN == RolloverFrameN) endFrameN += NFramesPerPeriod ; // avert auto-rollover guard
-#  endif // #if WAIT_FOR_JACK_INIT
+    endFrameN      =  endFrameNum ;
+    nFrames        = (endFrameN - TriggerLatencySize) - beginFrameN ;
+    nBytes         =  nFrames * BytesPerFrame ;
+    nSeconds       =  nFrames / SampleRate ;
+    nFramesPerPeak =  nFrames / N_FINE_PEAKS ;
+    doesPulseExist =  true ;
+
+#  if INIT_JACK_BEFORE_SCENES && ALLOW_BUFFER_ROLLOVER
+    if (endFrameN == EndFrameN) endFrameN += FramesPerPeriod ; // avert auto-rollover guard
+#  endif // #if INIT_JACK_BEFORE_SCENES && ALLOW_BUFFER_ROLLOVER
 #else
-    nFrames  = currentFrameN + NFramesPerPeriod ; nFramesPerPeak = nFrames / N_PEAKS_FINE ;
-    nBytes   = FrameSize     * nFrames ;          shouldSaveLoop = doesPulseExist = true ;
-    nSeconds = nFrames       / SampleRate ;
+    nFrames  = currentFrameN + FramesPerPeriod  ; nFramesPerPeak = nFrames / N_FINE_PEAKS ;
+    nSeconds = nFrames       / SampleRate ;       shouldSaveLoop = doesPulseExist = true ;
 #endif // #if SCENE_NFRAMES_EDITABLE
 
     Loopidity::UpdateView(sceneN) ;
@@ -157,7 +220,7 @@ bool Scene::addLoop(Loop* newLoop)
 {
 DEBUG_TRACE_SCENE_ADDLOOP_IN
 
-  unsigned int nLoops = loops.size() ; if (nLoops >= N_LOOPS) return false ;
+  unsigned int nLoops = loops.size() ; if (nLoops >= Loopidity::N_LOOPS) return false ;
 
   scanPeaks(newLoop , nLoops) ; loops.push_back(newLoop) ; return true ;
 
@@ -168,8 +231,7 @@ void Scene::deleteLoop(unsigned int loopN)
 {
 DEBUG_TRACE_SCENE_DELETELOOP_IN
 
-  if (loops.empty()) { reset() ; return ; }
-  if (loopN >= loops.size())     return ;
+  if (loopN >= loops.size()) return ;
 
   list<Loop*>::iterator loopIter = loops.begin() ; while (loopN--) ++loopIter ;
   loops.erase(loopIter) ; rescanPeaks() ;
@@ -181,9 +243,19 @@ void Scene::reset()
 {
 DEBUG_TRACE_SCENE_RESET_IN
 
+#if SCENE_NFRAMES_EDITABLE
+#  if INIT_JACK_BEFORE_SCENES
+  currentFrameN  = beginFrameN    = BeginFrameN ;
+  nFrames        = endFrameN      = EndFrameN ;
+  nBytes         = nSeconds       = 0 ;
+#  else
+  currentFrameN  = beginFrameN = BUFFER_MARGIN_SIZE /* KLUDGE */ ; nFrames        = EndFrameN ;
+#  endif // #if INIT_JACK_BEFORE_SCENES
+#else
   currentFrameN  = 0 ;     nFrames        = RecordBufferSize ;
-  shouldSaveLoop = false ; doesPulseExist = false ;
-  loops.clear() ; Loopidity::UpdateView(sceneN) ;
+#endif // #if SCENE_NFRAMES_EDITABLE
+
+  shouldSaveLoop = doesPulseExist = false ; loops.clear() ;
 
 DEBUG_TRACE_SCENE_RESET_OUT
 }
@@ -196,13 +268,21 @@ void Scene::scanPeaks(Loop* loop , unsigned int loopN)
 DEBUG_TRACE_SCENE_SCANPEAKS_IN
 
 #if SCAN_LOOP_PEAKS_DATA
-  if (!loop || loopN >= N_LOOPS) return ;
+  if (!loop || loopN >= Loopidity::N_LOOPS) return ;
 
   // fill fine peaks arrays
   Sample* peaks = loop->peaksFine ; unsigned int peakN , frameN ; Sample peak1 , peak2 ;
-  for (peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
+  for (peakN = 0 ; peakN < N_FINE_PEAKS ; ++peakN)
   {
+#if SCENE_NFRAMES_EDITABLE
+#  if INIT_JACK_BEFORE_SCENES
+    frameN       = BeginFrameN + (nFramesPerPeak * peakN) ;
+#  else
+    frameN       = BUFFER_MARGIN_SIZE + (nFramesPerPeak * peakN) ;
+#  endif // #if INIT_JACK_BEFORE_SCENES
+#else
     frameN       = nFramesPerPeak * peakN ;
+#endif // #if SCENE_NFRAMES_EDITABLE
     peak1        = JackIO::GetPeak(&(loop->buffer1[frameN]) , nFramesPerPeak) ;
     peak2        = JackIO::GetPeak(&(loop->buffer2[frameN]) , nFramesPerPeak) ;
 #  if FIXED_N_AUDIO_PORTS
@@ -221,13 +301,11 @@ DEBUG_TRACE_SCENE_SCANPEAKS_IN
   if (highestScenePeak < hiLoopPeaks[loopN]) highestScenePeak = hiLoopPeaks[loopN] ;
 
   // fill course peaks array
-  Sample* peaksCourse      = loop->peaksCourse ;
-  float nPeaksAsFloat      = (float)N_PEAKS_FINE / (float)N_PEAKS_COURSE ;
-  unsigned int nPeaksAsInt = (unsigned int)nPeaksAsFloat ;
-  for (unsigned int histPeakN = 0 ; histPeakN < N_PEAKS_COURSE ; ++histPeakN)
+  Sample* peaksCourse                  = loop->peaksCourse ;
+  for (unsigned int histPeakN = 0 ; histPeakN < N_COURSE_PEAKS ; ++histPeakN)
   {
-    peakN                  = (unsigned int)(nPeaksAsFloat * (float)histPeakN) ;
-    peaksCourse[histPeakN] = JackIO::GetPeak(&peaks[peakN] , nPeaksAsInt) ;
+    peakN                  = (unsigned int)(FinePeaksPerCoursePeak * (float)histPeakN) ;
+    peaksCourse[histPeakN] = JackIO::GetPeak(&peaks[peakN] , NFinePeaksPerCoursePeak) ;
   }
 #endif // #if SCAN_LOOP_PEAKS_DATA
 
@@ -239,9 +317,8 @@ void Scene::rescanPeaks()
 DEBUG_TRACE_SCENE_RESCANPEAKS_IN
 
   highestScenePeak   = 0.0 ;
-  unsigned int peakN = N_PEAKS_FINE ; while (peakN--) hiScenePeaks[peakN] = 0.0 ;
-//  unsigned int loopN = N_LOOPS ; while (loopN--)
-
+  unsigned int peakN = N_FINE_PEAKS ; while (peakN--) hiScenePeaks[peakN] = 0.0 ;
+//  unsigned int loopN = Loopidity::N_LOOPS ; while (loopN--)
   list<Loop*>::iterator loopIter ; unsigned int loopN = 0 ;
   for (loopIter = loops.begin() ; loopIter != loops.end() ; ++loopIter)
     { hiLoopPeaks[loopN] = 0.0 ; scanPeaks(*loopIter , loopN) ; ++loopN ; }
@@ -265,8 +342,26 @@ Loop* Scene::getLoop(unsigned int loopN)
 
 /* Scene instance side public functions */
 
-unsigned int Scene::getCurrentPeakN() { return ((float)currentFrameN / nFrames) * N_PEAKS_FINE ; }
+unsigned int Scene::getSceneN() { return sceneN ; }
 
-//float Scene::getCurrentSeconds() { return currentFrameN / SampleRate ; }
+unsigned int Scene::getDoesPulseExist() { return doesPulseExist ; }
 
-//float Scene::getTotalSeconds() { return nFrames / SampleRate ; }
+unsigned int Scene::getNLoops() { return loops.size() ; }
+
+unsigned int Scene::getCurrentPeakN()
+#if SCENE_NFRAMES_EDITABLE
+#  if INIT_JACK_BEFORE_SCENES
+  { return ((float)(currentFrameN - beginFrameN) / (float)nFrames) * N_FINE_PEAKS ; }
+#  else
+  { return ((float)(currentFrameN - BUFFER_MARGIN_SIZE) / nFrames) * N_FINE_PEAKS ; } // KLUDGE
+#  endif // #if INIT_JACK_BEFORE_SCENES
+#else
+  { return ((float)currentFrameN / nFrames) * N_FINE_PEAKS ; }
+#endif // #if SCENE_NFRAMES_EDITABLE
+
+float Scene::getCurrentSeconds() { return (currentFrameN - beginFrameN) / SampleRate ; }
+
+float Scene::getTotalSeconds()
+{
+  return (doesPulseExist || !Loopidity::GetIsRolling())? nSeconds : getCurrentSeconds() ;
+}

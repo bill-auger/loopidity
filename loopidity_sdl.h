@@ -41,7 +41,7 @@ using namespace std ;
 #define SCOPE_L           (WIN_CENTER - N_PEAKS_TRANSIENT)
 #define SCOPE_R           (WIN_CENTER + N_PEAKS_TRANSIENT)
 //#define SCOPE_T           (WinRect.h - (STATUS_H * 2) - SCOPE_H)
-#define SCOPE_T           (HEADER_H + Y_PADDING + (SCENE_H * N_SCENES))
+#define SCOPE_T           (HEADER_H + Y_PADDING + (SCENE_H * Loopidity::N_SCENES))
 #define SCOPE_0           (SCOPE_T + (SCOPE_H / 2)) ;
 #define SCOPE_PEAK_H      ((float)SCOPE_H / 2.0)
 #define SCOPE_RECT        { (Sint16)SCOPE_L , (Sint16)SCOPE_T , SCOPE_W + 1 , SCOPE_H + 1 }
@@ -63,9 +63,9 @@ using namespace std ;
 
 // mouse magnitudes
 #define MOUSE_SCENES_L (LOOPS_L - BORDER_PAD)
-#define MOUSE_SCENES_R (MOUSE_SCENES_L + (LOOP_W * N_LOOPS))
+#define MOUSE_SCENES_R (MOUSE_SCENES_L + (LOOP_W * Loopidity::N_LOOPS))
 #define MOUSE_SCENES_T (HEADER_H - (Y_PADDING / 2))
-#define MOUSE_SCENES_B (MOUSE_SCENES_T + (SCENE_H * N_SCENES))
+#define MOUSE_SCENES_B (MOUSE_SCENES_T + (SCENE_H * Loopidity::N_SCENES))
 
 // edit histogram magnitudes
 #if SCENE_NFRAMES_EDITABLE
@@ -115,7 +115,7 @@ class LoopiditySdl
 
   private:
 
-    /* class side private variables */
+    /* LoopiditySdl class side private variables */
 
     // window
     static SDL_Surface* Screen ;
@@ -168,7 +168,7 @@ class LoopiditySdl
     static SDL_Rect*    SceneRect ;
 
 
-    /* class side private functions */
+    /* LoopiditySdl class side private functions */
 
     // setup
     static bool IsInitialized(void) ; // TODO: make singleton
@@ -179,34 +179,27 @@ class LoopiditySdl
     static void Cleanup(      void) ;
 
     // drawing
-    static void DrawHeader(           void) ;
-    static void BlankScreen(          void) ;
-    static void DrawScenes(           void) ;
+    static void DrawHeader(         void) ;
+    static void BlankScreen(        void) ;
+    static void DrawScenes(         void) ;
 #if SCENE_NFRAMES_EDITABLE
-    static void DrawEditScopes(       void) ;
-    static void DrawTransientScopes(  void) ;
+    static void DrawEditScopes(     void) ;
+    static void DrawTransientScopes(void) ;
 #else
-    static void DrawScopes(           void) ;
+    static void DrawScopes(         void) ;
 #endif // #if SCENE_NFRAMES_EDITABLE
-    static void DrawText(             string text , SDL_Surface* surface , TTF_Font* font ,
-                                      SDL_Rect* screenRect , SDL_Rect* cropRect ,
-                                      SDL_Color fgColor) ;
-    static void DrawStatusArea(       void) ;
-    static void FlipScreen(           void) ;
-    static void Alert(                const char* msg) ;
+    static void DrawText(           string text , SDL_Surface* surface , TTF_Font* font ,
+                                    SDL_Rect* screenRect , SDL_Rect* cropRect ,
+                                    SDL_Color fgColor) ;
+    static void DrawStatusArea(     void) ;
+    static void FlipScreen(         void) ;
+    static void Alert(              string msg) ;
 
     // getters/settters
     static void SetStatusL(string msg) ;
     static void SetStatusC(string msg) ;
     static void SetStatusR(string msg) ;
-
 //    static Uint32 GetAvailableMemory() ;
-
-
-// DEBUG begin
-static Uint16 DbgFramerateTs ;
-//static Uint64 DbgMainLoopTs ;
-// DEBUG end
 } ;
 
 

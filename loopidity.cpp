@@ -1,5 +1,12 @@
 
 #include "loopidity.h"
+#include "scene.h"
+
+
+/* Loopidity class side public constants */
+
+const unsigned int Loopidity::N_SCENES = NUM_SCENES ;
+const unsigned int Loopidity::N_LOOPS  = NUM_LOOPS ;
 
 
 /* Loopidity class side private varables */
@@ -11,8 +18,8 @@ int Loopidity::InitJackTimeout = INIT_JACK_TIMEOUT ;
 #endif // #if WAIT_FOR_JACK_INIT
 
 // models and views
-Scene*         Loopidity::Scenes[N_SCENES]        = {0} ;
-SceneSdl*      Loopidity::SdlScenes[N_SCENES]     = {0} ;
+Scene*    Loopidity::Scenes[N_SCENES]    = {0} ;
+SceneSdl* Loopidity::SdlScenes[N_SCENES] = {0} ;
 
 // runtime state
 unsigned int Loopidity::CurrentSceneN = 0 ;
@@ -33,9 +40,7 @@ bool Loopidity::IsEditMode            = false ;
 
 int Loopidity::Main(int argc , char** argv)
 {
-#if DEBUG_TRACE
-cout << INIT_MSG << endl ;
-#endif // #if DEBUG_TRACE
+DEBUG_TRACE_LOOPIDITY_MAIN_IN
 
   // 'singleton' sanity check
   if (IsInitialized()) return false ;
@@ -63,9 +68,7 @@ cout << INIT_MSG << endl ;
   if (!LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , transientPeaks))
     return EXIT_FAILURE ;
 
-#if DEBUG_TRACE
-cout << INIT_SUCCESS_MSG << endl ;
-#endif // #if DEBUG_TRACE
+DEBUG_TRACE_LOOPIDITY_MAIN_MID
 
   // draw initial
   LoopiditySdl::BlankScreen() ; LoopiditySdl::DrawHeader() ;
@@ -111,10 +114,17 @@ if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
 
     // draw low priority
     if (!(guiLongCount = (guiLongCount + 1) % GUI_UPDATE_LOW_PRIORITY_NICE))
+    {
+      // LoopiditySdl::DrawMemory() ; // TODO: available system memory
+      if (!Scenes[CurrentSceneN]->getDoesPulseExist())
+        LoopiditySdl::SetStatusL(SdlScenes[CurrentSceneN]->makeDurationStatusText()) ;
       LoopiditySdl::DrawStatusArea() ;
+    }
 
     LoopiditySdl::FlipScreen() ;
   } // while (!done)
+
+DEBUG_TRACE_LOOPIDITY_MAIN_OUT
 
   return EXIT_SUCCESS ;
 }
@@ -140,62 +150,113 @@ bool Loopidity::GetIsRolling() { return IsRolling ; }
 /* Loopidity class side private functions */
 
 // setup
-
-bool Loopidity::IsInitialized() { return !!Scenes[0] ; }
-
+#if WAIT_FOR_JACK_INIT
+  bool Loopidity::IsInitialized() { return IsJackReady && !!Scenes[0] && !!SdlScenes[0] ; }
+#else
+  bool Loopidity::IsInitialized() { return !!Scenes[0] ; }
+#endif // #if WAIT_FOR_JACK_INIT
 bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
                      unsigned int recordBufferSize)
 {
   // disable AutoSceneChange if SCENE_CHANGE_ARG given
   if (!shouldAutoSceneChange) ToggleAutoSceneChange() ;
 
+#if INIT_JACK_BEFORE_SCENES
+  // sanity checks
+  if (N_SCENES + 1 == numeric_limits<unsigned int>::max()) return false ;
+
+  // initialize JACK
+  string errMsg ;
+  switch (JackIO::Init(shouldMonitorInputs , recordBufferSize))
+  {
+    case JACK_FAIL:      errMsg = JACK_FAIL_MSG ;
+    case JACK_BUFF_FAIL: errMsg = ZERO_BUFFER_SIZE_MSG ;
+    case JACK_MEM_FAIL:  errMsg = INSUFFICIENT_MEMORY_MSG ;
+                         LoopiditySdl::Alert(errMsg) ; return false ;
+  }
+
+#  if WAIT_FOR_JACK_INIT
+  // wait for JACK metadata
+  while (!IsJackReady && (InitJackTimeout -= 100) > 0) usleep(100000) ;
+  if (!IsJackReady) return false ; // via SetMetaData()
+#  endif // #if WAIT_FOR_JACK_INIT
+#endif // #if INIT_JACK_BEFORE_SCENES
+
   // instantiate Scenes (models) and SdlScenes (views)
   for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
   {
-#if WAIT_FOR_JACK_INIT
-    Scenes[sceneN]    = new Scene(sceneN) ;
+#if INIT_JACK_BEFORE_SCENES
+    try
+    {
+      Scenes[sceneN]    = new Scene(sceneN) ;
+      SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN]) ;
+    }
+    catch(exception& ex) { LoopiditySdl::Alert(ex.what()) ; return false ; }
 #else
     Scenes[sceneN]    = new Scene(sceneN , JackIO::GetRecordBufferSize()) ;
-#endif // #if WAIT_FOR_JACK_INIT
-
-    SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN] , sceneN) ;
+    SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN]) ;
+#endif // #if INIT_JACK_BEFORE_SCENES
     UpdateView(sceneN) ;
 
     if (!Scenes[sceneN] || !SdlScenes[sceneN]) return false ;
   }
 
+#if INIT_JACK_BEFORE_SCENES
+  JackIO::Reset(Scenes[0]) ; return true ;
+#else
   // initialize JACK
   string errMsg ;
-  switch (JackIO::Init(Scenes[0] , 0 , shouldMonitorInputs , recordBufferSize))
+  switch (JackIO::Init(Scenes[0] , shouldMonitorInputs , recordBufferSize))
   {
-    case JACK_FAIL:      errMsg = JACK_FAIL_MSG ;
-    case JACK_BUFF_FAIL: errMsg = ZERO_BUFFER_SIZE_MSG ;
-    case JACK_MEM_FAIL:  errMsg = INSUFFICIENT_MEMORY_MSG ;
-                         LoopiditySdl::Alert(errMsg.c_str()) ; return false ;
+    case JACK_INIT_SUCCESS: return true ;
+    case JACK_FAIL:         errMsg = JACK_FAIL_MSG ;
+    case JACK_BUFF_FAIL:    errMsg = ZERO_BUFFER_SIZE_MSG ;
+    case JACK_MEM_FAIL:     errMsg = INSUFFICIENT_MEMORY_MSG ;
+    default:                LoopiditySdl::Alert(errMsg) ; return false ;
   }
-#if WAIT_FOR_JACK_INIT
+#  if WAIT_FOR_JACK_INIT
   // wait for JACK metadata
-  InitJackTimeout = 0 ;
   while (!IsJackReady && (InitJackTimeout -= 100) > 0) usleep(100000) ;
-  return IsJackReady ;
-#else
-  return true ;
-#endif // #if WAIT_FOR_JACK_INIT
+  if (!IsJackReady) return false ; // via SetMetaData()
+#  endif // #if WAIT_FOR_JACK_INIT
+#endif // #if INIT_JACK_BEFORE_SCENES
 }
 
-#if WAIT_FOR_JACK_INIT
+#if INIT_JACK_BEFORE_SCENES
+#  if SCENE_NFRAMES_EDITABLE
 void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
-                            unsigned int frameSize , unsigned int recordBufferSize ,
-                            unsigned int rolloverFrameNum) ;
+                            unsigned int bytesPerFrame , unsigned int minLoopSize ,
+                            unsigned int triggerLatencySize ,
+                            unsigned int beginFrameN , unsigned int endFrameN)
 {
-  Scene::SetMetaData(sampleRate , nFramesPerPeriod , frameSize ,
-                     recordBufferSize , rolloverFrameNum) ;
+  Scene::SetMetaData(sampleRate , nFramesPerPeriod , bytesPerFrame , minLoopSize ,
+                     triggerLatencySize , beginFrameN , endFrameN) ;
+#if WAIT_FOR_JACK_INIT
   IsJackReady = true ;
+#endif // #if WAIT_FOR_JACK_INIT
+}
+#  else
+void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
+                            unsigned int recordBufferSize)
+{
+  Scene::SetMetaData(sampleRate , nFramesPerPeriod , recordBufferSize) ;
+#if WAIT_FOR_JACK_INIT
+  IsJackReady = true ;
+#endif // #if WAIT_FOR_JACK_INIT
+}
+#  endif // #if SCENE_NFRAMES_EDITABLE
+#else
+void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod)
+#  if SCENE_NFRAMES_EDITABLE
+{
+  Scene::SetMetaData(sampleRate , nFramesPerPeriod) ;
+  Scenes[1]->currentFrameN = Scenes[1]->beginFrameN = sampleRate ; // KLUDGE
+  Scenes[2]->currentFrameN = Scenes[2]->beginFrameN = sampleRate ; // KLUDGE
 }
 #else
-void Loopidity::SetMetaData(unsigned int sampleRate , unsigned int frameSize , unsigned int nFramesPerPeriod)
-  { Scene::SetMetaData(sampleRate , frameSize , nFramesPerPeriod) ; }
-#endif // #if WAIT_FOR_JACK_INIT
+  { Scene::SetMetaData(sampleRate , nFramesPerPeriod) ; }
+#  endif // #if SCENE_NFRAMES_EDITABLE
+#endif // #if INIT_JACK_BEFORE_SCENES
 
 void Loopidity::Cleanup()
 {
@@ -333,7 +394,8 @@ void Loopidity::DeleteLoop(unsigned int sceneN , unsigned int loopN)
 {
 DEBUG_TRACE_LOOPIDITY_DELETELOOP_IN
 
-  SdlScenes[sceneN]->deleteLoop(loopN) ; Scenes[sceneN]->deleteLoop(loopN) ;
+  if (!loopN) ResetScene(sceneN) ;
+  else { SdlScenes[sceneN]->deleteLoop(loopN) ; Scenes[sceneN]->deleteLoop(loopN) ; }
 
 DEBUG_TRACE_LOOPIDITY_DELETELOOP_OUT
 }
@@ -342,7 +404,7 @@ void Loopidity::DeleteLastLoop()
 {
 DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_IN
 
-  DeleteLoop(CurrentSceneN , Scenes[CurrentSceneN]->loops.size() - 1) ;
+  DeleteLoop(CurrentSceneN , Scenes[CurrentSceneN]->getNLoops() - 1) ;
 
 DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_OUT
 }
@@ -378,7 +440,16 @@ void Loopidity::ResetScene(unsigned int sceneN)
 {
 DEBUG_TRACE_LOOPIDITY_RESETSCENE_IN
 
-  Scenes[sceneN]->reset() ; SdlScenes[sceneN]->reset() ;
+  Scenes[sceneN]->reset() ; SdlScenes[sceneN]->reset() ; UpdateView(sceneN) ;
+
+  bool doesAnyPulseExist = false ;
+  for (sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
+{
+    doesAnyPulseExist |= Scenes[sceneN]->getDoesPulseExist() ;
+
+printf("Loopidity::ResetScene() Scenes[%d]->getDoesPulseExist()=%d doesAnyPulseExist=%d\n" , sceneN , Scenes[sceneN]->getDoesPulseExist() , doesAnyPulseExist) ;
+}
+  IsRolling = doesAnyPulseExist ;
 
 DEBUG_TRACE_LOOPIDITY_RESETSCENE_OUT
 }
@@ -389,8 +460,8 @@ void Loopidity::Reset()
 {
 DEBUG_TRACE_LOOPIDITY_RESET_IN
 
-  CurrentSceneN = NextSceneN = 0 ; JackIO::Reset(Scenes[0] , 0) ;
   for (unsigned int sceneN = 0 ; sceneN < N_SCENES ; ++sceneN) ResetScene(sceneN) ;
+  IsRolling = false ; CurrentSceneN = NextSceneN = 0 ; JackIO::Reset(Scenes[0]) ;
 
 DEBUG_TRACE_LOOPIDITY_RESET_OUT
 }
@@ -398,7 +469,6 @@ DEBUG_TRACE_LOOPIDITY_RESET_OUT
 
 // helpers
 
-void Loopidity::UpdateView(unsigned int sceneN) { SdlScenes[sceneN]->updateStatus() ; }
-// { if (Scenes[sceneN]->isRolling) SdlScenes[sceneN]->updateStatus() ; }
+void Loopidity::UpdateView(unsigned int sceneN) { SdlScenes[sceneN]->updateState() ; }
 
 void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OUT_OF_MEMORY_MSG) ; }

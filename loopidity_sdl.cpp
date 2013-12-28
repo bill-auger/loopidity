@@ -1,9 +1,5 @@
 
 #include "loopidity_sdl.h"
-// DEBUG begin
-Uint16 LoopiditySdl::DbgFramerateTs = 0 ;
-//Uint64 LoopiditySdl::DbgMainLoopTs  = 0 ;
-// DEBUG end
 
 
 /* LoopiditySdl class side private variables */
@@ -144,7 +140,7 @@ void LoopiditySdl::DrawScenes()
 {
 #if DRAW_SCENES
   CurrentSceneN = Loopidity::GetCurrentSceneN() ; NextSceneN = Loopidity::GetNextSceneN() ;
-  for (SceneN = 0 ; SceneN < N_SCENES ; ++SceneN)
+  for (SceneN = 0 ; SceneN < Loopidity::N_SCENES ; ++SceneN)
   {
     SdlScene = SdlScenes[SceneN] ; SceneRect = const_cast<SDL_Rect*>(&SdlScene->sceneRect) ;
     SDL_FillRect(Screen , SceneRect , WinBgColor) ;
@@ -156,7 +152,7 @@ void LoopiditySdl::DrawScenes()
       SdlScene->drawScene(SceneSurface , CurrentPeakN , SceneProgress) ;
 
 #if DRAW_RECORDING_LOOP
-      if (SdlScene->scene->loops.size() < N_LOOPS)
+      if (SdlScene->scene->loops.size() < Loopidity::N_LOOPS)
         SdlScene->drawRecordingLoop(SceneSurface , SceneProgress) ;
 #endif
     }
@@ -262,8 +258,6 @@ void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font 
 
 void LoopiditySdl::DrawStatusArea()
 {
-// TODO: DrawMemory() ;
-
   DrawText(StatusTextL , Screen , StatusFont , &StatusRectL , &StatusRectDim , StatusColor) ;
   DrawText(StatusTextC , Screen , StatusFont , &StatusRectC , &StatusRectDim , StatusColor) ;
   DrawText(StatusTextR , Screen , StatusFont , &StatusRectR , &StatusRectDim , StatusColor) ;
@@ -271,7 +265,7 @@ void LoopiditySdl::DrawStatusArea()
 
 void LoopiditySdl::FlipScreen() { SDL_Flip(Screen) ; }
 
-void LoopiditySdl::Alert(const char* msg) { printf("%s" , msg) ; }
+void LoopiditySdl::Alert(string msg) { cout << msg << endl ; }
 
 
 // getters/settters

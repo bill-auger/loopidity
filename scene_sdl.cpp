@@ -38,37 +38,40 @@ void LoopSdl::setStatus(Uint16 loopStatus)
 
 /* SceneSdl class side private constants */
 
-Sint16       SceneSdl::HistogramsT     = HISTOGRAMS_T + ((HISTOGRAMS_B - HISTOGRAMS_T) / 2) ;
-Sint16       SceneSdl::HistogramsB     = HistogramsT ; // reset()
-const Sint16 SceneSdl::HistFramesT     = HISTOGRAM_FRAMES_T ;
-const Sint16 SceneSdl::HistFramesB     = HISTOGRAM_FRAMES_B ;
-const Uint16 SceneSdl::HistSurfaceW    = HISTOGRAM_IMG_W ;
-const Uint16 SceneSdl::HistSurfaceH    = HISTOGRAM_IMG_H ;
-const Sint16 SceneSdl::HistFrameR      = HISTOGRAM_FRAME_R ;
-const Sint16 SceneSdl::HistFrameB      = HISTOGRAM_FRAME_B ;
-const float  SceneSdl::HistPeakH       = (float)HISTOGRAM_PEAK_H ;
-const Sint16 SceneSdl::Histogram0      = HISTOGRAM_0 ;
-const Uint16 SceneSdl::LoopD           = LOOP_DIAMETER ;
-const Sint16 SceneSdl::LoopW           = LOOP_W ;
-const Uint16 SceneSdl::Loop0           = LOOP_0 ;
-const Sint16 SceneSdl::LoopsL          = LOOPS_L ;
-const Sint16 SceneSdl::LoopsT          = LOOPS_T ;
-const Uint16 SceneSdl::Loops0          = LOOPS_0 ;
-const Uint16 SceneSdl::LoopsB          = LOOPS_B ;
-const Sint16 SceneSdl::LoopFrameT      = LOOP_FRAMES_T ;
-const Sint16 SceneSdl::LoopFrameB      = LOOP_FRAMES_B ;
-const Uint16 SceneSdl::SceneH          = SCENE_H ;
-const Uint16 SceneSdl::SceneL          = SCENE_L ;
-const Uint16 SceneSdl::SceneR          = SCENE_R ;
-const Uint16 SceneSdl::SceneFrameL     = SCENE_FRAME_L ;
-const Uint16 SceneSdl::SceneFrameR     = SCENE_FRAME_R ;
-const float  SceneSdl::PieSliceDegrees = PIE_SLICE_DEGREES ;
-const Uint8  SceneSdl::BytesPerPixel   = PIXEL_DEPTH / 8 ;
+Sint16       SceneSdl::HistogramsT        = Histogram0 ; // startRolling()
+Sint16       SceneSdl::HistogramsB        = Histogram0 ; // startRolling()
+const Sint16 SceneSdl::HistFramesT        = HISTOGRAM_FRAMES_T ;
+const Sint16 SceneSdl::HistFramesB        = HISTOGRAM_FRAMES_B ;
+const Uint16 SceneSdl::HistSurfaceW       = HISTOGRAM_IMG_W ;
+const Uint16 SceneSdl::HistSurfaceH       = HISTOGRAM_IMG_H ;
+const Sint16 SceneSdl::HistFrameR         = HISTOGRAM_FRAME_R ;
+const Sint16 SceneSdl::HistFrameB         = HISTOGRAM_FRAME_B ;
+const float  SceneSdl::HistPeakH          = (float)HISTOGRAM_PEAK_H ;
+const Sint16 SceneSdl::Histogram0         = HISTOGRAM_0 ;
+const Uint16 SceneSdl::LoopD              = LOOP_DIAMETER ;
+const Sint16 SceneSdl::LoopW              = LOOP_W ;
+const Uint16 SceneSdl::Loop0              = LOOP_0 ;
+const Sint16 SceneSdl::LoopsL             = LOOPS_L ;
+const Sint16 SceneSdl::LoopsT             = LOOPS_T ;
+const Uint16 SceneSdl::Loops0             = LOOPS_0 ;
+const Uint16 SceneSdl::LoopsB             = LOOPS_B ;
+const Sint16 SceneSdl::LoopFrameT         = LOOP_FRAMES_T ;
+const Sint16 SceneSdl::LoopFrameB         = LOOP_FRAMES_B ;
+const Uint16 SceneSdl::SceneH             = SCENE_H ;
+const Uint16 SceneSdl::SceneL             = SCENE_L ;
+const Uint16 SceneSdl::SceneR             = SCENE_R ;
+const Uint16 SceneSdl::SceneFrameL        = SCENE_FRAME_L ;
+const Uint16 SceneSdl::SceneFrameR        = SCENE_FRAME_R ;
+const float  SceneSdl::PieSliceDegrees    = PIE_SLICE_DEGREES ;
+const Uint8  SceneSdl::BytesPerPixel      = PIXEL_DEPTH / 8 ;
+const Uint16 SceneSdl::SECONDS_PER_HOUR   = N_SECONDS_PER_HOUR ;
+const Uint8  SceneSdl::MINUTES_PER_HOUR   = N_MINUTES_PER_HOUR ;
+const Uint8  SceneSdl::SECONDS_PER_MINUTE = N_SECONDS_PER_MINUTE ;
 
 
 /* SceneSdl class side private functions */
 
-SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN) :
+SceneSdl::SceneSdl(Scene* aScene) :
   // constants
   sceneT(      SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,
@@ -76,11 +79,12 @@ SceneSdl::SceneSdl(Scene* aScene , Uint16 sceneN) :
   sceneRect(   { 0 , sceneT , LoopiditySdl::WinRect.w , SceneH })
 {
   // model
-  scene = aScene ;
+  scene  = aScene ;
+  sceneN = scene->getSceneN() ;
 
   // drawScene() instance variables
   loopFrameColor  = STATE_IDLE_COLOR ;
-  sceneFrameColor = (!scene->sceneN)? STATE_PLAYING_COLOR : STATE_IDLE_COLOR ;
+  sceneFrameColor = (!sceneN)? STATE_PLAYING_COLOR : STATE_IDLE_COLOR ;
 
   // drawScene() , drawHistogram() , and drawRecordingLoop() 'local' variables
   currentPeakN  = 0 ;
@@ -136,9 +140,9 @@ Sint16 SceneSdl::GetLoopL(Uint16 loopN) { return LoopsL + (LoopW * loopN) ; }
 
 void SceneSdl::reset()
 {
-  HistogramsT    = HistogramsB     = HISTOGRAMS_T + ((HISTOGRAMS_B - HISTOGRAMS_T) / 2) ;
+  HistogramsT    = HistogramsB     = Histogram0 ;
   loopFrameColor = sceneFrameColor = STATE_IDLE_COLOR ;
-  histogramImgs.clear() ; loopImgs.clear() ; Loopidity::UpdateView(scene->sceneN) ;
+  histogramImgs.clear() ; loopImgs.clear() ;
 }
 
 void SceneSdl::cleanup() { SDL_FreeSurface(activeSceneSurface) ; SDL_FreeSurface(inactiveSceneSurface) ; }
@@ -148,7 +152,7 @@ void SceneSdl::cleanup() { SDL_FreeSurface(activeSceneSurface) ; SDL_FreeSurface
 
 void SceneSdl::startRolling() { HistogramsT = HISTOGRAMS_T ; HistogramsB = HISTOGRAMS_B ; }
 
-void SceneSdl::updateStatus()
+void SceneSdl::updateState()
 {
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN
 
@@ -163,8 +167,8 @@ DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN
     Uint16 loopState = (!scene->getLoop(loopN)->isMuted)?
         STATE_LOOP_PLAYING : ((!scene->isMuted)?
             STATE_LOOP_PENDING : STATE_LOOP_MUTED) ;
-    getLoop(&histogramImgs , loopN)->setStatus(loopState) ;
-    getLoop(&loopImgs , loopN)->setStatus(loopState) ;
+    getLoopView(&histogramImgs , loopN)->setStatus(loopState) ;
+    getLoopView(&loopImgs , loopN)->setStatus(loopState) ;
   }
 
   if (isCurrentScene) LoopiditySdl::SetStatusL(makeDurationStatusText()) ;
@@ -173,7 +177,7 @@ DRAW_DEBUG_TEXT_R
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT
 }
 
-LoopSdl* SceneSdl::getLoop(list<LoopSdl*>* imgs , unsigned int loopN)
+LoopSdl* SceneSdl::getLoopView(list<LoopSdl*>* imgs , unsigned int loopN)
 {
   if (loopN >= imgs->size()) return NULL ;
 
@@ -211,7 +215,7 @@ void SceneSdl::drawScene(SDL_Surface* surface , unsigned int currentPeakN , Uint
   for (loopN = 0 ; loopN < scene->loops.size() ; ++loopN)
   {
 #if DRAW_HISTOGRAMS
-    histogramImg    = getLoop(&histogramImgs , loopN) ;
+    histogramImg    = getLoopView(&histogramImgs , loopN) ;
     histogramRect.x = histogramImg->loopL - 1 ;
     SDL_BlitSurface(histogramImg->currentSurface , 0 , surface , &histogramRect) ;
     vlineColor(surface , histogramImg->loopL + sceneProgress , HistogramsT , HistogramsB , PEAK_CURRENT_COLOR) ;
@@ -219,7 +223,7 @@ void SceneSdl::drawScene(SDL_Surface* surface , unsigned int currentPeakN , Uint
 
 #if DRAW_LOOPS
     // draw cached loop image
-    loopImg = getLoop(&loopImgs , loopN) ;
+    loopImg = getLoopView(&loopImgs , loopN) ;
     rotImg  = rotozoomSurface(loopImg->currentSurface , currentPeakN * PieSliceDegrees , 1.0 , 0) ;
     rotRect = {(Sint16)(loopImg->loopC - (rotImg->w / 2)) , (Sint16)(Loops0 - (rotImg->h / 2)) , 0 , 0} ;
     SDL_BlitSurface(rotImg , 0 , surface , &rotRect) ; SDL_FreeSurface(rotImg) ;
@@ -256,16 +260,23 @@ void SceneSdl::drawRecordingLoop(SDL_Surface* aSurface , Uint16 sceneProgress)
 
 void SceneSdl::drawSceneStateIndicator(SDL_Surface* aSurface)
 {
+  // scene frame
   drawFrame(aSurface , SceneFrameL , sceneFrameT , SceneFrameR , sceneFrameB , sceneFrameColor) ;
 
 //if (scene->sceneN == Loopidity::GetNextSceneN() && sceneFrameColor == STATE_PLAYING_COLOR)
-Uint16 ToggleFrameL = SceneFrameL - 4 ;
-Uint16 ToggleFrameR = SceneFrameR + 4 ;
-Uint16 toggleFrameT = sceneFrameT - 5 ;
-Uint16 toggleFrameB = sceneFrameB + 5 ;
+  if (scene->sceneN != Loopidity::GetNextSceneN()) return ;
+
+// TODO: drawing nextScene indicator outside of scene frame
+//          (instead of drawing frame different color if nextScene)
+//          everything below the header will need to be shifted down 1 px
+//          then make ToggleFrameColor , ToggleFrameL , ToggleFrameR class constants
 const Uint32 ToggleFrameColor = STATE_PENDING_COLOR ;
-  if (scene->sceneN == Loopidity::GetNextSceneN())
-    drawFrame(aSurface , ToggleFrameL , toggleFrameT , ToggleFrameR , toggleFrameB , ToggleFrameColor) ;
+const Uint16 ToggleFrameL = SceneFrameL - 4 ;
+const Uint16 ToggleFrameR = SceneFrameR + 4 ;
+
+  // nextScene indicator frame
+  Uint16 toggleFrameT = sceneFrameT - 5 ; Uint16 toggleFrameB = sceneFrameB + 5 ;
+  drawFrame(aSurface , ToggleFrameL , toggleFrameT , ToggleFrameR , toggleFrameB , ToggleFrameColor) ;
 }
 
 void SceneSdl::drawFrame(SDL_Surface* aSurface , Uint16 l , Uint16 t , Uint16 r , Uint16 b , Uint32 color)
@@ -358,13 +369,7 @@ LoopSdl* SceneSdl::drawLoop(Loop* aLoop , Uint16 loopN)
 }
 
 
-// helpers
-
-SDL_Surface* SceneSdl::createHwSurface(Sint16 w , Sint16 h)
-  { return SDL_CreateRGBSurface(SDL_HWSURFACE , w , h , PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
-
-SDL_Surface* SceneSdl::createSwSurface(Sint16 w , Sint16 h)
-	{ return SDL_CreateRGBSurface(SDL_SWSURFACE , w , h , PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
+// images
 
 void SceneSdl::addLoop(Loop* newLoop , Uint16 loopN)
 {
@@ -398,13 +403,21 @@ DEBUG_TRACE_SCENESDL_DELETELOOP_IN
 DEBUG_TRACE_SCENESDL_DELETELOOP_OUT
 }
 
+// helpers
+
+SDL_Surface* SceneSdl::createHwSurface(Sint16 w , Sint16 h)
+  { return SDL_CreateRGBSurface(SDL_HWSURFACE , w , h , PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
+
+SDL_Surface* SceneSdl::createSwSurface(Sint16 w , Sint16 h)
+  { return SDL_CreateRGBSurface(SDL_SWSURFACE , w , h , PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
+
 string SceneSdl::makeDurationStatusText()
 {
-  Uint32 nSeconds = scene->nSeconds ; Uint32 sceneN = scene->sceneN ;
-  Uint32 h        = nSeconds / 3600 ; Uint32 m      = (nSeconds / 60) % 60 ;
-  Uint32 s        = nSeconds % 60 ;
-  return string("Scene: "           + to_string(sceneN) + " - " +
-                                      to_string(h)      + ":"   +
-                ((m > 9)? "" : "0") + to_string(m)      + ":"   +
-                ((s > 9)? "" : "0") + to_string(s)) ;
+  Uint32 nSeconds = scene->getTotalSeconds() ; char statusText[32] ;
+  snprintf(statusText , 32 , "Scene: %d - %d:%02d:%02d" , sceneN ,
+          ( nSeconds / SECONDS_PER_HOUR) ,
+          ((nSeconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR) ,
+          ( nSeconds % SECONDS_PER_MINUTE)) ;
+
+  return string(statusText) ;
 }

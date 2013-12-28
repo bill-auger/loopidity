@@ -6,7 +6,7 @@
 // DEBUG begin
 // setup features
 //#define INIT_LOOPIDITY          1
-#define INIT_JACK               1
+#define INIT_JACK_BEFORE_SCENES 1
 #define WAIT_FOR_JACK_INIT      0
 #define FIXED_N_AUDIO_PORTS     1
 //#define MEMORY_CHECK            1 // if 0 choose DEFAULT_AUDIO_BUFFER_SIZE wisely
@@ -14,8 +14,8 @@
 #define SCENE_NFRAMES_EDITABLE  1
 
 // runtime features
-//#define LOOP_COUNTER                  1
-//#define DSP                           1
+#define JACK_IO_READ_WRITE            1
+#define JACK_IO_COPY                  1
 #define HANDLE_KEYBOARD_EVENTS        1
 #define HANDLE_MOUSE_EVENTS           0
 #define HANDLE_USER_EVENTS            1
@@ -27,7 +27,7 @@
 #define DRAW_SCOPES                   1
 #define DRAW_EDIT_HISTOGRAM           SCENE_NFRAMES_EDITABLE && 1
 #define DRAW_DEBUG_TEXT               1
-#define DEBUG_TRACE                   1
+#define DEBUG_TRACE                   0
 #define AUTO_UNMUTE_LOOPS_ON_ROLLOVER 1
 
 #if DRAW_STATUS
@@ -60,12 +60,15 @@
 #endif // #if DRAW_DEBUG_TEXT
 
 // Trace class features
-#if DEBUG_TRACE
-#  define DEBUG_TRACE_EVS   1
-#  define DEBUG_TRACE_IN    1
-#  define DEBUG_TRACE_OUT   1
-#  define DEBUG_TRACE_CLASS 0
-#endif // #if DEBUG_TRACE
+#define DEBUG_TRACE_JACK         DEBUG_TRACE || 1
+#define DEBUG_TRACE_LOOPIDITY    DEBUG_TRACE && 0
+#define DEBUG_TRACE_LOOPIDITYSDL DEBUG_TRACE && 0
+#define DEBUG_TRACE_SCENE        DEBUG_TRACE && 0
+#define DEBUG_TRACE_SCENESDL     DEBUG_TRACE && 0
+#define DEBUG_TRACE_EVS          DEBUG_TRACE && 1
+#define DEBUG_TRACE_IN           DEBUG_TRACE && 1
+#define DEBUG_TRACE_OUT          DEBUG_TRACE && 1
+#define DEBUG_TRACE_CLASS        DEBUG_TRACE && 0
 // DEBUG end
 
 // quantities
@@ -75,8 +78,8 @@
 //#define DEFAULT_AUDIO_BUFFER_SIZE 8388608  // 2^23 (approx 45 sec @ 48k)
 //#define DEFAULT_AUDIO_BUFFER_SIZE 2097152  // 2^21 (approx 10 sec @ 48k)
 //#define DEFAULT_AUDIO_BUFFER_SIZE 1048576  // 2^20 (approx 5 sec @ 48k)
-#define N_SCENES                   3
-#define N_LOOPS                    9 // per scene
+#define NUM_SCENES                 3
+#define NUM_LOOPS                  9 // per scene
 #define LOOP_VOL_INC               0.1
 #if FIXED_N_AUDIO_PORTS
 #  define N_INPUT_CHANNELS         2
@@ -88,9 +91,16 @@
 #  define N_AUDIO_PORTS            N_INPUT_CHANNELS + N_OUTPUT_CHANNELS // TODO: nyi - only used for scope cache
 #endif // #if FIXED_N_AUDIO_PORTS
 #if SCENE_NFRAMES_EDITABLE
-#  define BUFFER_MARGIN_SIZE       SampleRate // nFrames
-#  define MIN_LOOP_DURATION        2          // nSeconds
-#  define TRIGGER_LATENCY_N_FRAMES 1500       // kludge to compensate for keyboard delay
+#  define BUFFER_MARGIN_SIZE       SampleRate
+#  define TRIGGER_LATENCY_SIZE     1280 // nFrames - kludge to compensate for keyboard delay - optimized for BufferSize <= 128
+#  define MINIMUM_LOOP_DURATION    2    // nSeconds
+#  if INIT_JACK_BEFORE_SCENES
+#    if ALLOW_BUFFER_ROLLOVER
+#      define INITIAL_END_FRAMEN     (RecordBufferSize - nFramesPerPeriod)
+#    else
+#      define INITIAL_END_FRAMEN     RecordBufferSize
+#    endif // #if ALLOW_BUFFER_ROLLOVER
+#  endif // #if INIT_JACK_BEFORE_SCENES
 #endif // #if SCENE_NFRAMES_EDITABLE
 #if DRAW_EDIT_HISTOGRAM
 #  define N_PEAKS_FINE             720 // should be divisible into 360
@@ -115,6 +125,11 @@
 #define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory - quitting"
 #define OUT_OF_MEMORY_MSG       "ERROR: Out of Memory"
 #define GETPEAK_ERROR_MSG       "Loopidity::GetPeak(): subscript out of range\n"
+#define INVALID_METADATA_MSG    "ERROR: Scene metadata state insane"
+#define JACK_INPUT1_PORT_NAME   "inL"
+#define JACK_INPUT2_PORT_NAME   "inR"
+#define JACK_OUTPUT1_PORT_NAME  "outL"
+#define JACK_OUTPUT2_PORT_NAME  "outR"
 
 // sdl user events
 #define EVT_NEW_LOOP      1
@@ -130,7 +145,9 @@
 // dependencies
 
 #include <cstdlib>
+#include <exception>           // Scene::Scene()
 #include <iostream>
+#include <limits>              // Loopidity::Init()
 #include <list>
 #include <sstream>
 #include <string>
@@ -141,8 +158,8 @@
 #include <SDL_gfxPrimitives.h>
 #include <SDL_rotozoom.h>
 #include <SDL_ttf.h>
-#include <unistd.h>
-#include <X11/Xlib.h>
+#include <unistd.h>            // Loopidity::Init()
+#include <X11/Xlib.h>          // LoopiditySdl::Init()
 
 typedef jack_default_audio_sample_t Sample ;
 
@@ -162,16 +179,25 @@ class Loopidity
   friend class JackIO ;
   friend class Trace ;
 
-    private:
+  public:
 
-    /* class side private variables */
+    /* Loopidity class side public constants */
+
+    static const unsigned int N_SCENES ;
+    static const unsigned int N_LOOPS ;
+
+
+  private:
+
+    /* Loopidity class side private variables */
 #if WAIT_FOR_JACK_INIT
     // setup
     static int InitJackTimeout ;
 #endif // #if WAIT_FOR_JACK_INIT
+
     // models and views
-    static Scene*       Scenes[N_SCENES] ;
-    static SceneSdl*    SdlScenes[N_SCENES] ;
+    static Scene*       Scenes[NUM_SCENES] ;
+    static SceneSdl*    SdlScenes[NUM_SCENES] ;
 
     // runtime state
     static unsigned int CurrentSceneN ;
@@ -181,42 +207,47 @@ class Loopidity
 #if WAIT_FOR_JACK_INIT
     static bool IsJackReady ;
 #endif // #if WAIT_FOR_JACK_INIT
-    static bool         IsRolling ;
+    static bool IsRolling ;
     static bool ShouldSceneAutoChange ;
     static bool IsEditMode ;
 
   public:
 
-    /* class side public functions */
+    /* Loopidity class side public functions */
 
     // main
     static int Main(int argc , char** argv) ;
 
     // getters/setters
-//    static void            SetNFramesPerPeriod(   unsigned int nFrames) ;
-    static unsigned int    GetCurrentSceneN(void) ;
-    static unsigned int    GetNextSceneN(   void) ;
-//    static unsigned int    GetLoopPos(    void) ;
-    static bool            GetIsRolling(    void) ;
-//    static bool            GetShouldSaveLoop(     void) ;
-//    static bool            GetDoesPulseExist(     void) ;
-//    static bool            GetIsEditMode(         void) ;
+//    static void         SetNFramesPerPeriod(   unsigned int nFrames) ;
+    static unsigned int GetCurrentSceneN(void) ;
+    static unsigned int GetNextSceneN(   void) ;
+//    static unsigned int GetLoopPos(    void) ;
+    static bool         GetIsRolling(    void) ;
+//    static bool         GetShouldSaveLoop(     void) ;
+//    static bool         GetDoesPulseExist(     void) ;
+//    static bool         GetIsEditMode(         void) ;
 
 
-    /* class side private functions */
+    /* Loopidity class side private functions */
 
     // setup
     static bool IsInitialized(void) ; // TODO: make singleton
     static bool Init(         bool shouldMonitorInputs , bool shouldAutoSceneChange ,
                               unsigned int recordBufferSize) ;
-#if WAIT_FOR_JACK_INIT
-    static void SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
-                            unsigned int frameSize , unsigned int recordBufferSize ,
-                            unsigned int rolloverFrameNum) ;
+#if INIT_JACK_BEFORE_SCENES
+#  if SCENE_NFRAMES_EDITABLE
+    static void SetMetaData(  unsigned int sampleRate , unsigned int nFramesPerPeriod ,
+                              unsigned int bytesPerFrame , unsigned int minLoopSize ,
+                              unsigned int triggerLatencySize ,
+                              unsigned int beginFrameN , unsigned int endFrameN) ;
+#  else
+    static void SetMetaData(  unsigned int sampleRate , unsigned int nFramesPerPeriod ,
+                              unsigned int recordBufferSize) ;
+#  endif // #if SCENE_NFRAMES_EDITABLE
 #else
-    static void SetMetaData(unsigned int sampleRate , unsigned int frameSize ,
-                            unsigned int nFramesPerPeriod) ;
-#endif // #if WAIT_FOR_JACK_INIT
+    static void SetMetaData(  unsigned int sampleRate , unsigned int nFramesPerPeriod) ;
+#endif // #if INIT_JACK_BEFORE_SCENES
     static void Cleanup(      void) ;
 
     // event handlers
@@ -241,8 +272,8 @@ class Loopidity
     static void Reset(                void) ;
 
     // helpers
-    static void UpdateView(        unsigned int sceneN) ;
-    static void OOM(               void) ;
+    static void UpdateView(unsigned int sceneN) ;
+    static void OOM(       void) ;
 } ;
 
 #endif // #ifndef _LOOPIDITY_H_

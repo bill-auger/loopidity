@@ -2,10 +2,10 @@
 Loopidity MVC classes:
 Loopidity    - main  controller class (== 0                  instances)
 LoopiditySDL - main  view       class (== 0                  instances)
-Scene        - scene model      class (== N_SCENES           instances)
-SceneSDL     - scene view       class (== N_SCENES           instances)
-Loop         - loop  model      class (<= N_SCENES * N_LOOPS instances)
-LoopSDL      - loop  view       class (<= N_SCENES * N_LOOPS instances)
+Scene        - scene model      class (== NUM_SCENES           instances)
+SceneSDL     - scene view       class (== NUM_SCENES           instances)
+Loop         - loop  model      class (<= NUM_SCENES * N_LOOPS instances)
+LoopSDL      - loop  view       class (<= NUM_SCENES * N_LOOPS instances)
 JackIO       - JACK  wrapper    class (== 0                  instances)
 Trace        - debug trace      class (== 0                  instances)
 */

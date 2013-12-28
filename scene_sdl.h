@@ -30,7 +30,7 @@
 #define SCENE_H                 ((Y_PADDING * 3) + HISTOGRAMS_H + LOOP_DIAMETER)
 #define SCENE_L                 (LOOPS_L - BORDER_PAD - 1)
 #define SCENE_R                 (SCENE_L + 999) // SCOPE_IMG is 1000x101 , LOOP_DIAMETER is 101 when PEAK_RADIUS is 50
-#define SCENE_T                 (HEADER_H + (BORDER_PAD * 2) + (SCENE_H * sceneN))
+#define SCENE_T                 (HEADER_H + (BORDER_PAD * 2) + (SCENE_H * aScene->getSceneN()))
 #define SCENE_B                 (SCENE_T + SCENE_H)
 #define SCENE_FRAME_L           (SCENE_L - BORDER_PAD - 1)
 #define SCENE_FRAME_R           (SCENE_R + BORDER_PAD + 1)
@@ -44,6 +44,9 @@
 #define ROT_LOOP_IMG_RECT       { 0 , 0 , 0 , 0 }
 #define PIE_SLICE_DEGREES       (360.0 / (float)N_PEAKS_FINE)
 #define PIE_12_OCLOCK           -90
+#define N_SECONDS_PER_HOUR      3600
+#define N_MINUTES_PER_HOUR      60
+#define N_SECONDS_PER_MINUTE    60
 
 // colors
 #define SCOPE_PEAK_MAX_COLOR  0x800000ff
@@ -77,13 +80,13 @@ class LoopSdl
 
   private:
 
-    /* class side private functions */
+    /* LoopSdl class side private functions */
 
     LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Sint16 x , Sint16 y) ;
     ~LoopSdl() ;
 
 
-    /* instance side private varables */
+    /* LoopSdl instance side private varables */
 
     // drawing backbuffers
     SDL_Surface* playingSurface ;
@@ -95,7 +98,7 @@ class LoopSdl
     Sint16   loopC ;
     SDL_Rect rect ;
 
-    /* instance side private functions */
+    /* LoopSdl instance side private functions */
 
     // loop state
     void setStatus(Uint16 loopStatus) ;
@@ -110,7 +113,7 @@ class SceneSdl
 
   private:
 
-    /* class side private constants */
+    /* SceneSdl class side private constants */
 
     // drawing coordinates
     // TODO: some of these Uint16 have caused conversion warnings (perhaps all should be Sint16)
@@ -140,12 +143,14 @@ class SceneSdl
     static const Uint16 SceneFrameR ;
     static const float  PieSliceDegrees ;
     static const Uint8  BytesPerPixel ;
+    static const Uint16 SECONDS_PER_HOUR ;
+    static const Uint8  MINUTES_PER_HOUR ;
+    static const Uint8  SECONDS_PER_MINUTE ;
 
-
-    /* class side private functions */
+    /* SceneSdl class side private functions */
 
     // setup
-    SceneSdl(Scene* aScene , Uint16 sceneN) ;
+    SceneSdl(Scene* aScene) ;
 
     // helpers
     static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
@@ -154,7 +159,7 @@ class SceneSdl
     static Sint16 GetLoopL(Uint16 loopN) ;
 
 
-    /* instance side private constants */
+    /* SceneSdl instance side private constants */
 
     // drawing coordinates
     const Sint16   sceneT ;
@@ -163,10 +168,11 @@ class SceneSdl
     const SDL_Rect sceneRect ;
 
 
-    /* instance side private varables */
+    /* SceneSdl instance side private varables */
 
     // model
     Scene* scene ;
+    Uint8  sceneN ;
 
     // loop image caches
     list<LoopSdl*> histogramImgs ;
@@ -205,16 +211,16 @@ class SceneSdl
     SDL_Surface* inactiveSceneSurface ;
 
 
-    /* instance side private functions */
+    /* SceneSdl instance side private functions */
 
     // setup
     void reset(  void) ;
     void cleanup(void) ;
 
     // getters/setters
-    void startRolling(void) ;
-    void updateStatus(void) ;
-    LoopSdl* getLoop(     list<LoopSdl*>* imgs , unsigned int loopN) ;
+    void     startRolling(void) ;
+    void     updateState( void) ;
+    LoopSdl* getLoopView( list<LoopSdl*>* imgs , unsigned int loopN) ;
 
     // drawing
     void     drawScene(              SDL_Surface* screen , unsigned int currentPeakN ,
@@ -226,11 +232,13 @@ class SceneSdl
     LoopSdl* drawHistogram(          Loop* aLoop) ;
     LoopSdl* drawLoop(               Loop* aLoop , Uint16 loopN) ;
 
+    // images
+    void  addLoop(   Loop* newLoop , Uint16 nLoops) ;
+    void  deleteLoop(Uint8 loopN) ;
+
     // helpers
     SDL_Surface*  createHwSurface(       Sint16 w , Sint16 h) ;
     SDL_Surface*  createSwSurface(       Sint16 w , Sint16 h) ;
-    void          addLoop(               Loop* newLoop , Uint16 nLoops) ;
-    void          deleteLoop(            Uint8 loopN) ;
     string        makeDurationStatusText(void) ;
 } ;
 
