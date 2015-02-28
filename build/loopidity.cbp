@@ -2,13 +2,16 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="LoopiditySDL" />
+		<Option title="loopidity" />
+		<Option platforms="Unix;" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/LoopiditySDL" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Debug/" />
+				<Option platforms="Unix;" />
+				<Option output="./bin/Debug/loopidity" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="./bin/Debug/" />
+				<Option object_output="./obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
@@ -16,12 +19,14 @@
 				</Compiler>
 			</Target>
 			<Target title="Release">
-				<Option output="bin/Release/LoopiditySDL" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+				<Option platforms="Unix;" />
+				<Option output="./bin/Release/loopidity" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="./bin/Release/" />
+				<Option object_output="./obj/Release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-O2" />
+					<Add option="-O3" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -29,8 +34,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-Wall" />
 			<Add option="-std=c++11" />
+			<Add option="-Wall" />
 			<Add option="`sdl-config --cflags`" />
 		</Compiler>
 		<Linker>
@@ -41,19 +46,19 @@
 			<Add library="/usr/lib/i386-linux-gnu/libSDL_ttf.so" />
 			<Add library="/usr/lib/i386-linux-gnu/libjack.so" />
 		</Linker>
-		<Unit filename="jack_io.cpp" />
-		<Unit filename="jack_io.h" />
-		<Unit filename="loopidity.cpp" />
-		<Unit filename="loopidity.h" />
-		<Unit filename="loopidity_sdl.cpp" />
-		<Unit filename="loopidity_sdl.h" />
-		<Unit filename="main.cpp" />
-		<Unit filename="scene.cpp" />
-		<Unit filename="scene.h" />
-		<Unit filename="scene_sdl.cpp" />
-		<Unit filename="scene_sdl.h" />
-		<Unit filename="trace.cpp" />
-		<Unit filename="trace.h" />
+		<Unit filename="../src/jack_io.cpp" />
+		<Unit filename="../src/jack_io.h" />
+		<Unit filename="../src/loopidity.cpp" />
+		<Unit filename="../src/loopidity.h" />
+		<Unit filename="../src/loopidity_sdl.cpp" />
+		<Unit filename="../src/loopidity_sdl.h" />
+		<Unit filename="../src/main.cpp" />
+		<Unit filename="../src/scene.cpp" />
+		<Unit filename="../src/scene.h" />
+		<Unit filename="../src/scene_sdl.cpp" />
+		<Unit filename="../src/scene_sdl.h" />
+		<Unit filename="../src/trace.cpp" />
+		<Unit filename="../src/trace.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />

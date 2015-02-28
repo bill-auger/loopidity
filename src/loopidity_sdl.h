@@ -1,3 +1,22 @@
+/*\ Loopidity - multitrack audio looper designed for live handsfree use
+|*| https://github.com/bill-auger/loopidity/issues/
+|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+|*|
+|*| This file is part of Loopidity.
+|*|
+|*| Loopidity is free software: you can redistribute it and/or modify
+|*| it under the terms of the GNU General Public License version 3
+|*| as published by the Free Software Foundation.
+|*|
+|*| Loopidity is distributed in the hope that it will be useful,
+|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*| GNU General Public License for more details.
+|*|
+|*| You should have received a copy of the GNU General Public License
+|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+\*/
+
 
 #ifndef _LOOPIDITY_SDL_H_
 #define _LOOPIDITY_SDL_H_
@@ -73,22 +92,23 @@ using namespace std ;
 #  define EDIT_HISTOGRAM_GRADUATION_H            12
 #endif // #if SCENE_NFRAMES_EDITABLE
 
+// external assets
+#define SCOPE_IMG_PATH     "../assets/scope_gradient.bmp"
+#define HISTOGRAM_IMG_PATH "../assets/histogram_gradient.bmp"
+#define LOOP_IMG_PATH      "../assets/loop_gradient.argb.bmp"
+#define PURISA_TTF_PATH    "../assets/Purisa.ttf"
+
 // fonts and colors
+#define HEADER_FONT_PATH       PURISA_TTF_PATH
+#define HEADER_TEXT_COLOR      { 255 , 0 , 255 }
+#define STATUS_FONT_PATH       PURISA_TTF_PATH
+#define STATUS_TEXT_COLOR      { 255 , 0 , 255 }
 #define INSCOPE_QUIET_COLOR    0x00ff00ff
 #define INSCOPE_OPTIMAL_COLOR  0xffff00ff
 #define INSCOPE_LOUD_COLOR     0xff0000ff
 #define OUTSCOPE_QUIET_COLOR   0x00ff00ff
 #define OUTSCOPE_OPTIMAL_COLOR 0xffff00ff
 #define OUTSCOPE_LOUD_COLOR    0xff0000ff
-#define HEADER_FONT            "/usr/share/fonts/truetype/tlwg/Purisa.ttf"
-#define HEADER_TEXT_COLOR      { 255 , 0 , 255 }
-#define STATUS_FONT            "/usr/share/fonts/truetype/tlwg/Purisa.ttf"
-#define STATUS_TEXT_COLOR      { 255 , 0 , 255 }
-
-// external images
-#define SCOPE_IMG     "scope_gradient.bmp"
-#define HISTOGRAM_IMG "histogram_gradient.bmp"
-#define LOOP_IMG      "loop_gradient.argb.bmp"
 
 // string constants
 #define HEADER_TEXT                 "This is Loopidity"
@@ -97,11 +117,11 @@ using namespace std ;
 #define SDL_ERROR_FMT               "ERROR: %s(): %s\n"
 #define SDL_INIT_ERROR_TEXT         "SDL_Init"
 #define SDL_SETVIDEOMODE_ERROR_TEXT "SDL_SetVideoMode"
-#define SDL_KEYREPEAT_ERROR_TEXT    "SDL_EnableKeyRepeat()"
-#define SDL_LOADBMP_ERROR_TEXT      "SDL_LoadBMP()"
+#define SDL_KEYREPEAT_ERROR_TEXT    "SDL_EnableKeyRepeat"
+#define SDL_LOADBMP_ERROR_TEXT      "SDL_LoadBMP"
 #define TTF_ERROR_FMT               "ERROR: %s(): %s\n"
-#define TTF_INIT_ERROR_MSG          "TTF_Init()"
-#define TTF_OPENFONT_ERROR_MSG      "TTF_OpenFont()"
+#define TTF_INIT_ERROR_MSG          "TTF_Init"
+#define TTF_OPENFONT_ERROR_MSG      "TTF_OpenFont"
 
 // flags
 #define SDL_SCREEN_FLAGS SDL_HWSURFACE | SDL_DOUBLEBUF
@@ -112,6 +132,7 @@ class LoopiditySdl
   friend class Loopidity ;
   friend class SceneSdl ;
   friend class Trace ;
+
 
   private:
 
