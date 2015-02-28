@@ -1,5 +1,4 @@
-./bin
-./obj
-bin
-obj
-LoopiditySDL.layout*
+build/bin
+build/obj
+build/loopidity.depend
+build/loopidity.layout*

@@ -1,11 +1,30 @@
+/*\ Loopidity - multitrack audio looper designed for live handsfree use
+|*| https://github.com/bill-auger/loopidity/issues/
+|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+|*|
+|*| This file is part of Loopidity.
+|*|
+|*| Loopidity is free software: you can redistribute it and/or modify
+|*| it under the terms of the GNU General Public License version 3
+|*| as published by the Free Software Foundation.
+|*|
+|*| Loopidity is distributed in the hope that it will be useful,
+|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*| GNU General Public License for more details.
+|*|
+|*| You should have received a copy of the GNU General Public License
+|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+\*/
+
 
 #include "jack_io.h"
 
 
 /* Scene class side public constants */
 
-const unsigned int Scene::N_FINE_PEAKS      = N_PEAKS_FINE ;
-const unsigned int Scene::N_COURSE_PEAKS    = N_PEAKS_COURSE ;
+const unsigned int Scene::N_FINE_PEAKS   = N_PEAKS_FINE ;
+const unsigned int Scene::N_COURSE_PEAKS = N_PEAKS_COURSE ;
 
 
 /* Scene class side private constants */
@@ -45,8 +64,8 @@ Loop::Loop(unsigned int nFrames)
   buffer2 = new Sample[nFrames] ;
 
   // peaks cache
-  peaksFine[Scene::N_FINE_PEAKS]   = {0.0} ;
-  peaksCourse[Scene::N_FINE_PEAKS] = {0.0} ;
+  peaksFine  [Scene::N_FINE_PEAKS  ] = {0.0} ;
+  peaksCourse[Scene::N_COURSE_PEAKS] = {0.0} ;
 
   // loop state
   vol     = 1.0 ;
@@ -86,10 +105,10 @@ Scene::Scene(unsigned int sceneNum , unsigned int recordBufferSize)
   list<Loop*> loops ;
 
   // peaks cache
-  hiScenePeaks[N_FINE_PEAKS] = {0.0} ; // scanPeaks()
-  hiLoopPeaks[NUM_LOOPS]     = {0.0} ; // scanPeaks()
-  highestScenePeak           = 0.0 ;   // scanPeaks()
-  nFramesPerPeak             = 0 ;     // toggleRecordingState()
+  hiScenePeaks[N_FINE_PEAKS      ] = {0.0} ; // scanPeaks()
+  hiLoopPeaks [Loopidity::N_LOOPS] = {0.0} ; // scanPeaks()
+  highestScenePeak                 = 0.0 ;   // scanPeaks()
+  nFramesPerPeak                   = 0 ;     // toggleRecordingState()
 
   // buffer iteration
 #if SCENE_NFRAMES_EDITABLE

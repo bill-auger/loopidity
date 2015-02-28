@@ -1,3 +1,22 @@
+/*\ Loopidity - multitrack audio looper designed for live handsfree use
+|*| https://github.com/bill-auger/loopidity/issues/
+|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+|*|
+|*| This file is part of Loopidity.
+|*|
+|*| Loopidity is free software: you can redistribute it and/or modify
+|*| it under the terms of the GNU General Public License version 3
+|*| as published by the Free Software Foundation.
+|*|
+|*| Loopidity is distributed in the hope that it will be useful,
+|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*| GNU General Public License for more details.
+|*|
+|*| You should have received a copy of the GNU General Public License
+|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+\*/
+
 
 #include "loopidity_sdl.h"
 
@@ -101,15 +120,15 @@ bool LoopiditySdl::Init(SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
 */
 
   // load images
-  if (!(ScopeGradient     = SDL_LoadBMP(SCOPE_IMG))     ||
-      !(HistogramGradient = SDL_LoadBMP(HISTOGRAM_IMG)) ||
-      !(LoopGradient      = SDL_LoadBMP(LOOP_IMG)))
+  if (!(ScopeGradient     = SDL_LoadBMP(SCOPE_IMG_PATH    )) ||
+      !(HistogramGradient = SDL_LoadBMP(HISTOGRAM_IMG_PATH)) ||
+      !(LoopGradient      = SDL_LoadBMP(LOOP_IMG_PATH     ))  )
     { SdlError(SDL_LOADBMP_ERROR_TEXT) ; return false ; }
 
   // load fonts
   if (TTF_Init()) { TtfError(TTF_INIT_ERROR_MSG) ; return false ; }
-  if (!(StatusFont = TTF_OpenFont(STATUS_FONT , STATUS_FONT_SIZE)) ||
-      !(HeaderFont = TTF_OpenFont(HEADER_FONT , HEADER_FONT_SIZE)))
+  if (!(HeaderFont = TTF_OpenFont(HEADER_FONT_PATH , HEADER_FONT_SIZE)) ||
+      !(StatusFont = TTF_OpenFont(STATUS_FONT_PATH , STATUS_FONT_SIZE))  )
     { TtfError(TTF_OPENFONT_ERROR_MSG) ; return false ; }
 
   return true ;
