@@ -93,10 +93,10 @@ using namespace std ;
 #endif // #if SCENE_NFRAMES_EDITABLE
 
 // external assets
-#define SCOPE_IMG_PATH     "../assets/scope_gradient.bmp"
-#define HISTOGRAM_IMG_PATH "../assets/histogram_gradient.bmp"
-#define LOOP_IMG_PATH      "../assets/loop_gradient.argb.bmp"
-#define PURISA_TTF_PATH    "../assets/Purisa.ttf"
+#define SCOPE_IMG_PATH     "scope_gradient.bmp"
+#define HISTOGRAM_IMG_PATH "histogram_gradient.bmp"
+#define LOOP_IMG_PATH      "loop_gradient.argb.bmp"
+#define PURISA_TTF_PATH    "Purisa.ttf"
 
 // fonts and colors
 #define HEADER_FONT_PATH       PURISA_TTF_PATH

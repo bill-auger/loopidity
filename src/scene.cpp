@@ -64,8 +64,13 @@ Loop::Loop(unsigned int nFrames)
   buffer2 = new Sample[nFrames] ;
 
   // peaks cache
+#ifdef _WIN32
+  for (unsigned int peakN = 0 ; peakN < Scene::N_FINE_PEAKS ;   ++peakN) peaksFine  [peakN] = 0.0 ;
+  for (unsigned int peakN = 0 ; peakN < Scene::N_COURSE_PEAKS ; ++peakN) peaksCourse[peakN] = 0.0 ;
+#else // _WIN32
   peaksFine  [Scene::N_FINE_PEAKS  ] = {0.0} ;
   peaksCourse[Scene::N_COURSE_PEAKS] = {0.0} ;
+#endif // _WIN32
 
   // loop state
   vol     = 1.0 ;
@@ -105,8 +110,13 @@ Scene::Scene(unsigned int sceneNum , unsigned int recordBufferSize)
   list<Loop*> loops ;
 
   // peaks cache
+#ifdef _WIN32
+  for (unsigned int peakN = 0 ; peakN < N_FINE_PEAKS ;       ++peakN) hiScenePeaks[peakN] = 0.0 ;
+  for (unsigned int peakN = 0 ; peakN < Loopidity::N_LOOPS ; ++peakN) hiLoopPeaks [peakN] = 0.0 ;
+#else // _WIN32
   hiScenePeaks[N_FINE_PEAKS      ] = {0.0} ; // scanPeaks()
   hiLoopPeaks [Loopidity::N_LOOPS] = {0.0} ; // scanPeaks()
+#endif // _WIN32
   highestScenePeak                 = 0.0 ;   // scanPeaks()
   nFramesPerPeak                   = 0 ;     // toggleRecordingState()
 

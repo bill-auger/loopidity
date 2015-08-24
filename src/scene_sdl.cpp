@@ -33,7 +33,14 @@ LoopSdl::LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Sint16 x , Si
   // drawing coordinates
   loopL = x ;
   loopC = x + PEAK_RADIUS ;
+#ifndef _WIN32
   rect  = { x , y , 0 , 0 } ;
+#else // _WIN32
+  rect.x = x ;
+  rect.y = y ;
+  rect.w = 0 ;
+  rect.h = 0 ;
+#endif // _WIN32
 }
 
 LoopSdl::~LoopSdl() { SDL_FreeSurface(playingSurface) ; SDL_FreeSurface(mutedSurface) ; }
@@ -94,8 +101,12 @@ SceneSdl::SceneSdl(Scene* aScene) :
   // constants
   sceneT(      SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,
+#ifndef _WIN32
   sceneFrameB( SCENE_FRAME_B) ,
   sceneRect(   { 0 , sceneT , LoopiditySdl::WinRect.w , SceneH })
+#else // _WIN32
+  sceneFrameB( SCENE_FRAME_B)
+#endif // _WIN32
 {
   // model
   scene  = aScene ;
@@ -118,12 +129,43 @@ SceneSdl::SceneSdl(Scene* aScene) :
   ringR         = 0 ;
   loopFrameL    = 0 ;
   loopFrameR    = 0 ;
+#ifndef _WIN32
   scopeMaskRect = SCOPE_MASK_RECT ;
   scopeGradRect = SCOPE_GRADIENT_RECT ;
   histogramRect = HISTOGRAM_RECT ;
-  rotRect       = ROT_LOOP_IMG_RECT ;
   histMaskRect  = HISTOGRAM_MASK_RECT ;
   histGradRect  = HISTOGRAM_GRADIENT_RECT ;
+  rotRect       = ROT_LOOP_IMG_RECT ;
+#else // _WIN32
+  scopeMaskRect.x = 0 ;
+  scopeMaskRect.y = 0 ;
+  scopeMaskRect.w = SCENE_W ;
+  scopeMaskRect.h = 0 ;
+  scopeGradRect.x = SCENE_L ;
+  scopeGradRect.y = 0 ;
+  scopeGradRect.w = 0 ;
+  scopeGradRect.h = 0 ;
+  histogramRect.x = 0 ;
+  histogramRect.y = HISTOGRAM_FRAMES_T ;
+  histogramRect.w = 0 ;
+  histogramRect.h = 0 ;
+  histMaskRect.x = 0 ;
+  histMaskRect.y = 0 ;
+  histMaskRect.w = 1 ;
+  histMaskRect.h = 0 ;
+  histGradRect.x = 0 ;
+  histGradRect.y = 0 ;
+  histGradRect.w = 0 ;
+  histGradRect.h = 0 ;
+  rotRect.x = 0 ;
+  rotRect.y = 0 ;
+  rotRect.w = 0 ;
+  rotRect.h = 0 ;
+  sceneRect.x = 0 ;
+  sceneRect.y = sceneT ;
+  sceneRect.w = LoopiditySdl::WinRect.w ;
+  sceneRect.h = SceneH ;
+#endif // _WIN32
   histogramImg  = NULL ;
   loopImg       = NULL ;
   loop          = NULL ;
@@ -244,7 +286,14 @@ void SceneSdl::drawScene(SDL_Surface* surface , unsigned int currentPeakN , Uint
     // draw cached loop image
     loopImg = getLoopView(&loopImgs , loopN) ;
     rotImg  = rotozoomSurface(loopImg->currentSurface , currentPeakN * PieSliceDegrees , 1.0 , 0) ;
+#ifndef _WIN32
     rotRect = {(Sint16)(loopImg->loopC - (rotImg->w / 2)) , (Sint16)(Loops0 - (rotImg->h / 2)) , 0 , 0} ;
+#else // _WIN32
+    rotRect.x = (Sint16)(loopImg->loopC - (rotImg->w / 2)) ;
+    rotRect.y = (Sint16)(Loops0         - (rotImg->h / 2)) ;
+    rotRect.w = 0 ;
+    rotRect.h = 0 ;
+#endif // _WIN32
     SDL_BlitSurface(rotImg , 0 , surface , &rotRect) ; SDL_FreeSurface(rotImg) ;
 #endif // #if DRAW_LOOPS
 

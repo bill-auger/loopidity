@@ -29,7 +29,7 @@
 #define WAIT_FOR_JACK_INIT      0
 #define FIXED_N_AUDIO_PORTS     1
 //#define MEMORY_CHECK            1 // if 0 choose DEFAULT_AUDIO_BUFFER_SIZE wisely
-#define FIXED_AUDIO_BUFFER_SIZE 1 // TODO: user defined/adjustable buffer sizes
+#define FIXED_AUDIO_BUFFER_SIZE 0 // TODO: user defined/adjustable buffer sizes
 #define SCENE_NFRAMES_EDITABLE  1
 
 // runtime features
@@ -46,7 +46,6 @@
 #define DRAW_SCOPES                   1
 #define DRAW_EDIT_HISTOGRAM           SCENE_NFRAMES_EDITABLE && 1
 #define DRAW_DEBUG_TEXT               1
-#define DEBUG_TRACE                   0
 #define AUTO_UNMUTE_LOOPS_ON_ROLLOVER 1
 
 #if DRAW_STATUS
@@ -79,15 +78,16 @@
 #endif // #if DRAW_DEBUG_TEXT
 
 // Trace class features
+#define DEBUG_TRACE              1
 #define DEBUG_TRACE_JACK         DEBUG_TRACE && 0
 #define DEBUG_TRACE_LOOPIDITY    DEBUG_TRACE && 0
 #define DEBUG_TRACE_LOOPIDITYSDL DEBUG_TRACE && 0
 #define DEBUG_TRACE_SCENE        DEBUG_TRACE && 0
 #define DEBUG_TRACE_SCENESDL     DEBUG_TRACE && 0
+#define DEBUG_TRACE_CLASS        DEBUG_TRACE && 0
 #define DEBUG_TRACE_EVS          DEBUG_TRACE && 1
 #define DEBUG_TRACE_IN           DEBUG_TRACE && 1
 #define DEBUG_TRACE_OUT          DEBUG_TRACE && 1
-#define DEBUG_TRACE_CLASS        DEBUG_TRACE && 0
 // DEBUG end
 
 // quantities
@@ -132,6 +132,7 @@
 
 // string constants
 #define APP_NAME                "Loopidity"
+
 #define INIT_MSG                "\nINIT:  Loopidity::Main(): init\n\n"
 #define INIT_SUCCESS_MSG        "\nINIT:  Loopidity::Main(): init success - entering sdl loop\n\n"
 #define INIT_FAIL_MSG           "\nERROR: Loopidity::Main(): init failed - quitting\n\n"
@@ -139,9 +140,9 @@
 #define MONITOR_ARG             "--nomon"
 #define SCENE_CHANGE_ARG        "--noautoscenechange"
 //#define FREEMEM_FAIL_MSG        "ERROR: Could not determine available memory - quitting"
-#define JACK_FAIL_MSG           "ERROR: Could not register JACK client - quitting"
-#define ZERO_BUFFER_SIZE_MSG    "ERROR: initBufferSize is zero - quitting"
 #define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory - quitting"
+#define JACK_SW_FAIL_MSG        "ERROR: Could not register JACK client"
+#define JACK_HW_FAIL_MSG        "ERROR: Could not open ports for JACK"
 #define OUT_OF_MEMORY_MSG       "ERROR: Out of Memory"
 #define GETPEAK_ERROR_MSG       "Loopidity::GetPeak(): subscript out of range\n"
 #define INVALID_METADATA_MSG    "ERROR: Scene metadata state insane"
@@ -156,9 +157,9 @@
 
 // error states
 #define JACK_INIT_SUCCESS 0
-#define JACK_FAIL         1
-#define JACK_BUFF_FAIL    2
-#define JACK_MEM_FAIL     3
+#define JACK_MEM_FAIL     1
+#define JACK_SW_FAIL      2
+#define JACK_HW_FAIL      3
 
 
 // dependencies
@@ -177,8 +178,13 @@
 #include <SDL_gfxPrimitives.h>
 #include <SDL_rotozoom.h>
 #include <SDL_ttf.h>
-#include <unistd.h>            // Loopidity::Init()
-#include <X11/Xlib.h>          // LoopiditySdl::Init()
+#ifdef _WIN32
+#  undef main
+#  define snprintf _snprintf
+#else // _WIN32
+#  include <unistd.h>            // Loopidity::Init()
+#  include <X11/Xlib.h>          // LoopiditySdl::Init()
+#endif // _WIN32
 
 typedef jack_default_audio_sample_t Sample ;
 

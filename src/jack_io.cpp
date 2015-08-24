@@ -146,7 +146,7 @@ DEBUG_TRACE_JACK_INIT
 
   // register JACK client
   if (!(Client = jack_client_open(APP_NAME , JackNoStartServer , NULL)))
-    return JACK_FAIL ;
+    return JACK_SW_FAIL ;
 
 #if INIT_JACK_BEFORE_SCENES
 #define DUMMY_SCENEN -1
@@ -166,7 +166,7 @@ DEBUG_TRACE_JACK_INIT
       !(InputPort2  = RegisterPort(JACK_INPUT2_PORT_NAME  , JackPortIsInput))  ||
       !(OutputPort1 = RegisterPort(JACK_OUTPUT1_PORT_NAME , JackPortIsOutput)) ||
       !(OutputPort2 = RegisterPort(JACK_OUTPUT2_PORT_NAME , JackPortIsOutput)))
-    return JACK_FAIL ;
+    return JACK_HW_FAIL ;
 #else
   if (!(InputPort1  = RegisterPort(JACK_INPUT1_PORT_NAME  , JackPortIsInput))  ||
       !(InputPort2  = RegisterPort(JACK_INPUT2_PORT_NAME  , JackPortIsInput))  ||
@@ -337,6 +337,8 @@ int JackIO::ProcessCallback(jack_nframes_t nFramesPerPeriod , void* unused)
 #if SCENE_NFRAMES_EDITABLE
 {
 DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
+
+//if (!CurrentScene->loops.size()) return 0 ; // KLUDGE: win init
 
 #if JACK_IO_READ_WRITE
   // get JACK buffers

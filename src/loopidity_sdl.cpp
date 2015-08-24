@@ -93,12 +93,16 @@ bool LoopiditySdl::Init(SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
   PeaksTransient = peaksTransient ;
 
   // detect screen resolution
+#ifdef _WIN32
+  // TODO:
+#else // _WIN32
   Display* display = XOpenDisplay(NULL) ; XWindowAttributes winAttr ;
   Uint16 screenN   = DefaultScreen(display) ;
   if (!XGetWindowAttributes(display, RootWindow(display , screenN) , &winAttr))
     { printf(X11_ERROR_MSG) ; return false ; }
   if (winAttr.width < SCREEN_W || winAttr.height < SCREEN_H)
     { printf(RESOLUTION_ERROR_MSG , SCREEN_W , SCREEN_H) ; return false ; }
+#endif // _WIN32
 
   // initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) < 0) { SdlError(SDL_INIT_ERROR_TEXT) ; return false ; }

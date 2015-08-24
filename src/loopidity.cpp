@@ -71,8 +71,7 @@ DEBUG_TRACE_LOOPIDITY_MAIN_IN
     else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) isAutoSceneChange = false ;
     // TODO: user defined buffer sizes via command line
 #if FIXED_AUDIO_BUFFER_SIZE
-//    else if (!strcmp(argv[argN] , BUFFER_SIZE_ARG)) isAutoSceneChange = bufferSize = arg ;
-  recordBufferSize = 0 ; // nyi
+  else if (!strcmp(argv[argN] , BUFFER_SIZE_ARG)) isAutoSceneChange = bufferSize = arg ;
 #else
   recordBufferSize = 0 ;
 #endif // #if FIXED_AUDIO_BUFFER_SIZE
@@ -182,16 +181,15 @@ bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
 
 #if INIT_JACK_BEFORE_SCENES
   // sanity checks
-  if (N_SCENES + 1 == numeric_limits<unsigned int>::max()) return false ;
+  if (N_SCENES + 2 < N_SCENES) return false ;
 
   // initialize JACK
-  string errMsg ;
   switch (JackIO::Init(shouldMonitorInputs , recordBufferSize))
   {
-    case JACK_FAIL:      errMsg = JACK_FAIL_MSG ;
-    case JACK_BUFF_FAIL: errMsg = ZERO_BUFFER_SIZE_MSG ;
-    case JACK_MEM_FAIL:  errMsg = INSUFFICIENT_MEMORY_MSG ;
-                         LoopiditySdl::Alert(errMsg) ; return false ;
+    case JACK_MEM_FAIL: LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return false ;
+    case JACK_SW_FAIL:  LoopiditySdl::Alert(JACK_SW_FAIL_MSG       ) ; return false ;
+    case JACK_HW_FAIL:  LoopiditySdl::Alert(JACK_HW_FAIL_MSG       ) ; return false ;
+    default:            break ;
   }
 
 #  if WAIT_FOR_JACK_INIT
@@ -224,14 +222,12 @@ bool Loopidity::Init(bool shouldMonitorInputs , bool shouldAutoSceneChange ,
   JackIO::Reset(Scenes[0]) ; return true ;
 #else
   // initialize JACK
-  string errMsg ;
   switch (JackIO::Init(Scenes[0] , shouldMonitorInputs , recordBufferSize))
   {
-    case JACK_INIT_SUCCESS: return true ;
-    case JACK_FAIL:         errMsg = JACK_FAIL_MSG ;
-    case JACK_BUFF_FAIL:    errMsg = ZERO_BUFFER_SIZE_MSG ;
-    case JACK_MEM_FAIL:     errMsg = INSUFFICIENT_MEMORY_MSG ;
-    default:                LoopiditySdl::Alert(errMsg) ; return false ;
+    case JACK_MEM_FAIL: LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return false ;
+    case JACK_SW_FAIL:  LoopiditySdl::Alert(JACK_SW_FAIL_MSG       ) ; return false ;
+    case JACK_HW_FAIL:  LoopiditySdl::Alert(JACK_HW_FAIL_MSG       ) ; return false ;
+    default:            break ;
   }
 #  if WAIT_FOR_JACK_INIT
   // wait for JACK metadata

@@ -1,4 +1,6 @@
-build/bin
-build/obj
-build/loopidity.depend
-build/loopidity.layout*
+build/*
+!build/generate-makefile.sh
+!build/Makefile
+!build/loopidity.cbp
+!build/loopidity.sln
+!build/loopidity.vcproj
