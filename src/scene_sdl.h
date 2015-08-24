@@ -55,12 +55,12 @@
 #define SCENE_FRAME_R           (SCENE_R + BORDER_PAD + 1)
 #define SCENE_FRAME_T           (SCENE_T + LOOP_FRAMES_T - BORDER_PAD - 1)
 #define SCENE_FRAME_B           (SCENE_T + LOOP_FRAMES_B + BORDER_PAD + 1)
-#define SCOPE_MASK_RECT         { 0 , 0 , SCENE_W , 0 }
-#define SCOPE_GRADIENT_RECT     { SCENE_L , 0 , 0 , 0 }
-#define HISTOGRAM_RECT          { 0 , HISTOGRAM_FRAMES_T , 0 , 0 }
-#define HISTOGRAM_MASK_RECT     { 0 , 0 , 1 , 0 }
-#define HISTOGRAM_GRADIENT_RECT { 0 , 0 , 0 , 0 }
-#define ROT_LOOP_IMG_RECT       { 0 , 0 , 0 , 0 }
+//#define SCOPE_MASK_RECT         { 0 , 0 , SCENE_W , 0 }
+//#define SCOPE_GRADIENT_RECT     { SCENE_L , 0 , 0 , 0 }
+//#define HISTOGRAM_RECT          { 0 , HISTOGRAM_FRAMES_T , 0 , 0 }
+//#define HISTOGRAM_MASK_RECT     { 0 , 0 , 1 , 0 }
+//#define HISTOGRAM_GRADIENT_RECT { 0 , 0 , 0 , 0 }
+//#define ROT_LOOP_IMG_RECT       { 0 , 0 , 0 , 0 }
 #define PIE_SLICE_DEGREES       (360.0 / (float)N_PEAKS_FINE)
 #define PIE_12_OCLOCK           -90
 #define N_SECONDS_PER_HOUR      3600
@@ -186,7 +186,8 @@ class SceneSdl
     const Sint16   sceneT ;
     const Uint16   sceneFrameT ;
     const Uint16   sceneFrameB ;
-    const SDL_Rect sceneRect ;
+//    const SDL_Rect sceneRect ;
+    SDL_Rect sceneRect ;
 
 
     /* SceneSdl instance side private varables */

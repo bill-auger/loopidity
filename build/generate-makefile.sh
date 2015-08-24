@@ -1,10 +1,7 @@
 #!/bin/bash
 
 
-GENERATE_MAKEFILE_ERROR="cbp2make is not installed - if any 
-files or dependencies have been added or removed please edit the 
-Makefile manually or install cbp2make then rebuild - get cbp2make at 
---> http://sourceforge.net/projects/cbp2make/"
+GENERATE_MAKEFILE_ERROR="cbp2make is not installed - please edit the Makefile manually or install cbp2make and execute this script if any files or dependencies have been added to or removed from the c::b project - get cbp2make at --> http://sourceforge.net/projects/cbp2make/"
 
 
 which cbp2make > /dev/null

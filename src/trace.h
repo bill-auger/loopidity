@@ -178,6 +178,8 @@ class Trace
     static const char         *MODEL_DESC_FMT   , *VIEW_DESC_FMT  ;
     static const char         *MODEL_ERR_FMT    , *VIEW_ERR_FMT   ;
     static const unsigned int EVENT_LEN         , STATE_LEN       , DESC_LEN , TRACE_STATE_LEN ;
+
+
   private:
 
     /* class side private variables */

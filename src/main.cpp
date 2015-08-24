@@ -17,11 +17,11 @@ Trace        - debug trace      class (== 0                  instances)
 
 int main(int argc , char** argv)
 {
-	int exitStatus = Loopidity::Main(argc , argv) ; Loopidity::Cleanup() ;
+  int exitStatus = Loopidity::Main(argc , argv) ; Loopidity::Cleanup() ;
 
 #if DEBUG_TRACE
-if (exitStatus) cout << INIT_FAIL_MSG << endl ;
+  if (!!exitStatus) cout << INIT_FAIL_MSG << endl ;
 #endif
 
-	return exitStatus ;
+  return exitStatus ;
 }
