@@ -38,13 +38,13 @@ class JackIO
 
     /* JackIO class side private constants */
 
-    static const unsigned int N_PORTS ;
-    static const unsigned int N_INPUT_PORTS ;
-    static const unsigned int N_OUTPUT_PORTS ;
-    static const unsigned int N_TRANSIENT_PEAKS ;
-    static const unsigned int DEFAULT_BUFFER_SIZE ;
-    static const unsigned int N_BYTES_PER_FRAME ;
-    static const unsigned int GUI_UPDATE_IVL ;
+    static const Uint32 N_PORTS ;
+    static const Uint32 N_INPUT_PORTS ;
+    static const Uint32 N_OUTPUT_PORTS ;
+    static const Uint32 N_TRANSIENT_PEAKS ;
+    static const Uint32 DEFAULT_BUFFER_SIZE ;
+    static const Uint32 N_BYTES_PER_FRAME ;
+    static const Uint32 GUI_UPDATE_IVL ;
 
 
     /* JackIO class side private varables */
@@ -60,14 +60,14 @@ class JackIO
 #endif // #if FIXED_N_AUDIO_PORTS
 
     // app state
-    static Scene*       CurrentScene ;
-    static Scene*       NextScene ;
+    static Scene* CurrentScene ;
+    static Scene* NextScene ;
 
     // audio data
-    static unsigned int RecordBufferSize ;
+    static Uint32  RecordBufferSize ;
 #if FIXED_N_AUDIO_PORTS
-    static Sample*      RecordBuffer1 ;
-    static Sample*      RecordBuffer2 ;
+    static Sample* RecordBuffer1 ;
+    static Sample* RecordBuffer2 ;
 #  if SCENE_NFRAMES_EDITABLE
 /*
     static Sample* LeadInBuffer1 ;
@@ -91,37 +91,35 @@ class JackIO
 //    static Sample         TransientPeakOutMix ;
 
     // event structs
-    static SDL_Event    NewLoopEvent ;
-    static unsigned int NewLoopEventSceneN ;
-    static Loop*        NewLoopEventLoop ;
-    static SDL_Event    SceneChangeEvent ;
-    static unsigned int SceneChangeEventSceneN ;
+    static SDL_Event NewLoopEvent ;
+    static Uint32    NewLoopEventSceneN ;
+    static Loop*     NewLoopEventLoop ;
+    static SDL_Event SceneChangeEvent ;
+    static Uint32    SceneChangeEventSceneN ;
 
     // metadata
     static jack_nframes_t SampleRate ;
-//    static unsigned int       NBytesPerSecond ;
+//    static Uint32       NBytesPerSecond ;
 //    static jack_nframes_t     NFramesPerPeriod ;
 #if SCENE_NFRAMES_EDITABLE
-    static unsigned int   MinLoopSize ;
-    static unsigned int   BufferMarginSize ;
-    static unsigned int   TriggerLatencySize ;
+    static Uint32         MinLoopSize ;
+    static Uint32         BufferMarginSize ;
+    static Uint32         TriggerLatencySize ;
 #  if INIT_JACK_BEFORE_SCENES
-    static unsigned int   EndFrameN ;
+    static Uint32         EndFrameN ;
 #  endif // #if INIT_JACK_BEFORE_SCENES
-    static unsigned int   BeginFrameN ;
-    static unsigned int   BufferMarginsSize ;
-    static unsigned int   BytesPerPeriod ;
-    static unsigned int   BufferMarginBytes ;
-
-    static unsigned int   TriggerLatencyBytes ;
-
+    static Uint32         BeginFrameN ;
+    static Uint32         BufferMarginsSize ;
+    static Uint32         BytesPerPeriod ;
+    static Uint32         BufferMarginBytes ;
+    static Uint32         TriggerLatencyBytes ;
 #else
 #  if INIT_JACK_BEFORE_SCENES
-    static unsigned int   EndFrameN ;
+    static Uint32         EndFrameN ;
 #  endif // #if INIT_JACK_BEFORE_SCENES
-    static unsigned int   BytesPerPeriod ;
+    static Uint32         BytesPerPeriod ;
 #endif // #if SCENE_NFRAMES_EDITABLE
-    static unsigned int   FramesPerGuiInterval ;
+    static Uint32         FramesPerGuiInterval ;
 
     // misc flags
     static bool ShouldMonitorInputs ;
@@ -133,22 +131,22 @@ class JackIO
 
     // setup
 #if INIT_JACK_BEFORE_SCENES
-    static unsigned int Init(bool shouldMonitorInputs , unsigned int recordBufferSize) ;
+    static Uint32 Init(bool shouldMonitorInputs , Uint32 recordBufferSize) ;
 #else
-    static unsigned int Init(Scene* currentScene , bool shouldMonitorInputs ,
-                             unsigned int recordBufferSize) ;
+    static Uint32 Init(Scene* currentScene     , bool shouldMonitorInputs ,
+                       Uint32 recordBufferSize                            ) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
-    static void Reset(       Scene* currentScene) ;
+    static void Reset( Scene* currentScene) ;
 
     // getters/setters
 #if !INIT_JACK_BEFORE_SCENES
-    static unsigned int    GetRecordBufferSize(void) ;
+    static Uint32          GetRecordBufferSize(void) ;
 #endif // #if !INIT_JACK_BEFORE_SCENES
 /*
-    static unsigned int    GetNFramesPerPeriod(void) ;
-    static unsigned int    GetFrameSize(       void) ;
-    static unsigned int    GetSampleRate(      void) ;
-    static unsigned int    GetNBytesPerSecond(void) ;
+    static Uint32    GetNFramesPerPeriod(void) ;
+    static Uint32    GetFrameSize(       void) ;
+    static Uint32    GetSampleRate(      void) ;
+    static Uint32    GetNBytesPerSecond(void) ;
 */
     static void            SetCurrentScene(   Scene* currentScene) ;
     static void            SetNextScene(      Scene* nextScene) ;
@@ -160,7 +158,7 @@ class JackIO
 
     // helpers
     static void   ScanTransientPeaks(void) ;
-    static Sample GetPeak(           Sample* buffer , unsigned int nFrames) ;
+    static Sample GetPeak(           Sample* buffer , Uint32 nFrames) ;
 
 
   private:
@@ -176,7 +174,7 @@ class JackIO
     // helpers
     static jack_port_t* RegisterPort(const char* portName , unsigned long portType) ;
 #if SCENE_NFRAMES_EDITABLE
-    static void         SetMetaData( jack_nframes_t sampleRate , jack_nframes_t nFramesPerPeriod) ;
+    static void         SetMetadata( jack_nframes_t sampleRate , jack_nframes_t nFramesPerPeriod) ;
 #endif // #if SCENE_NFRAMES_EDITABLE
 } ;
 

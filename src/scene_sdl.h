@@ -55,12 +55,12 @@
 #define SCENE_FRAME_R           (SCENE_R + BORDER_PAD + 1)
 #define SCENE_FRAME_T           (SCENE_T + LOOP_FRAMES_T - BORDER_PAD - 1)
 #define SCENE_FRAME_B           (SCENE_T + LOOP_FRAMES_B + BORDER_PAD + 1)
-//#define SCOPE_MASK_RECT         { 0 , 0 , SCENE_W , 0 }
-//#define SCOPE_GRADIENT_RECT     { SCENE_L , 0 , 0 , 0 }
-//#define HISTOGRAM_RECT          { 0 , HISTOGRAM_FRAMES_T , 0 , 0 }
-//#define HISTOGRAM_MASK_RECT     { 0 , 0 , 1 , 0 }
-//#define HISTOGRAM_GRADIENT_RECT { 0 , 0 , 0 , 0 }
-//#define ROT_LOOP_IMG_RECT       { 0 , 0 , 0 , 0 }
+#define SCOPE_MASK_RECT         { 0 , 0 , SCENE_W , 0 }
+#define SCOPE_GRADIENT_RECT     { SCENE_L , 0 , 0 , 0 }
+#define HISTOGRAM_RECT          { 0 , HISTOGRAM_FRAMES_T , 0 , 0 }
+#define HISTOGRAM_MASK_RECT     { 0 , 0 , 1 , 0 }
+#define HISTOGRAM_GRADIENT_RECT { 0 , 0 , 0 , 0 }
+#define ROT_LOOP_IMG_RECT       { 0 , 0 , 0 , 0 }
 #define PIE_SLICE_DEGREES       (360.0 / (float)N_PEAKS_FINE)
 #define PIE_12_OCLOCK           -90
 #define N_SECONDS_PER_HOUR      3600
@@ -242,15 +242,15 @@ class SceneSdl
     // getters/setters
     void     startRolling(void) ;
     void     updateState( void) ;
-    LoopSdl* getLoopView( list<LoopSdl*>* imgs , unsigned int loopN) ;
+    LoopSdl* getLoopView( list<LoopSdl*>* imgs , Uint32 loopN) ;
 
     // drawing
-    void     drawScene(              SDL_Surface* screen , unsigned int currentPeakN ,
+    void     drawScene(              SDL_Surface* screen , Uint32 currentPeakN ,
                                      Uint16 loopProgress) ;
     void     drawRecordingLoop(      SDL_Surface* aSurface , Uint16 loopProgress) ;
     void     drawSceneStateIndicator(SDL_Surface* aSurface) ;
-    void     drawFrame(              SDL_Surface* aSurface , Uint16 l , Uint16 t ,
-                                     Uint16 r , Uint16 b , Uint32 color) ;
+    void     drawFrame(              SDL_Surface* aSurface , Uint16 l , Uint16 t    ,
+                                     Uint16       r        , Uint16 b , Uint32 color) ;
     LoopSdl* drawHistogram(          Loop* aLoop) ;
     LoopSdl* drawLoop(               Loop* aLoop , Uint16 loopN) ;
 

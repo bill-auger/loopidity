@@ -29,7 +29,23 @@ using namespace std ;
 
 
 class InvalidMetadataException: public exception
-  { virtual const char* what() const throw() { return INVALID_METADATA_MSG ; } } ;
+{
+  virtual const char* what() const throw() { return INVALID_METADATA_MSG ; }
+} ;
+
+
+#if SCENE_NFRAMES_EDITABLE
+typedef struct SceneMetadata
+{
+  Uint32 sampleRate ;
+  Uint32 nFramesPerPeriod ;
+  Uint32 bytesPerFrame ;
+  Uint32 minLoopSize ;
+  Uint32 triggerLatencySize ;
+  Uint32 beginFrameN ;
+  Uint32 endFrameN ;
+} SceneMetadata ;
+#endif // SCENE_NFRAMES_EDITABLE
 
 
 class Loop
@@ -44,7 +60,7 @@ friend class SceneSdl ;
 
     /* Loop class side private funcrtions  */
 
-    Loop(unsigned int nFrames) ;
+    Loop(Uint32 nFrames) ;
     ~Loop() ;
 
 
@@ -67,8 +83,8 @@ friend class SceneSdl ;
 
     /* Loop instance side public functions */
 
-    Sample getPeakFine(  unsigned int peakN) ;
-    Sample getPeakCourse(unsigned int peakN) ;
+    Sample getPeakFine(  Uint32 peakN) ;
+    Sample getPeakCourse(Uint32 peakN) ;
 } ;
 
 
@@ -85,8 +101,8 @@ class Scene
 
     /* Scene class side public constants */
 
-    static const unsigned int N_FINE_PEAKS ;
-    static const unsigned int N_COURSE_PEAKS ;
+    static const Uint32 N_FINE_PEAKS ;
+    static const Uint32 N_COURSE_PEAKS ;
 
 
   private:
@@ -99,23 +115,23 @@ class Scene
     /* Scene class side private varables */
 
     // peaks cache
-    static float        FinePeaksPerCoursePeak ;
-    static unsigned int NFinePeaksPerCoursePeak ;
+    static float  FinePeaksPerCoursePeak ;
+    static Uint32 NFinePeaksPerCoursePeak ;
 
     // sample metedata
-    static unsigned int SampleRate ;
-    static unsigned int FramesPerPeriod ;
-    static unsigned int TriggerLatencySize ;
+    static Uint32 SampleRate ;
+    static Uint32 FramesPerPeriod ;
+    static Uint32 TriggerLatencySize ;
 #if SCENE_NFRAMES_EDITABLE
-    static unsigned int MinLoopSize ;
+    static Uint32 MinLoopSize ;
 #endif // #if SCENE_NFRAMES_EDITABLE
 #if SCENE_NFRAMES_EDITABLE && INIT_JACK_BEFORE_SCENES
-    static unsigned int BytesPerFrame ;
-    static unsigned int BeginFrameN ;
-    static unsigned int EndFrameN ;
+    static Uint32 BytesPerFrame ;
+    static Uint32 BeginFrameN ;
+    static Uint32 EndFrameN ;
 #endif // #if SCENE_NFRAMES_EDITABLE && INIT_JACK_BEFORE_SCENES
 #if !SCENE_NFRAMES_EDITABLE || !INIT_JACK_BEFORE_SCENES
-    static unsigned int RecordBufferSize ;
+    static Uint32 RecordBufferSize ;
 #endif // #if !SCENE_NFRAMES_EDITABLE || !WAIT_FOR_JACK_INITWAIT_FOR_JACK_INIT
 
 
@@ -123,54 +139,51 @@ class Scene
 
     // setup
 #if INIT_JACK_BEFORE_SCENES
-    Scene(unsigned int sceneNum) ;
+    Scene(Uint32 sceneNum) ;
 #else
 #  if SCENE_NFRAMES_EDITABLE
-    Scene(unsigned int sceneNum , unsigned int endFrameN) ;
+    Scene(Uint32 sceneNum , Uint32 endFrameN) ;
 #  else
-    Scene(unsigned int sceneNum , unsigned int recordBufferSize) ;
+    Scene(Uint32 sceneNum , Uint32 bufferSize) ;
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #endif // #if INIT_JACK_BEFORE_SCENES
 
     // getters/setters
 #if INIT_JACK_BEFORE_SCENES
 #  if SCENE_NFRAMES_EDITABLE
-    static void SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
-                            unsigned int bytesPerFrame , unsigned int minLoopSize ,
-                            unsigned int triggerLatencySize ,
-                            unsigned int beginFrameN , unsigned int endFrameN) ;
+    static void SetMetadata(SceneMetadata* sceneMetadata) ;
 #  else
-    static void SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod ,
-                            unsigned int recordBufferSize) ;
+    static void SetMetadata(Uint32 sampleRate       , Uint32 nFramesPerPeriod ,
+                            Uint32 recordBufferSize                           ) ;
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #else
-    static void SetMetaData(unsigned int sampleRate , unsigned int nFramesPerPeriod) ;
+    static void SetMetadata(Uint32 sampleRate , Uint32 nFramesPerPeriod) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
 
 
     /* Scene instance side private varables */
 
     // identity
-    unsigned int sceneN ;
+    Uint32 sceneN ;
 
     // audio data
     list<Loop*> loops ;
 
     // peaks cache
-    float        hiScenePeaks[N_PEAKS_FINE] ; // the loudest of the currently playing samples in the current scene
-    float        hiLoopPeaks[NUM_LOOPS] ;     // the loudest sample for each loop of the current scene
-    float        highestScenePeak ;           // the loudest of all samples in all loops of the current scene (nyi)
-    unsigned int nFramesPerPeak ;             // # of samples per fine peak (hiScenePeaks , hiLoopPeaks , peaksFine)
+    float  hiScenePeaks[N_PEAKS_FINE] ; // the loudest of the currently playing samples in the current scene
+    float  hiLoopPeaks [NUM_LOOPS] ;    // the loudest sample for each loop of the current scene
+    float  highestScenePeak ;           // the loudest of all samples in all loops of the current scene (nyi)
+    Uint32 nFramesPerPeak ;             // # of samples per fine peak (hiScenePeaks , hiLoopPeaks , peaksFine)
 
     // buffer iteration
-    unsigned int currentFrameN ;
+    Uint32 currentFrameN ;
 #if SCENE_NFRAMES_EDITABLE
-    unsigned int beginFrameN ;
-    unsigned int endFrameN ;
+    Uint32 beginFrameN ;
+    Uint32 endFrameN ;
 #endif // #if SCENE_NFRAMES_EDITABLE
-    unsigned int nFrames ;
-    unsigned int nBytes ;
-    unsigned int nSeconds ;
+    Uint32 nFrames ;
+    Uint32 nBytes ;
+    Uint32 nSeconds ;
 
     // scene state
     bool shouldSaveLoop ;
@@ -186,16 +199,16 @@ class Scene
 
     // audio data
     bool addLoop(   Loop* newLoop) ;
-    void deleteLoop(unsigned int loopN) ;
+    void deleteLoop(Uint32 loopN) ;
     void reset(     void) ;
 
     // peaks cache
-    void scanPeaks(  Loop* loop , unsigned int loopN) ;
+    void scanPeaks(  Loop* loop , Uint32 loopN) ;
     void rescanPeaks(void) ;
 
     // getters/setters
-    Loop* getLoop(unsigned int loopN) ;
-//    unsigned int getLoopPos(  void) ;
+    Loop* getLoop(Uint32 loopN) ;
+//    Uint32 getLoopPos(  void) ;
 
 
   public:
@@ -203,12 +216,12 @@ class Scene
     /* Scene instance side public functions */
 
     // getters/setters
-    unsigned int getSceneN() ;
-    unsigned int getDoesPulseExist() ;
-    unsigned int getNLoops() ;
-    unsigned int getCurrentPeakN() ;
-    float        getCurrentSeconds() ;
-    float        getTotalSeconds() ;
+    Uint32 getSceneN() ;
+    Uint32 getDoesPulseExist() ;
+    Uint32 getNLoops() ;
+    Uint32 getCurrentPeakN() ;
+    float  getCurrentSeconds() ;
+    float  getTotalSeconds() ;
 } ;
 
 
