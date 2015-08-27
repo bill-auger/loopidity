@@ -24,10 +24,10 @@
 /* LoopiditySdl class side private variables */
 
 // window
-SDL_Surface* LoopiditySdl::Screen       = 0 ;
-SDL_Rect     LoopiditySdl::WinRect      = WIN_RECT ;
-Uint32       LoopiditySdl::WinBgColor   = 0 ;
-const Uint16 LoopiditySdl::WinCenter    = WIN_CENTER ;
+SDL_Surface* LoopiditySdl::Screen     = 0 ;
+SDL_Rect     LoopiditySdl::WinRect    = WIN_RECT ;
+Uint32       LoopiditySdl::WinBgColor = 0 ;
+const Uint16 LoopiditySdl::WinCenter  = WIN_CENTER ;
 
 // header
 SDL_Rect        LoopiditySdl::HeaderRectDim = HEADER_RECT_DIM ;
@@ -67,7 +67,7 @@ Sample*         LoopiditySdl::PeaksTransient = 0 ;
 Uint16       LoopiditySdl::CurrentSceneN = 0 ;
 Uint16       LoopiditySdl::NextSceneN    = 0 ;
 Uint32       LoopiditySdl::CurrentPeakN  = 0 ;
-Uint16       LoopiditySdl::SceneProgress  = 0 ;
+Uint16       LoopiditySdl::SceneProgress = 0 ;
 Uint16       LoopiditySdl::SceneN        = 0 ;
 SceneSdl*    LoopiditySdl::SdlScene      = 0 ;
 SDL_Surface* LoopiditySdl::SceneSurface  = 0 ;

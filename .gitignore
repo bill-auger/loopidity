@@ -1,6 +1,4 @@
 build/*
-!build/generate-makefile.sh
 !build/Makefile
+!build/generate-makefile.sh
 !build/loopidity.cbp
-!build/loopidity.sln
-!build/loopidity.vcproj

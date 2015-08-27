@@ -132,24 +132,19 @@
 
 // string constants
 #define APP_NAME                "Loopidity"
-
-#define INIT_MSG                "\nINIT:  Loopidity::Main(): init\n\n"
-#define INIT_SUCCESS_MSG        "\nINIT:  Loopidity::Main(): init success - entering sdl loop\n\n"
-#define INIT_FAIL_MSG           "\nERROR: Loopidity::Main(): init failed - quitting\n\n"
 //#define CONNECT_ARG             "--connect"
 #define MONITOR_ARG             "--nomon"
 #define SCENE_CHANGE_ARG        "--noautoscenechange"
-//#define FREEMEM_FAIL_MSG        "ERROR: Could not determine available memory - quitting"
-#define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory - quitting"
-#define JACK_SW_FAIL_MSG        "ERROR: Could not register JACK client"
-#define JACK_HW_FAIL_MSG        "ERROR: Could not open ports for JACK"
-#define OUT_OF_MEMORY_MSG       "ERROR: Out of Memory"
-#define GETPEAK_ERROR_MSG       "Loopidity::GetPeak(): subscript out of range\n"
-#define INVALID_METADATA_MSG    "ERROR: Scene metadata state insane"
 #define JACK_INPUT1_PORT_NAME   "inL"
 #define JACK_INPUT2_PORT_NAME   "inR"
 #define JACK_OUTPUT1_PORT_NAME  "outL"
 #define JACK_OUTPUT2_PORT_NAME  "outR"
+#define INVALID_METADATA_MSG    "ERROR: Scene metadata state insane"
+//#define FREEMEM_FAIL_MSG        "ERROR: Could not determine available memory - quitting"
+#define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory initializng buffers"
+#define JACK_SW_FAIL_MSG        "ERROR: Could not register JACK client"
+#define JACK_HW_FAIL_MSG        "ERROR: Could not open ports for JACK"
+#define OUT_OF_MEMORY_MSG       "ERROR: Out of Memory"
 
 // sdl user events
 #define EVT_NEW_LOOP      1
@@ -167,7 +162,6 @@
 #include <cstdlib>
 #include <exception>           // Scene::Scene()
 #include <iostream>
-#include <limits>              // Loopidity::Init()
 #include <list>
 #include <sstream>
 #include <string>
@@ -208,8 +202,8 @@ class Loopidity
 
     /* Loopidity class side public constants */
 
-    static const unsigned int N_SCENES ;
-    static const unsigned int N_LOOPS ;
+    static const Uint32 N_SCENES ;
+    static const Uint32 N_LOOPS ;
 
 
   private:
@@ -221,12 +215,12 @@ class Loopidity
 #endif // #if WAIT_FOR_JACK_INIT
 
     // models and views
-    static Scene*       Scenes[NUM_SCENES] ;
-    static SceneSdl*    SdlScenes[NUM_SCENES] ;
+    static Scene*    Scenes   [NUM_SCENES] ;
+    static SceneSdl* SdlScenes[NUM_SCENES] ;
 
     // runtime state
-    static unsigned int CurrentSceneN ;
-    static unsigned int NextSceneN ;
+    static Uint32 CurrentSceneN ;
+    static Uint32 NextSceneN ;
 
     // runtime flags
 #if WAIT_FOR_JACK_INIT
@@ -244,11 +238,11 @@ class Loopidity
     static int Main(int argc , char** argv) ;
 
     // getters/setters
-//    static void         SetNFramesPerPeriod(   unsigned int nFrames) ;
-    static unsigned int GetCurrentSceneN(void) ;
-    static unsigned int GetNextSceneN(   void) ;
-//    static unsigned int GetLoopPos(    void) ;
-    static bool         GetIsRolling(    void) ;
+//    static void         SetNFramesPerPeriod(   Uint32 nFrames) ;
+    static Uint32 GetCurrentSceneN(void) ;
+    static Uint32 GetNextSceneN(   void) ;
+//    static Uint32 GetLoopPos(    void) ;
+    static bool   GetIsRolling(    void) ;
 //    static bool         GetShouldSaveLoop(     void) ;
 //    static bool         GetDoesPulseExist(     void) ;
 //    static bool         GetIsEditMode(         void) ;
@@ -258,20 +252,17 @@ class Loopidity
 
     // setup
     static bool IsInitialized(void) ; // TODO: make singleton
-    static bool Init(         bool shouldMonitorInputs , bool shouldAutoSceneChange ,
-                              unsigned int recordBufferSize) ;
+    static bool Init(         bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
+                              Uint32 recordBufferSize                                 ) ;
 #if INIT_JACK_BEFORE_SCENES
 #  if SCENE_NFRAMES_EDITABLE
-    static void SetMetaData(  unsigned int sampleRate , unsigned int nFramesPerPeriod ,
-                              unsigned int bytesPerFrame , unsigned int minLoopSize ,
-                              unsigned int triggerLatencySize ,
-                              unsigned int beginFrameN , unsigned int endFrameN) ;
+    static void SetMetadata(  SceneMetadata* sceneMetadata) ;
 #  else
-    static void SetMetaData(  unsigned int sampleRate , unsigned int nFramesPerPeriod ,
-                              unsigned int recordBufferSize) ;
+    static void SetMetadata(  Uint32 sampleRate       , Uint32 nFramesPerPeriod ,
+                              Uint32 recordBufferSize                           ) ;
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #else
-    static void SetMetaData(  unsigned int sampleRate , unsigned int nFramesPerPeriod) ;
+    static void SetMetadata(  Uint32 sampleRate , Uint32 nFramesPerPeriod) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
     static void Cleanup(      void) ;
 
@@ -279,25 +270,25 @@ class Loopidity
     static void HandleKeyEvent(  SDL_Event* event) ;
     static void HandleMouseEvent(SDL_Event* event) ;
     static void HandleUserEvent( SDL_Event* event) ;
-    static void OnLoopCreation(  unsigned int* sceneNum , Loop** newLoop) ;
-    static void OnSceneChange(   unsigned int* sceneNum) ;
+    static void OnLoopCreation(  Uint32* sceneNum , Loop** newLoop) ;
+    static void OnSceneChange(   Uint32* sceneNum) ;
 
     // user actions
     static void ToggleAutoSceneChange(void) ;
     static void ToggleRecordingState( void) ;
     static void ToggleNextScene(      void) ;
-    static void DeleteLoop(           unsigned int sceneN , unsigned int loopN) ;
+    static void DeleteLoop(           Uint32 sceneN , Uint32 loopN) ;
     static void DeleteLastLoop(       void) ;
-    static void IncLoopVol(           unsigned int sceneN , unsigned int loopN , bool IsInc) ;
-    static void ToggleLoopIsMuted(    unsigned int sceneN , unsigned int loopN) ;
+    static void IncLoopVol(           Uint32 sceneN , Uint32 loopN , bool IsInc) ;
+    static void ToggleLoopIsMuted(    Uint32 sceneN , Uint32 loopN) ;
     static void ToggleSceneIsMuted(   void) ;
     static void ToggleEditMode(       void) ;
-    static void ResetScene(           unsigned int sceneN) ;
+    static void ResetScene(           Uint32 sceneN) ;
     static void ResetCurrentScene(    void) ;
     static void Reset(                void) ;
 
     // helpers
-    static void UpdateView(unsigned int sceneN) ;
+    static void UpdateView(Uint32 sceneN) ;
     static void OOM(       void) ;
 } ;
 

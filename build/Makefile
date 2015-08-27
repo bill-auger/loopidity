@@ -16,7 +16,7 @@ LIB = /usr/lib/libjack.lib /usr/lib/SDL_ttf.lib /usr/lib/SDL_gfx.lib
 LDFLAGS = -L/usr/lib -lmingw32 -lSDLmain -lSDL -mwindows
 else
 CFLAGS = -std=c++11 -Wall `sdl-config --cflags`
-LIB = /usr/lib/i386-linux-gnu/libSDL_gfx.so /usr/lib/i386-linux-gnu/libSDL_image.so /usr/lib/i386-linux-gnu/libSDL_ttf.so /usr/lib/i386-linux-gnu/libjack.so
+LIB = /usr/lib/i386-linux-gnu/libSDL_gfx.so /usr/lib/i386-linux-gnu/libSDL_ttf.so /usr/lib/i386-linux-gnu/libjack.so
 LDFLAGS = `sdl-config --libs` `pkg-config  x11 --libs`
 endif
 
@@ -55,6 +55,10 @@ before_debug:
 	test -d $(OBJDIR_DEBUG)/__/src || mkdir -p $(OBJDIR_DEBUG)/__/src
 
 after_debug:
+	[ -f ./bin/Debug/histogram_gradient.bmp ] || cp ../assets/histogram_gradient.bmp ./bin/Debug
+	[ -f ./bin/Debug/loop_gradient.argb.bmp ] || cp ../assets/loop_gradient.argb.bmp ./bin/Debug
+	[ -f ./bin/Debug/scope_gradient.bmp     ] || cp ../assets/scope_gradient.bmp     ./bin/Debug
+	[ -f ./bin/Debug/Purisa.ttf             ] || cp ../assets/Purisa.ttf             ./bin/Debug
 
 debug: before_debug out_debug after_debug
 
@@ -92,6 +96,10 @@ before_release:
 	test -d $(OBJDIR_RELEASE)/__/src || mkdir -p $(OBJDIR_RELEASE)/__/src
 
 after_release:
+	[ -f ./bin/Release/histogram_gradient.bmp ] || cp ../assets/histogram_gradient.bmp ./bin/Release
+	[ -f ./bin/Release/loop_gradient.argb.bmp ] || cp ../assets/loop_gradient.argb.bmp ./bin/Release
+	[ -f ./bin/Release/scope_gradient.bmp     ] || cp ../assets/scope_gradient.bmp     ./bin/Release
+	[ -f ./bin/Release/Purisa.ttf             ] || cp ../assets/Purisa.ttf             ./bin/Release
 
 release: before_release out_release after_release
 

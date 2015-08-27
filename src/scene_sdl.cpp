@@ -33,14 +33,7 @@ LoopSdl::LoopSdl(SDL_Surface* playingImg , SDL_Surface* mutedImg , Sint16 x , Si
   // drawing coordinates
   loopL = x ;
   loopC = x + PEAK_RADIUS ;
-#ifndef _WIN32
   rect  = { x , y , 0 , 0 } ;
-#else // _WIN32
-  rect.x = x ;
-  rect.y = y ;
-  rect.w = 0 ;
-  rect.h = 0 ;
-#endif // _WIN32
 }
 
 LoopSdl::~LoopSdl() { SDL_FreeSurface(playingSurface) ; SDL_FreeSurface(mutedSurface) ; }
@@ -101,12 +94,8 @@ SceneSdl::SceneSdl(Scene* aScene) :
   // constants
   sceneT(      SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,
-#ifndef _WIN32
   sceneFrameB( SCENE_FRAME_B) ,
   sceneRect(   { 0 , sceneT , LoopiditySdl::WinRect.w , SceneH })
-#else // _WIN32
-  sceneFrameB( SCENE_FRAME_B)
-#endif // _WIN32
 {
   // model
   scene  = aScene ;
@@ -129,49 +118,22 @@ SceneSdl::SceneSdl(Scene* aScene) :
   ringR         = 0 ;
   loopFrameL    = 0 ;
   loopFrameR    = 0 ;
-#ifndef _WIN32
   scopeMaskRect = SCOPE_MASK_RECT ;
   scopeGradRect = SCOPE_GRADIENT_RECT ;
   histogramRect = HISTOGRAM_RECT ;
   histMaskRect  = HISTOGRAM_MASK_RECT ;
   histGradRect  = HISTOGRAM_GRADIENT_RECT ;
   rotRect       = ROT_LOOP_IMG_RECT ;
-#else // _WIN32
-  scopeMaskRect.x = 0 ;
-  scopeMaskRect.y = 0 ;
-  scopeMaskRect.w = SCENE_W ;
-  scopeMaskRect.h = 0 ;
-  scopeGradRect.x = SCENE_L ;
-  scopeGradRect.y = 0 ;
-  scopeGradRect.w = 0 ;
-  scopeGradRect.h = 0 ;
-  histogramRect.x = 0 ;
-  histogramRect.y = HISTOGRAM_FRAMES_T ;
-  histogramRect.w = 0 ;
-  histogramRect.h = 0 ;
-  histMaskRect.x = 0 ;
-  histMaskRect.y = 0 ;
-  histMaskRect.w = 1 ;
-  histMaskRect.h = 0 ;
-  histGradRect.x = 0 ;
-  histGradRect.y = 0 ;
-  histGradRect.w = 0 ;
-  histGradRect.h = 0 ;
-  rotRect.x = 0 ;
-  rotRect.y = 0 ;
-  rotRect.w = 0 ;
-  rotRect.h = 0 ;
-  sceneRect.x = 0 ;
-  sceneRect.y = sceneT ;
-  sceneRect.w = LoopiditySdl::WinRect.w ;
-  sceneRect.h = SceneH ;
-#endif // _WIN32
   histogramImg  = NULL ;
   loopImg       = NULL ;
   loop          = NULL ;
   rotImg        = NULL ;
 
   // drawing backbuffers
+  sceneRect.x = 0 ;
+  sceneRect.y = sceneT ;
+  sceneRect.w = LoopiditySdl::WinRect.w ;
+  sceneRect.h = SceneH ;
   activeSceneSurface   = createHwSurface(sceneRect.w , SceneH) ;
   inactiveSceneSurface = createHwSurface(sceneRect.w , SceneH) ;
 
@@ -238,7 +200,7 @@ DRAW_DEBUG_TEXT_R
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT
 }
 
-LoopSdl* SceneSdl::getLoopView(list<LoopSdl*>* imgs , unsigned int loopN)
+LoopSdl* SceneSdl::getLoopView(list<LoopSdl*>* imgs , Uint32 loopN)
 {
   if (loopN >= imgs->size()) return NULL ;
 
@@ -249,7 +211,7 @@ LoopSdl* SceneSdl::getLoopView(list<LoopSdl*>* imgs , unsigned int loopN)
 
 // drawing
 
-void SceneSdl::drawScene(SDL_Surface* surface , unsigned int currentPeakN , Uint16 sceneProgress)
+void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sceneProgress)
 {
 // TODO: perhaps scene scope could/should be output mix (is hiScenePeak now)
 //		(e.g) hiScenePeaks[] is static so scenescope does not reflect loop->vol or loop->isMuted
@@ -286,14 +248,7 @@ void SceneSdl::drawScene(SDL_Surface* surface , unsigned int currentPeakN , Uint
     // draw cached loop image
     loopImg = getLoopView(&loopImgs , loopN) ;
     rotImg  = rotozoomSurface(loopImg->currentSurface , currentPeakN * PieSliceDegrees , 1.0 , 0) ;
-#ifndef _WIN32
     rotRect = {(Sint16)(loopImg->loopC - (rotImg->w / 2)) , (Sint16)(Loops0 - (rotImg->h / 2)) , 0 , 0} ;
-#else // _WIN32
-    rotRect.x = (Sint16)(loopImg->loopC - (rotImg->w / 2)) ;
-    rotRect.y = (Sint16)(Loops0         - (rotImg->h / 2)) ;
-    rotRect.w = 0 ;
-    rotRect.h = 0 ;
-#endif // _WIN32
     SDL_BlitSurface(rotImg , 0 , surface , &rotRect) ; SDL_FreeSurface(rotImg) ;
 #endif // #if DRAW_LOOPS
 
@@ -339,8 +294,8 @@ void SceneSdl::drawSceneStateIndicator(SDL_Surface* aSurface)
 //          everything below the header will need to be shifted down 1 px
 //          then make ToggleFrameColor , ToggleFrameL , ToggleFrameR class constants
 const Uint32 ToggleFrameColor = STATE_PENDING_COLOR ;
-const Uint16 ToggleFrameL = SceneFrameL - 4 ;
-const Uint16 ToggleFrameR = SceneFrameR + 4 ;
+const Uint16 ToggleFrameL     = SceneFrameL - 4 ;
+const Uint16 ToggleFrameR     = SceneFrameR + 4 ;
 
   // nextScene indicator frame
   Uint16 toggleFrameT = sceneFrameT - 5 ; Uint16 toggleFrameB = sceneFrameB + 5 ;
