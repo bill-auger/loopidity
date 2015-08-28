@@ -1,0 +1,7 @@
+#!/bin/bash
+
+ROOT_DIR=`pwd`
+
+
+cd build     && make clean
+cd $ROOT_DIR && ./mk

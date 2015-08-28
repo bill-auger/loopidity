@@ -12,7 +12,7 @@ RESINC =
 LIBDIR =
 ifdef MINGW
 CFLAGS = -std=gnu++0x -Wall -I/usr/include -I/usr/include/SDL -D_GNU_SOURCE=1 -Dmain=SDL_main
-LIB = /usr/lib/libjack.lib /usr/lib/SDL_ttf.lib /usr/lib/SDL_gfx.lib
+LIB = /usr/lib/libjack.lib /usr/lib/libSDL_gfx.dll.a /usr/lib/SDL_ttf.lib
 LDFLAGS = -L/usr/lib -lmingw32 -lSDLmain -lSDL -mwindows
 else
 CFLAGS = -std=c++11 -Wall `sdl-config --cflags`
@@ -28,8 +28,9 @@ LIBDIR_DEBUG = $(LIBDIR)
 LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ./obj/Debug
+BINDIR_DEBUG = ./bin/Debug
 DEP_DEBUG =
-OUT_DEBUG = ./bin/Debug/loopidity
+OUT_DEBUG = $(BINDIR_DEBUG)/loopidity-dbg
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O3
@@ -39,98 +40,112 @@ LIBDIR_RELEASE = $(LIBDIR)
 LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ./obj/Release
+BINDIR_RELEASE = ./bin/Release
 DEP_RELEASE =
-OUT_RELEASE = ./bin/Release/loopidity
+OUT_RELEASE = $(BINDIR_RELEASE)/loopidity
 
-OBJ_DEBUG = $(OBJDIR_DEBUG)/__/src/jack_io.o $(OBJDIR_DEBUG)/__/src/loopidity.o $(OBJDIR_DEBUG)/__/src/loopidity_sdl.o $(OBJDIR_DEBUG)/__/src/main.o $(OBJDIR_DEBUG)/__/src/scene.o $(OBJDIR_DEBUG)/__/src/scene_sdl.o $(OBJDIR_DEBUG)/__/src/trace.o
+ASSETS_DIR = ../assets
+SYSBIN_DIR = /usr/bin
+DEBUG_LIBS_CHECK_SENTINEL = make-debug-libs-check
+RELEASE_LIBS_CHECK_SENTINEL = make-release-libs-check
 
-OBJ_RELEASE = $(OBJDIR_RELEASE)/__/src/jack_io.o $(OBJDIR_RELEASE)/__/src/loopidity.o $(OBJDIR_RELEASE)/__/src/loopidity_sdl.o $(OBJDIR_RELEASE)/__/src/main.o $(OBJDIR_RELEASE)/__/src/scene.o $(OBJDIR_RELEASE)/__/src/scene_sdl.o $(OBJDIR_RELEASE)/__/src/trace.o
+OBJ_DEBUG = $(OBJDIR_DEBUG)/__/src/jack_io.o       \
+            $(OBJDIR_DEBUG)/__/src/loopidity.o     \
+            $(OBJDIR_DEBUG)/__/src/loopidity_sdl.o \
+            $(OBJDIR_DEBUG)/__/src/main.o          \
+            $(OBJDIR_DEBUG)/__/src/scene.o         \
+            $(OBJDIR_DEBUG)/__/src/scene_sdl.o     \
+            $(OBJDIR_DEBUG)/__/src/trace.o
+OBJ_RELEASE = $(OBJDIR_RELEASE)/__/src/jack_io.o       \
+              $(OBJDIR_RELEASE)/__/src/loopidity.o     \
+              $(OBJDIR_RELEASE)/__/src/loopidity_sdl.o \
+              $(OBJDIR_RELEASE)/__/src/main.o          \
+              $(OBJDIR_RELEASE)/__/src/scene.o         \
+              $(OBJDIR_RELEASE)/__/src/scene_sdl.o     \
+              $(OBJDIR_RELEASE)/__/src/trace.o
+ASSETS = histogram_gradient.bmp \
+         loop_gradient.argb.bmp \
+         scope_gradient.bmp     \
+         Purisa.ttf
+ifdef MINGW
+WINLIBS = SDL.dll           \
+          SDL_gfx.dll       \
+          SDL_ttf.dll       \
+          libfreetype-6.dll \
+          zlib1.dll
+else
+WINLIBS =
+endif
+
 
 all: debug release
 
+
 clean: clean_debug clean_release
 
-before_debug:
-	test -d ./bin/Debug || mkdir -p ./bin/Debug
-	test -d $(OBJDIR_DEBUG)/__/src || mkdir -p $(OBJDIR_DEBUG)/__/src
-
-after_debug:
-	[ -f ./bin/Debug/histogram_gradient.bmp ] || cp ../assets/histogram_gradient.bmp ./bin/Debug
-	[ -f ./bin/Debug/loop_gradient.argb.bmp ] || cp ../assets/loop_gradient.argb.bmp ./bin/Debug
-	[ -f ./bin/Debug/scope_gradient.bmp     ] || cp ../assets/scope_gradient.bmp     ./bin/Debug
-	[ -f ./bin/Debug/Purisa.ttf             ] || cp ../assets/Purisa.ttf             ./bin/Debug
 
 debug: before_debug out_debug after_debug
 
+before_debug:
+	@echo -e "\nbuilding debug configuration"
+	@test -d $(BINDIR_DEBUG) || mkdir -p $(BINDIR_DEBUG)
+	@test -d $(OBJDIR_DEBUG)/__/src || mkdir -p $(OBJDIR_DEBUG)/__/src
+
+after_debug: $(ASSETS) $(WINLIBS)
+
 out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
-	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
+	@echo "linking debug binary"
+	@$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
 
-$(OBJDIR_DEBUG)/__/src/jack_io.o: ../src/jack_io.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../src/jack_io.cpp -o $(OBJDIR_DEBUG)/__/src/jack_io.o
-
-$(OBJDIR_DEBUG)/__/src/loopidity.o: ../src/loopidity.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../src/loopidity.cpp -o $(OBJDIR_DEBUG)/__/src/loopidity.o
-
-$(OBJDIR_DEBUG)/__/src/loopidity_sdl.o: ../src/loopidity_sdl.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../src/loopidity_sdl.cpp -o $(OBJDIR_DEBUG)/__/src/loopidity_sdl.o
-
-$(OBJDIR_DEBUG)/__/src/main.o: ../src/main.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../src/main.cpp -o $(OBJDIR_DEBUG)/__/src/main.o
-
-$(OBJDIR_DEBUG)/__/src/scene.o: ../src/scene.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../src/scene.cpp -o $(OBJDIR_DEBUG)/__/src/scene.o
-
-$(OBJDIR_DEBUG)/__/src/scene_sdl.o: ../src/scene_sdl.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../src/scene_sdl.cpp -o $(OBJDIR_DEBUG)/__/src/scene_sdl.o
-
-$(OBJDIR_DEBUG)/__/src/trace.o: ../src/trace.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../src/trace.cpp -o $(OBJDIR_DEBUG)/__/src/trace.o
+$(OBJ_DEBUG): $(OBJDIR_DEBUG)/__/src/%.o: ../src/%.cpp
+	@echo "  -> compiling $*.cpp"
+	@$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c $< -o $@
 
 clean_debug:
-	rm -f $(OBJ_DEBUG) $(OUT_DEBUG)
-	rm -rf ./bin/Debug
-	rm -rf $(OBJDIR_DEBUG)/__/src
+	@rm -f  $(OBJ_DEBUG) $(OUT_DEBUG)
+	@rm -rf $(BINDIR_DEBUG)
+	@rm -rf $(OBJDIR_DEBUG)/__/src
 
-before_release:
-	test -d ./bin/Release || mkdir -p ./bin/Release
-	test -d $(OBJDIR_RELEASE)/__/src || mkdir -p $(OBJDIR_RELEASE)/__/src
-
-after_release:
-	[ -f ./bin/Release/histogram_gradient.bmp ] || cp ../assets/histogram_gradient.bmp ./bin/Release
-	[ -f ./bin/Release/loop_gradient.argb.bmp ] || cp ../assets/loop_gradient.argb.bmp ./bin/Release
-	[ -f ./bin/Release/scope_gradient.bmp     ] || cp ../assets/scope_gradient.bmp     ./bin/Release
-	[ -f ./bin/Release/Purisa.ttf             ] || cp ../assets/Purisa.ttf             ./bin/Release
 
 release: before_release out_release after_release
 
+before_release:
+	@echo -e "\nbuilding release configuration"
+	@test -d $(BINDIR_RELEASE) || mkdir -p $(BINDIR_RELEASE)
+	@test -d $(OBJDIR_RELEASE)/__/src || mkdir -p $(OBJDIR_RELEASE)/__/src
+
+after_release: $(ASSETS) $(WINLIBS)
+
 out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
-	$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE) $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) $(LIB_RELEASE)
+	@echo "linking release binary"
+	@$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE) $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) $(LIB_RELEASE)
 
-$(OBJDIR_RELEASE)/__/src/jack_io.o: ../src/jack_io.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../src/jack_io.cpp -o $(OBJDIR_RELEASE)/__/src/jack_io.o
-
-$(OBJDIR_RELEASE)/__/src/loopidity.o: ../src/loopidity.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../src/loopidity.cpp -o $(OBJDIR_RELEASE)/__/src/loopidity.o
-
-$(OBJDIR_RELEASE)/__/src/loopidity_sdl.o: ../src/loopidity_sdl.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../src/loopidity_sdl.cpp -o $(OBJDIR_RELEASE)/__/src/loopidity_sdl.o
-
-$(OBJDIR_RELEASE)/__/src/main.o: ../src/main.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../src/main.cpp -o $(OBJDIR_RELEASE)/__/src/main.o
-
-$(OBJDIR_RELEASE)/__/src/scene.o: ../src/scene.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../src/scene.cpp -o $(OBJDIR_RELEASE)/__/src/scene.o
-
-$(OBJDIR_RELEASE)/__/src/scene_sdl.o: ../src/scene_sdl.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../src/scene_sdl.cpp -o $(OBJDIR_RELEASE)/__/src/scene_sdl.o
-
-$(OBJDIR_RELEASE)/__/src/trace.o: ../src/trace.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../src/trace.cpp -o $(OBJDIR_RELEASE)/__/src/trace.o
+$(OBJ_RELEASE): $(OBJDIR_RELEASE)/__/src/%.o: ../src/%.cpp
+	@echo "  -> compiling $*.cpp"
+	@$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c $< -o $@
 
 clean_release:
-	rm -f $(OBJ_RELEASE) $(OUT_RELEASE)
-	rm -rf ./bin/Release
-	rm -rf $(OBJDIR_RELEASE)/__/src
+	@rm -f  $(OBJ_RELEASE) $(OUT_RELEASE)
+	@rm -rf $(BINDIR_RELEASE)
+	@rm -rf $(OBJDIR_RELEASE)/__/src
+
+
+$(ASSETS):
+	@[ ! -d $(BINDIR_DEBUG)   ] || [ -f $(BINDIR_DEBUG)/$@   ] || \
+            ( echo "copying asset to debug bin directory: '$@'"   ;   \
+              cp $(ASSETS_DIR)/$@ $(BINDIR_DEBUG)/$@              )
+	@[ ! -d $(BINDIR_RELEASE) ] || [ -f $(BINDIR_RELEASE)/$@ ] || \
+            ( echo "copying asset to release bin directory: '$@'" ;   \
+              cp $(ASSETS_DIR)/$@ $(BINDIR_RELEASE)/$@            )
+
+
+$(WINLIBS):
+	@[ ! -d $(BINDIR_DEBUG)   ] || [ -f $(BINDIR_DEBUG)/$@   ] || \
+            ( echo "copying asset to debug bin directory: '$@'"   ;   \
+              cp $(SYSBIN_DIR)/$@ $(BINDIR_DEBUG)/$@              )
+	@[ ! -d $(BINDIR_RELEASE) ] || [ -f $(BINDIR_RELEASE)/$@ ] || \
+            ( echo "copying asset to release bin directory: '$@'" ;   \
+              cp $(SYSBIN_DIR)/$@ $(BINDIR_RELEASE)/$@            )
+
 
 .PHONY: before_debug after_debug clean_debug before_release after_release clean_release
-
