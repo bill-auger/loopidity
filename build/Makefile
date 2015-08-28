@@ -15,9 +15,9 @@ CFLAGS = -std=gnu++0x -Wall -I/usr/include -I/usr/include/SDL -D_GNU_SOURCE=1 -D
 LIB = /usr/lib/libjack.lib /usr/lib/libSDL_gfx.dll.a /usr/lib/SDL_ttf.lib
 LDFLAGS = -L/usr/lib -lmingw32 -lSDLmain -lSDL -mwindows
 else
-CFLAGS = -std=c++11 -Wall `sdl-config --cflags`
-LIB = /usr/lib/i386-linux-gnu/libSDL_gfx.so /usr/lib/i386-linux-gnu/libSDL_ttf.so /usr/lib/i386-linux-gnu/libjack.so
-LDFLAGS = `sdl-config --libs` `pkg-config  x11 --libs`
+CFLAGS = -std=gnu++0x -Wall `sdl-config --cflags`
+LIB =
+LDFLAGS = `sdl-config --libs` `pkg-config  x11 --libs` `pkg-config  SDL_ttf --libs` `pkg-config  SDL_gfx --libs` `pkg-config  jack --libs`
 endif
 
 INC_DEBUG = $(INC)
@@ -45,9 +45,11 @@ DEP_RELEASE =
 OUT_RELEASE = $(BINDIR_RELEASE)/loopidity
 
 ASSETS_DIR = ../assets
+ifdef MINGW
 SYSBIN_DIR = /usr/bin
-DEBUG_LIBS_CHECK_SENTINEL = make-debug-libs-check
-RELEASE_LIBS_CHECK_SENTINEL = make-release-libs-check
+else
+SYSBIN_DIR = /usr/bin
+endif
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/__/src/jack_io.o       \
             $(OBJDIR_DEBUG)/__/src/loopidity.o     \
@@ -87,7 +89,7 @@ clean: clean_debug clean_release
 debug: before_debug out_debug after_debug
 
 before_debug:
-	@echo -e "\nbuilding debug configuration"
+	@echo ; echo "building debug configuration" ;
 	@test -d $(BINDIR_DEBUG) || mkdir -p $(BINDIR_DEBUG)
 	@test -d $(OBJDIR_DEBUG)/__/src || mkdir -p $(OBJDIR_DEBUG)/__/src
 
@@ -110,7 +112,7 @@ clean_debug:
 release: before_release out_release after_release
 
 before_release:
-	@echo -e "\nbuilding release configuration"
+	@echo ; echo "building release configuration" ;
 	@test -d $(BINDIR_RELEASE) || mkdir -p $(BINDIR_RELEASE)
 	@test -d $(OBJDIR_RELEASE)/__/src || mkdir -p $(OBJDIR_RELEASE)/__/src
 
