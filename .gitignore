@@ -1,4 +1,5 @@
 build/*
+!build/debian
 !build/Makefile
 !build/generate-makefile.sh
 !build/loopidity.cbp

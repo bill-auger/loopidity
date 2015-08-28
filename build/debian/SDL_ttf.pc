@@ -1,0 +1,11 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${prefix}/lib/x86_64-linux-gnu
+includedir=${prefix}/include
+
+Name: SDL_ttf
+Description: ttf library for Simple DirectMedia Layer with FreeType 2 support
+Version: 2.0.11
+Requires: sdl >= 1.2.4
+Libs: -L${libdir} -lSDL_ttf
+Cflags: -I${includedir}/SDL

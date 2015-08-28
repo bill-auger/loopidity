@@ -1,5 +1,11 @@
 ### This is Loopidity *- A multitrack looping audio recorder for GNU/Linux designed for live handsfree use*
+| build      | status |
+| ---------- | ------ |
+| linux      | [![Build Status](https://travis-ci.org/bill-auger/loopidity.svg?branch=linux)](https://travis-ci.org/bill-auger/loopidity) |
+| windows    | [![Build Status](https://travis-ci.org/bill-auger/loopidity.svg?branch=mingw)](https://travis-ci.org/bill-auger/loopidity) |
+| latest-dev | [![Build Status](https://travis-ci.org/bill-auger/loopidity.svg)](https://travis-ci.org/bill-auger/loopidity) |
 
+#### build
 * binaries coming soon - bake yer own for now
 * build requires libsdl1.2 , libSDL_gfx , libSDL_ttf and libjack2 (also X11 on *nix) devel libs
 * compiler must support c++11 features
