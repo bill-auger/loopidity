@@ -2,10 +2,10 @@
 
 echo $COMSPEC | grep WINDOWS > /dev/null
 IS_NOT_WINDOWS=$?
-PWD=`pwd`
+ROOT_DIR=`pwd`
 
 if (($IS_NOT_WINDOWS))
-then cd build &&         make && cd bin/Debug/ && gdb ./loopidity
-else cd build && MINGW=1 make && cd bin/Debug/ && gdb ./loopidity.exe
+then cd build &&         make debug && cd bin/Debug/ && gdb ./loopidity-dbg
+else cd build && MINGW=1 make debug && cd bin/Debug/ && gdb ./loopidity-dbg.exe
 fi
-cd $PWD
+cd $ROOT_DIR
