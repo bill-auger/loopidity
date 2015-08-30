@@ -59,8 +59,6 @@ bool Loopidity::IsEditMode            = false ;
 
 int Loopidity::Main(int argc , char** argv)
 {
-DEBUG_TRACE_LOOPIDITY_MAIN_IN
-
   // 'singleton' sanity check
   if (IsInitialized()) return false ;
 
@@ -202,20 +200,19 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
   // instantiate Scenes (models) and SdlScenes (views)
   for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
   {
-#if INIT_JACK_BEFORE_SCENES
     try
     {
+#if INIT_JACK_BEFORE_SCENES
       Scenes   [sceneN] = new Scene(sceneN) ;
       SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN]) ;
+#else
+      Scenes   [sceneN] = new Scene(sceneN , JackIO::GetRecordBufferSize()) ;
+      SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN]) ;
+#endif // #if INIT_JACK_BEFORE_SCENES
     }
     catch(exception& ex) { LoopiditySdl::Alert(ex.what()) ; return false ; }
-#else
-    Scenes   [sceneN] = new Scene(sceneN , JackIO::GetRecordBufferSize()) ;
-    SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN]) ;
-#endif // #if INIT_JACK_BEFORE_SCENES
-    UpdateView(sceneN) ;
 
-    if (!Scenes[sceneN] || !SdlScenes[sceneN]) return false ;
+    UpdateView(sceneN) ;
   }
 
 #if INIT_JACK_BEFORE_SCENES

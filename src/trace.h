@@ -28,23 +28,21 @@
 #define TRACE_IN    Trace::TraceIn
 #define TRACE_OUT   Trace::TraceOut
 #define TRACE_SCENE Trace::TraceScene
-#if DEBUG_TRACE_JACK //|| 1
-#  define DEBUG_TRACE_JACK_INIT                      printf("JackIO::Init() shouldMonitorInputs=%d recordBufferSize=%d\n" , shouldMonitorInputs , recordBufferSize) ;
-#  define DEBUG_TRACE_JACK_RESET                     printf("JackIO::Reset() sceneN=%d\n" , currentScene->sceneN) ;
-#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN       ; // Uint32 DbgNextFrameN = (CurrentScene->currentFrameN + nFramesPerPeriod) ; if (DbgNextFrameN >= CurrentScene->endFrameN || !(DbgNextFrameN % 32768)) printf("JackIO::ProcessCallback() sceneN=%d currentFrameN=%d nFramesPerPeriod=%d CurrentScene->endFrameN=%d mod=%d\n" , CurrentScene->sceneN , CurrentScene->currentFrameN , nFramesPerPeriod , CurrentScene->endFrameN , ((CurrentScene->currentFrameN + nFramesPerPeriod) % CurrentScene->endFrameN)) ;
-#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER printf("JackIO::ProcessCallback() buffer rollover nLoops=%d isBaseLoop=%d beginFrameN=%d endFrameN=%d nSeconds=%d - %s\n" , nLoops , isBaseLoop , beginFrameN , endFrameN , (nFrames / SampleRate) , ((!isBaseLoop)? "" : ((endFrameN == EndFrameN)? "endFrameN invalid" : ((nFrames < MinLoopSize)? "nFrames invalid" : "valid")))) ;
-#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP printf("JackIO::ProcessCallback() NewLoop isBaseLoop=%d\n" , isBaseLoop) ;
-#  define DEBUG_TRACE_JACK_SETMETADATA               printf("JackIO::SetMetadata() SampleRate=%d nFramesPerPeriod=%d BeginFrameN=%d EndFrameN=%d modsane=%d\n" , SampleRate , nFramesPerPeriod , BeginFrameN , EndFrameN , (!(BeginFrameN % nFramesPerPeriod) && !(EndFrameN % nFramesPerPeriod))) ;
+
+#if DEBUG_TRACE
+#  ifdef _WIN32
+#    define REDIRECT_WINDOWS_OUTPUT std::ofstream ofs("debug.log") ; cout.rdbuf(ofs.rdbuf()) ;
+#  else // _WIN32
+#    define REDIRECT_WINDOWS_OUTPUT ;
+#  endif // _WIN32
+#  define DEBUG_TRACE_MAIN_IN   REDIRECT_WINDOWS_OUTPUT if (DEBUG_TRACE_EVS) DBG(INIT_MSG) ;
+#  define DEBUG_TRACE_MAIN_OUT  if (!!exitStatus) ERR(INIT_FAIL_MSG) ;
 #else
-#  define DEBUG_TRACE_JACK_INIT                      ;
-#  define DEBUG_TRACE_JACK_RESET                     ;
-#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN       ;
-#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER ;
-#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP ;
-#  define DEBUG_TRACE_JACK_SETMETADATA               ;
-#endif // #if DEBUG_TRACE_JACK
+#  define DEBUG_TRACE_MAIN_IN  ;
+#  define DEBUG_TRACE_MAIN_OUT ;
+#endif
+
 #if DEBUG_TRACE_LOOPIDITY
-#  define DEBUG_TRACE_LOOPIDITY_MAIN_IN                  if (DEBUG_TRACE_EVS) printf("%s\n" , INIT_MSG) ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_MID                 if (DEBUG_TRACE_EVS) printf("%s\n" , INIT_SUCCESS_MSG) ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_OUT                 if (DEBUG_TRACE_EVS) printf("%s\n" , EXIT_SUCCESS_MSG) ;
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN  if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_SPACE --> Loopidity::ToggleRecordingState(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ToggleRecordingState(%d)  IN" , Scenes[CurrentSceneN])) return ;
@@ -69,7 +67,6 @@
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT        if (TRACE_OUT(NextSceneN))    TRACE_SCENE("Loopidity::OnSceneChange(%d)  OUT" , nextScene) ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                                                 TRACE_SCENE("Loopidity::OOM(%d)   IN" , Scenes[CurrentSceneN]) ;
 #else
-#  define DEBUG_TRACE_LOOPIDITY_MAIN_IN                  ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_MID                 ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_OUT                 ;
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN  ;
@@ -94,11 +91,29 @@
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT        ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                   ;
 #endif // #if DEBUG_TRACE_LOOPIDITY
+
+#if DEBUG_TRACE_JACK
+#  define DEBUG_TRACE_JACK_INIT                      printf("JackIO::Init() shouldMonitorInputs=%d recordBufferSize=%d\n" , shouldMonitorInputs , recordBufferSize) ;
+#  define DEBUG_TRACE_JACK_RESET                     printf("JackIO::Reset() sceneN=%d\n" , currentScene->sceneN) ;
+#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN       ; // Uint32 DbgNextFrameN = (CurrentScene->currentFrameN + nFramesPerPeriod) ; if (DbgNextFrameN >= CurrentScene->endFrameN || !(DbgNextFrameN % 32768)) printf("JackIO::ProcessCallback() sceneN=%d currentFrameN=%d nFramesPerPeriod=%d CurrentScene->endFrameN=%d mod=%d\n" , CurrentScene->sceneN , CurrentScene->currentFrameN , nFramesPerPeriod , CurrentScene->endFrameN , ((CurrentScene->currentFrameN + nFramesPerPeriod) % CurrentScene->endFrameN)) ;
+#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER printf("JackIO::ProcessCallback() buffer rollover nLoops=%d isBaseLoop=%d beginFrameN=%d endFrameN=%d nSeconds=%d - %s\n" , nLoops , isBaseLoop , beginFrameN , endFrameN , (nFrames / SampleRate) , ((!isBaseLoop)? "" : ((endFrameN == EndFrameN)? "endFrameN invalid" : ((nFrames < MinLoopSize)? "nFrames invalid" : "valid")))) ;
+#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP printf("JackIO::ProcessCallback() NewLoop isBaseLoop=%d\n" , isBaseLoop) ;
+#  define DEBUG_TRACE_JACK_SETMETADATA               printf("JackIO::SetMetadata() SampleRate=%d nFramesPerPeriod=%d BeginFrameN=%d EndFrameN=%d modsane=%d\n" , SampleRate , nFramesPerPeriod , BeginFrameN , EndFrameN , (!(BeginFrameN % nFramesPerPeriod) && !(EndFrameN % nFramesPerPeriod))) ;
+#else
+#  define DEBUG_TRACE_JACK_INIT                      ;
+#  define DEBUG_TRACE_JACK_RESET                     ;
+#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN       ;
+#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER ;
+#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP ;
+#  define DEBUG_TRACE_JACK_SETMETADATA               ;
+#endif // #if DEBUG_TRACE_JACK
+
 #if DEBUG_TRACE_LOOPIDITYSDL
 #  define DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT if (DEBUG_TRACE_EVS) switch (event->key.keysym.sym) { case SDLK_SPACE: printf("\nKEY: SDLK_SPACE\n") ; break ; case SDLK_KP0: printf("\nKEY: SDLK_KP0\n") ; break ; case SDLK_KP_ENTER: printf("\nKEY: SDLK_KP_ENTER\n") ; break ; case SDLK_ESCAPE: printf("\nKEY: SDLK_ESCAPE\n") ;  break ; default: break ; }
 #else
 #  define DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT ;
 #endif // #if DEBUG_TRACE_LOOPIDITYSDL
+
 #if DEBUG_TRACE_SCENE
 #  define DEBUG_TRACE_SCENE_BEGINRECORDING_IN        if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::beginRecording(%d)     IN" , this)) return ; ;
 #  define DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_IN  if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::toggleRecordingState(%d)      IN" , this)) return ;
@@ -128,6 +143,7 @@
 #  define DEBUG_TRACE_SCENE_RESCANPEAKS_IN           ;
 #  define DEBUG_TRACE_SCENE_RESCANPEAKS_OUT          ;
 #endif // #if DEBUG_TRACE_SCENE
+
 #if DEBUG_TRACE_SCENESDL
 #  define DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN  if (TRACE_IN(scene->sceneN))    TRACE_SCENE("SceneSdl::updateState(%d)   IN" , scene) ;
 #  define DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT if (TRACE_OUT(scene->sceneN))   TRACE_SCENE("SceneSdl::updateState(%d)  OUT" , scene) ;
@@ -144,7 +160,8 @@
 #  define DEBUG_TRACE_SCENESDL_DELETELOOP_OUT   ;
 #endif // #if DEBUG_TRACE_SCENESDL
 
-#define INIT_MSG          "Loopidity::Main(): init"
+
+#define INIT_MSG          "main(): init"
 #define INIT_SUCCESS_MSG  "Loopidity::Main(): init success - entering sdl loop"
 #define INIT_FAIL_MSG     "Loopidity::Main(): init failed - quitting"
 #define GETPEAK_ERROR_MSG "Loopidity::GetPeak(): subscript out of range"

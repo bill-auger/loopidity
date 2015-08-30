@@ -172,7 +172,7 @@ DEBUG_TRACE_JACK_INIT
       !(InputPort2  = RegisterPort(JACK_INPUT2_PORT_NAME  , JackPortIsInput))  ||
       !(OutputPort1 = RegisterPort(JACK_OUTPUT1_PORT_NAME , JackPortIsOutput)) ||
       !(OutputPort2 = RegisterPort(JACK_OUTPUT2_PORT_NAME , JackPortIsOutput)) ||
-      jack_activate(Client)) return JACK_FAIL ;
+      jack_activate(Client)) return JACK_HW_FAIL ;
 #endif // #if INIT_JACK_BEFORE_SCENES
 
   // propogate server state

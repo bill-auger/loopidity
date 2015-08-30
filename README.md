@@ -1,28 +1,35 @@
-### This is Loopidity *- A multitrack looping audio recorder for GNU/Linux designed for live handsfree use*
-| build      | status |
-| ---------- | ------ |
-| linux      | [![Build Status](https://travis-ci.org/bill-auger/loopidity.svg?branch=linux)](https://travis-ci.org/bill-auger/loopidity) |
-| windows    | [![Build Status](https://travis-ci.org/bill-auger/loopidity.svg?branch=mingw)](https://travis-ci.org/bill-auger/loopidity) |
-| latest-dev | [![Build Status](https://travis-ci.org/bill-auger/loopidity.svg)](https://travis-ci.org/bill-auger/loopidity) |
+### This is Loopidity *- A multi-track, multi-channel, looping audio recorder for GNU/Linux and Windows - designed for live handsfree use*
+| build status: | linux [![linux build status][linux-img]][travis] | windows [![windows build status][windows-img]][travis] | latest-dev [![latest build status][latest-img]][travis] |
+| ------------- | ------------------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------- |
 
 #### build
 * binaries coming soon - bake yer own for now
-* build requires libsdl1.2 , libSDL_gfx , libSDL_ttf and libjack2 (also X11 on *nix) devel libs
+* build requires libsdl1.2 , libSDL_gfx , libSDL_ttf and libjack2 (also X11 on *nix)
 * compiler must support c++11 features
-* windows and code::blocks builds refer to [README-MINGW.md](https://github.com/bill-auger/loopidity/blob/master/README-MINGW.md)
-
-build with gnu toolchain on a *nix
+* windows builds refer to [README-MINGW.md][README-MINGW]
+* build with gnu toolchain
 ```bash
-    $ cd build
-    $ make
+  $ cd build
+  $ make release
+  $ make debug
+  $ make         # [ all ]
 ```
-build with gnu toolchain on windows
+* or compile, run/debug, and/or clean via helper script
 ```bash
-    $ cd build
-    $ MINGW=1 make
+  $ ./mk debug
+  $ ./mk release
+  $ ./mk debug   clean
+  $ ./mk release clean
 ```
-build with code::blocks
+* build with code::blocks
 ```bash
     $  cd build
     $  codeblocks loopidity.cbp
 ```
+
+
+[linux-img]:    https://travis-ci.org/bill-auger/loopidity.svg?branch=linux
+[windows-img]:  https://travis-ci.org/bill-auger/loopidity.svg?branch=mingw
+[latest-img]:   https://travis-ci.org/bill-auger/loopidity.svg
+[travis]:       https://travis-ci.org/bill-auger/loopidity
+[README-MINGW]: https://github.com/bill-auger/loopidity/blob/master/README-MINGW.md

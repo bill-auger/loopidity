@@ -1,4 +1,8 @@
 
+ifeq (${MSYSTEM} , MINGW32)
+MINGW = 1
+endif
+
 WORKDIR = `pwd`
 
 CC = gcc
@@ -47,8 +51,6 @@ OUT_RELEASE = $(BINDIR_RELEASE)/loopidity
 ASSETS_DIR = ../assets
 ifdef MINGW
 SYSBIN_DIR = /usr/bin
-else
-SYSBIN_DIR = /usr/bin
 endif
 
 OBJ_DEBUG = $(OBJDIR_DEBUG)/__/src/jack_io.o       \
@@ -69,15 +71,6 @@ ASSETS = histogram_gradient.bmp \
          loop_gradient.argb.bmp \
          scope_gradient.bmp     \
          Purisa.ttf
-ifdef MINGW
-WINLIBS = SDL.dll           \
-          SDL_gfx.dll       \
-          SDL_ttf.dll       \
-          libfreetype-6.dll \
-          zlib1.dll
-else
-WINLIBS =
-endif
 
 
 all: debug release
@@ -139,15 +132,6 @@ $(ASSETS):
 	@[ ! -d $(BINDIR_RELEASE) ] || [ -f $(BINDIR_RELEASE)/$@ ] || \
             ( echo "copying asset to release bin directory: '$@'" ;   \
               cp $(ASSETS_DIR)/$@ $(BINDIR_RELEASE)/$@            )
-
-
-$(WINLIBS):
-	@[ ! -d $(BINDIR_DEBUG)   ] || [ -f $(BINDIR_DEBUG)/$@   ] || \
-            ( echo "copying asset to debug bin directory: '$@'"   ;   \
-              cp $(SYSBIN_DIR)/$@ $(BINDIR_DEBUG)/$@              )
-	@[ ! -d $(BINDIR_RELEASE) ] || [ -f $(BINDIR_RELEASE)/$@ ] || \
-            ( echo "copying asset to release bin directory: '$@'" ;   \
-              cp $(SYSBIN_DIR)/$@ $(BINDIR_RELEASE)/$@            )
 
 
 .PHONY: before_debug after_debug clean_debug before_release after_release clean_release

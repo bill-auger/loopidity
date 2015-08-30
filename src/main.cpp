@@ -10,6 +10,11 @@ JackIO       - JACK  wrapper    class (== 0                    instances)
 Trace        - debug trace      class (== 0                    instances)
 */
 
+
+#ifdef _WIN32
+#  include <fstream>
+#endif // _WIN32
+
 #include "loopidity.h"
 
 
@@ -17,11 +22,11 @@ Trace        - debug trace      class (== 0                    instances)
 
 int main(int argc , char** argv)
 {
+DEBUG_TRACE_MAIN_IN
+
   int exitStatus = Loopidity::Main(argc , argv) ; Loopidity::Cleanup() ;
 
-#if DEBUG_TRACE
-  if (!!exitStatus) ERR(INIT_FAIL_MSG) ;
-#endif
+DEBUG_TRACE_MAIN_OUT
 
   return exitStatus ;
 }
