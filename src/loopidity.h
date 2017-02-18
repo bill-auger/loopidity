@@ -181,8 +181,15 @@
 #endif // _WIN32
 
 typedef jack_default_audio_sample_t Sample ;
+using namespace std ;
 
 // local includes
+class JackIO ;
+class LoopiditySdl ;
+class Loop ;
+class LoopSdl ;
+class Scene ;
+class SceneSdl ;
 #include "jack_io.h"
 #include "loopidity_sdl.h"
 #include "scene.h"
@@ -190,7 +197,6 @@ typedef jack_default_audio_sample_t Sample ;
 #include "trace.h"
 
 
-using namespace std ;
 
 
 class Loopidity

@@ -25,9 +25,6 @@
 #include "loopidity.h"
 
 
-using namespace std ;
-
-
 class InvalidMetadataException: public exception
 {
   virtual const char* what() const throw() { return INVALID_METADATA_MSG ; }

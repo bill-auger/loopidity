@@ -20,8 +20,6 @@
 
 #include "loopidity.h"
 
-using namespace std ;
-
 
 /* Trace class side public constants */
 

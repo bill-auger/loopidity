@@ -23,10 +23,8 @@
 
 
 #include <jack/jack.h>
-typedef jack_default_audio_sample_t Sample ;
+
 #include "loopidity.h"
-class Loop ;
-class Scene ;
 
 
 using namespace std ;

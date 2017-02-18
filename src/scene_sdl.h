@@ -86,11 +86,6 @@
 
 
 #include "loopidity.h"
-class Loop ;
-class Scene ;
-
-
-using namespace std ;
 
 
 class LoopSdl

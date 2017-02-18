@@ -23,9 +23,6 @@
 
 
 #include "loopidity.h"
-class SceneSdl ;
-
-using namespace std ;
 
 
 // intervals
