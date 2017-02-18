@@ -55,7 +55,7 @@ bool Loopidity::IsEditMode            = false ;
 
 /* Loopidity class side public functions */
 
-/* main */
+// main entry
 
 int Loopidity::Main(int argc , char** argv)
 {
@@ -75,14 +75,14 @@ int Loopidity::Main(int argc , char** argv)
 #endif // #if FIXED_AUDIO_BUFFER_SIZE
 
   // initialize Loopidity (controller) and instantiate Scenes (models and SdlScenes (views))
-  if (!Init(isMonitorInputs , isAutoSceneChange , recordBufferSize)) return EXIT_FAILURE ;
+  if (!Init(isMonitorInputs , isAutoSceneChange , recordBufferSize)) return Cleanup(EXIT_FAILURE) ;
 
   // initialize LoopiditySdl (view)
   vector<Sample>* peaksIn  = JackIO::GetPeaksIn() ;
   vector<Sample>* peaksOut = JackIO::GetPeaksOut() ;
   Sample* transientPeaks   = JackIO::GetTransientPeaks() ;
   if (!LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , transientPeaks))
-    return EXIT_FAILURE ;
+    return Cleanup(EXIT_FAILURE) ;
 
 DEBUG_TRACE_LOOPIDITY_MAIN_MID
 
@@ -142,11 +142,44 @@ if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
 
 DEBUG_TRACE_LOOPIDITY_MAIN_OUT
 
-  return EXIT_SUCCESS ;
+  return Cleanup(EXIT_SUCCESS) ;
 }
 
 
 // getters/setters
+
+std::string Loopidity::GetAssetsPath(std::string filename)
+{
+  // determine proper path to assets on the current system
+  std::string this_path ;
+  std::string assets_path ;
+#ifdef _WIN32
+this_path="./" ; // FIXME
+/* TODO:
+  std::vector<wchar_t> path_buffer ;
+  DWORD n_wchars = 0 ;
+  while (n_wchars >= path_buffer.size())
+  {
+    path_buffer.resize(path_buffer.size() + 256) ;
+    n_wchars = GetModuleFileName(0 , &path_buffer.at(0) , path_buffer.size()) ;
+  }
+  pathBuf.resize(n_wchars) ;
+  wstring path(path_buffer.begin() , path_buffer.end()) ;
+  this_path = std::wstring_convert<std::codecvt_utf8<wchar_t> , wchar_t> converterX.to_bytes(path) ;
+*/
+#else // _WIN32
+#define SCRATCH_BUFFER_SIZE 2048
+  char path_buffer[SCRATCH_BUFFER_SIZE] ;
+  if (::readlink("/proc/self/exe" , path_buffer , SCRATCH_BUFFER_SIZE) > 0)
+    this_path = std::string(path_buffer) ;
+#endif // _WIN32
+  this_path   = this_path.substr(0 , this_path.find_last_of("/\\")) ;
+  assets_path = this_path + "/../share/loopidity/" + filename ;
+
+printf("Loopidity::GetAssetsPath() loading asset=%s\n\n" , assets_path.c_str());
+
+  return assets_path ;
+}
 
 Uint32 Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
 
@@ -163,9 +196,17 @@ bool Loopidity::GetIsRolling() { return IsRolling ; }
 //bool Loopidity::GetIsEditMode() { return IsEditMode ; }
 
 
+// view helpers
+
+void Loopidity::UpdateView(Uint32 sceneN) { SdlScenes[sceneN]->updateState() ; }
+
+void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OUT_OF_MEMORY_MSG) ; }
+
+
 /* Loopidity class side private functions */
 
 // setup
+
 #if WAIT_FOR_JACK_INIT
   bool Loopidity::IsInitialized() { return IsJackReady && !!Scenes[0] && !!SdlScenes[0] ; }
 #else
@@ -266,11 +307,17 @@ void Loopidity::SetMetadata(Uint32 sampleRate , Uint32 nFramesPerPeriod)
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #endif // #if INIT_JACK_BEFORE_SCENES
 
-void Loopidity::Cleanup()
+int Loopidity::Cleanup(int exit_status)
 {
+#if DEBUG_TRACE
+if (exit_status) cout << INIT_FAIL_MSG << endl ;
+#endif
+
   for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
     if (SdlScenes[sceneN]) SdlScenes[sceneN]->cleanup() ;
   LoopiditySdl::Cleanup() ;
+
+  return exit_status ;
 }
 
 
@@ -473,10 +520,3 @@ DEBUG_TRACE_LOOPIDITY_RESET_IN
 
 DEBUG_TRACE_LOOPIDITY_RESET_OUT
 }
-
-
-// helpers
-
-void Loopidity::UpdateView(Uint32 sceneN) { SdlScenes[sceneN]->updateState() ; }
-
-void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OUT_OF_MEMORY_MSG) ; }

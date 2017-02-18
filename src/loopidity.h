@@ -230,6 +230,7 @@ class Loopidity
     static bool ShouldSceneAutoChange ;
     static bool IsEditMode ;
 
+
   public:
 
     /* Loopidity class side public functions */
@@ -238,16 +239,22 @@ class Loopidity
     static int Main(int argc , char** argv) ;
 
     // getters/setters
+    static std::string GetAssetsPath(std::string filename) ;
 //    static void         SetNFramesPerPeriod(   Uint32 nFrames) ;
-    static Uint32 GetCurrentSceneN(void) ;
-    static Uint32 GetNextSceneN(   void) ;
+    static Uint32      GetCurrentSceneN(void) ;
+    static Uint32      GetNextSceneN(   void) ;
 //    static Uint32 GetLoopPos(    void) ;
-    static bool   GetIsRolling(    void) ;
+    static bool        GetIsRolling(    void) ;
 //    static bool         GetShouldSaveLoop(     void) ;
 //    static bool         GetDoesPulseExist(     void) ;
 //    static bool         GetIsEditMode(         void) ;
 
+    // view helpers
+    static void UpdateView(Uint32 sceneN) ;
+    static void OOM(       void) ;
 
+
+private:
     /* Loopidity class side private functions */
 
     // setup
@@ -264,7 +271,7 @@ class Loopidity
 #else
     static void SetMetadata(  Uint32 sampleRate , Uint32 nFramesPerPeriod) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
-    static void Cleanup(      void) ;
+    static int  Cleanup(      int retval) ;
 
     // event handlers
     static void HandleKeyEvent(  SDL_Event* event) ;
@@ -286,10 +293,6 @@ class Loopidity
     static void ResetScene(           Uint32 sceneN) ;
     static void ResetCurrentScene(    void) ;
     static void Reset(                void) ;
-
-    // helpers
-    static void UpdateView(Uint32 sceneN) ;
-    static void OOM(       void) ;
 } ;
 
 #endif // #ifndef _LOOPIDITY_H_
