@@ -34,13 +34,4 @@
 
 /* entry point */
 
-int main(int argc , char** argv)
-{
-	int exitStatus = Loopidity::Main(argc , argv) ; Loopidity::Cleanup() ;
-
-#if DEBUG_TRACE
-if (exitStatus) cout << INIT_FAIL_MSG << endl ;
-#endif
-
-	return exitStatus ;
-}
+int main(int argc , char** argv) { return Loopidity::Main(argc , argv) ; }
