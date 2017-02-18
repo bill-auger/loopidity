@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -23,9 +23,6 @@
 
 
 #include "loopidity.h"
-class SceneSdl ;
-
-using namespace std ;
 
 
 // intervals
@@ -100,9 +97,9 @@ using namespace std ;
 
 // fonts and colors
 #define HEADER_FONT_PATH       PURISA_TTF_PATH
-#define HEADER_TEXT_COLOR      { 255 , 0 , 255 }
+#define HEADER_TEXT_COLOR      { 255 , 0 , 255 , 0 }
 #define STATUS_FONT_PATH       PURISA_TTF_PATH
-#define STATUS_TEXT_COLOR      { 255 , 0 , 255 }
+#define STATUS_TEXT_COLOR      { 255 , 0 , 255 , 0 }
 #define INSCOPE_QUIET_COLOR    0x00ff00ff
 #define INSCOPE_OPTIMAL_COLOR  0xffff00ff
 #define INSCOPE_LOUD_COLOR     0xff0000ff
@@ -157,9 +154,9 @@ class LoopiditySdl
     static SDL_Rect        StatusRectR ;
     static TTF_Font*       StatusFont ;
     static const SDL_Color StatusColor ;
-    static string          StatusTextL ;
-    static string          StatusTextC ;
-    static string          StatusTextR ;
+    static std::string     StatusTextL ;
+    static std::string     StatusTextC ;
+    static std::string     StatusTextR ;
 
     // scenes
     static SceneSdl**   SdlScenes ;
@@ -168,15 +165,15 @@ class LoopiditySdl
     static SDL_Surface* LoopGradient ;
 
     // scopes
-    static SDL_Rect        ScopeRect ;
-    static SDL_Rect        MaskRect ;
-    static SDL_Rect        GradientRect ;
-    static const Sint16    Scope0 ;
-    static const Uint16    ScopeR ;
-    static const float     ScopePeakH ;
-    static vector<Sample>* PeaksIn ;
-    static vector<Sample>* PeaksOut ;
-    static Sample*         PeaksTransient ;
+    static SDL_Rect             ScopeRect ;
+    static SDL_Rect             MaskRect ;
+    static SDL_Rect             GradientRect ;
+    static const Sint16         Scope0 ;
+    static const Uint16         ScopeR ;
+    static const float          ScopePeakH ;
+    static std::vector<Sample>* PeaksIn ;
+    static std::vector<Sample>* PeaksOut ;
+    static Sample*              PeaksTransient ;
 
     // DrawScenes() 'local' variables
     static Uint16       CurrentSceneN ;
@@ -193,8 +190,8 @@ class LoopiditySdl
 
     // setup
     static bool IsInitialized(void) ; // TODO: make singleton
-    static bool Init(         SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
-                              vector<Sample>* peaksOut , Sample* peaksTransient) ;
+    static bool Init(         SceneSdl**           sdlScenes , std::vector<Sample>* peaksIn       ,
+                              std::vector<Sample>* peaksOut  , Sample*              peaksTransient) ;
     static void SdlError(     const char* functionName) ;
     static void TtfError(     const char* functionName) ;
     static void Cleanup(      void) ;
@@ -209,17 +206,17 @@ class LoopiditySdl
 #else
     static void DrawScopes(         void) ;
 #endif // #if SCENE_NFRAMES_EDITABLE
-    static void DrawText(           string text , SDL_Surface* surface , TTF_Font* font ,
-                                    SDL_Rect* screenRect , SDL_Rect* cropRect ,
-                                    SDL_Color fgColor) ;
+    static void DrawText(           std::string text     , SDL_Surface* surface    ,
+                                    TTF_Font*   font     , SDL_Rect*    screenRect ,
+                                    SDL_Rect*   cropRect , SDL_Color    fgColor    ) ;
     static void DrawStatusArea(     void) ;
     static void FlipScreen(         void) ;
-    static void Alert(              string msg) ;
+    static void Alert(              std::string msg) ;
 
     // getters/settters
-    static void SetStatusL(string msg) ;
-    static void SetStatusC(string msg) ;
-    static void SetStatusR(string msg) ;
+    static void SetStatusL(std::string msg) ;
+    static void SetStatusC(std::string msg) ;
+    static void SetStatusR(std::string msg) ;
 //    static Uint32 GetAvailableMemory() ;
 } ;
 

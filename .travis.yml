@@ -25,7 +25,7 @@ script:         >
     --depends       'libsdl-gfx1.2-4'                                                \
     --depends       'libsdl-ttf2.0-0'                                                \
     --description   'loopidity
-                    \n\nA multitrack looping audio recorder for GNU/Linux
+                    \n\nA multi-track multi-channel audio looper
                     designed for live handsfree use.'                                \
     --deb-changelog $DEB_DIR/changelog                                               \
     --deb-priority  'optional'                                                       \

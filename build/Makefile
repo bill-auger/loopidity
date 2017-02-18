@@ -20,7 +20,7 @@ CXX = g++
 AR  = ar
 LD  = g++
 
-CFLAGS = -std=gnu++0x -Wall -MMD
+CFLAGS = -std=gnu++0x -MMD -Wall -Werror -Wextra
 ifeq ($(CONFIG),debug)
   CFLAGS  += -g -DDEBUG=1
   LDFLAGS  =
@@ -62,6 +62,8 @@ before:
 	@test -d $(BINDIR)  || mkdir -p $(BINDIR)
 	@test -d $(DATADIR) || mkdir -p $(DATADIR)
 	@test -d $(OBJDIR)  || mkdir -p $(OBJDIR)
+	@test -d $(BINDIR) || mkdir -p $(BINDIR)
+	@test -d $(OBJDIR) || mkdir -p $(OBJDIR)
 
 out: before $(OBJECTS)
 	@echo "linking $(CONFIG) binary"
