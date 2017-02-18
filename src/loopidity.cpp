@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -78,9 +78,9 @@ int Loopidity::Main(int argc , char** argv)
   if (!Init(isMonitorInputs , isAutoSceneChange , recordBufferSize)) return Cleanup(EXIT_FAILURE) ;
 
   // initialize LoopiditySdl (view)
-  vector<Sample>* peaksIn  = JackIO::GetPeaksIn() ;
-  vector<Sample>* peaksOut = JackIO::GetPeaksOut() ;
-  Sample* transientPeaks   = JackIO::GetTransientPeaks() ;
+  std::vector<Sample>* peaksIn        = JackIO::GetPeaksIn() ;
+  std::vector<Sample>* peaksOut       = JackIO::GetPeaksOut() ;
+  Sample*              transientPeaks = JackIO::GetTransientPeaks() ;
   if (!LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , transientPeaks))
     return Cleanup(EXIT_FAILURE) ;
 
@@ -251,7 +251,7 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
       SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN]) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
     }
-    catch(exception& ex) { LoopiditySdl::Alert(ex.what()) ; return false ; }
+    catch(std::exception& ex) { LoopiditySdl::Alert(ex.what()) ; return false ; }
 
     UpdateView(sceneN) ;
   }
@@ -310,7 +310,7 @@ void Loopidity::SetMetadata(Uint32 sampleRate , Uint32 nFramesPerPeriod)
 int Loopidity::Cleanup(int exit_status)
 {
 #if DEBUG_TRACE
-if (exit_status) cout << INIT_FAIL_MSG << endl ;
+if (exit_status) std::cout << INIT_FAIL_MSG << std::endl ;
 #endif
 
   for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
@@ -347,11 +347,11 @@ DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT
 
 void Loopidity::HandleMouseEvent(SDL_Event* event)
 {
-#if HANDLE_MOUSE_EVENTS
   Uint16 x = event->button.x ; Uint16 y = event->button.y ;
   if (x < MOUSE_SCENES_L || x > MOUSE_SCENES_R ||
       y < MOUSE_SCENES_T || y > MOUSE_SCENES_B) return ;
 
+#if HANDLE_MOUSE_EVENTS
   Uint32 sceneN = (y - MOUSE_SCENES_T) / SCENE_H ;
   Uint32 loopN  = (x - MOUSE_SCENES_L) / LOOP_W ;
   switch (event->button.button)

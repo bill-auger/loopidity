@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -22,14 +22,7 @@
 #define _JACK_IO_H_
 
 
-#include <jack/jack.h>
-typedef jack_default_audio_sample_t Sample ;
 #include "loopidity.h"
-class Loop ;
-class Scene ;
-
-
-using namespace std ;
 
 
 class JackIO
@@ -80,15 +73,15 @@ class JackIO
 #endif // #if FIXED_N_AUDIO_PORTS
 
     // peaks data
-    static vector<Sample> PeaksIn ;                       // scope peaks (mono mix)
-    static vector<Sample> PeaksOut ;                      // scope peaks (mono mix)
+    static std::vector<Sample> PeaksIn ;                       // scope peaks (mono mix)
+    static std::vector<Sample> PeaksOut ;                      // scope peaks (mono mix)
 #if FIXED_N_AUDIO_PORTS
-    static Sample         TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
+    static Sample              TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
 #else // TODO:
-    static Sample         TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
+    static Sample              TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
 #endif // #if FIXED_N_AUDIO_PORTS
-    static Sample         TransientPeakInMix ;
-//    static Sample         TransientPeakOutMix ;
+    static Sample              TransientPeakInMix ;
+//    static Sample              TransientPeakOutMix ;
 
     // event structs
     static SDL_Event NewLoopEvent ;
@@ -148,13 +141,13 @@ class JackIO
     static Uint32    GetSampleRate(      void) ;
     static Uint32    GetNBytesPerSecond(void) ;
 */
-    static void            SetCurrentScene(   Scene* currentScene) ;
-    static void            SetNextScene(      Scene* nextScene) ;
-    static vector<Sample>* GetPeaksIn(        void) ;
-    static vector<Sample>* GetPeaksOut(       void) ;
-    static Sample*         GetTransientPeaks( void) ;
-    static Sample*         GetTransientPeakIn(void) ;
-//    static Sample*         GetTransientPeakOut(   void) ;
+    static void                 SetCurrentScene(   Scene* currentScene) ;
+    static void                 SetNextScene(      Scene* nextScene) ;
+    static std::vector<Sample>* GetPeaksIn(        void) ;
+    static std::vector<Sample>* GetPeaksOut(       void) ;
+    static Sample*              GetTransientPeaks( void) ;
+    static Sample*              GetTransientPeakIn(void) ;
+//    static Sample*              GetTransientPeakOut(   void) ;
 
     // helpers
     static void   ScanTransientPeaks(void) ;

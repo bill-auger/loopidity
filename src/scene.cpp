@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -98,7 +98,7 @@ Scene::Scene(Uint32 sceneNum , Uint32 recordBufferSize)
   sceneN = sceneNum ;
 
   // audio data
-  list<Loop*> loops ;
+  std::list<Loop*> loops ;
 
   // peaks cache
   highestScenePeak = 0.0 ; // scanPeaks()
@@ -180,7 +180,7 @@ DEBUG_TRACE_SCENE_BEGINRECORDING_IN
 
   beginFrameN = currentFrameN - TriggerLatencySize ;
 #if INIT_JACK_BEFORE_SCENES
-  if (beginFrameN - BeginFrameN < 0) beginFrameN = BeginFrameN ;
+  if (beginFrameN < BeginFrameN) beginFrameN = BeginFrameN ;
 #else
   if (beginFrameN - BUFFER_MARGIN_SIZE < 0) beginFrameN = BUFFER_MARGIN_SIZE ;
 #  endif // #if INIT_JACK_BEFORE_SCENES
@@ -243,7 +243,7 @@ DEBUG_TRACE_SCENE_DELETELOOP_IN
 
   if (loopN >= loops.size()) return ;
 
-  list<Loop*>::iterator loopIter = loops.begin() ; while (loopN--) ++loopIter ;
+  std::list<Loop*>::iterator loopIter = loops.begin() ; while (loopN--) ++loopIter ;
   loops.erase(loopIter) ; rescanPeaks() ;
 
 DEBUG_TRACE_SCENE_DELETELOOP_IN
@@ -329,7 +329,7 @@ DEBUG_TRACE_SCENE_RESCANPEAKS_IN
   highestScenePeak   = 0.0 ;
   Uint32 peakN = N_FINE_PEAKS ; while (peakN--) hiScenePeaks[peakN] = 0.0 ;
 //  Uint32 loopN = Loopidity::N_LOOPS ; while (loopN--)
-  list<Loop*>::iterator loopIter ; Uint32 loopN = 0 ;
+  std::list<Loop*>::iterator loopIter ; Uint32 loopN = 0 ;
   for (loopIter = loops.begin() ; loopIter != loops.end() ; ++loopIter)
     { hiLoopPeaks[loopN] = 0.0 ; scanPeaks(*loopIter , loopN) ; ++loopN ; }
 
@@ -343,7 +343,7 @@ Loop* Scene::getLoop(Uint32 loopN)
 {
   if (loopN >= loops.size()) return NULL ;
 
-  list<Loop*>::iterator aLoop = loops.begin() ; while (loopN--) ++aLoop ;
+  std::list<Loop*>::iterator aLoop = loops.begin() ; while (loopN--) ++aLoop ;
   return (*aLoop) ;
 }
 
