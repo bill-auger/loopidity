@@ -148,6 +148,39 @@ DEBUG_TRACE_LOOPIDITY_MAIN_OUT
 
 // getters/setters
 
+std::string Loopidity::GetAssetsPath(std::string filename)
+{
+  // determine proper path to assets on the current system
+  std::string this_path ;
+  std::string assets_path ;
+#ifdef _WIN32
+this_path="./" ; // FIXME
+/* TODO:
+  std::vector<wchar_t> path_buffer ;
+  DWORD n_wchars = 0 ;
+  while (n_wchars >= path_buffer.size())
+  {
+    path_buffer.resize(path_buffer.size() + 256) ;
+    n_wchars = GetModuleFileName(0 , &path_buffer.at(0) , path_buffer.size()) ;
+  }
+  pathBuf.resize(n_wchars) ;
+  wstring path(path_buffer.begin() , path_buffer.end()) ;
+  this_path = std::wstring_convert<std::codecvt_utf8<wchar_t> , wchar_t> converterX.to_bytes(path) ;
+*/
+#else // _WIN32
+#define SCRATCH_BUFFER_SIZE 2048
+  char path_buffer[SCRATCH_BUFFER_SIZE] ;
+  if (::readlink("/proc/self/exe" , path_buffer , SCRATCH_BUFFER_SIZE) > 0)
+    this_path = std::string(path_buffer) ;
+#endif // _WIN32
+  this_path   = this_path.substr(0 , this_path.find_last_of("/\\")) ;
+  assets_path = this_path + "/../share/loopidity/" + filename ;
+
+printf("Loopidity::GetAssetsPath() loading asset=%s\n\n" , assets_path.c_str());
+
+  return assets_path ;
+}
+
 Uint32 Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
 
 Uint32 Loopidity::GetNextSceneN() { return NextSceneN ; }
