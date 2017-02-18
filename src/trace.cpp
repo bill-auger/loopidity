@@ -1,26 +1,24 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
 #include "loopidity.h"
-
-using namespace std ;
 
 
 /* Trace class side public constants */
@@ -73,9 +71,9 @@ bool Trace::SanityCheck(Uint32 sceneN)
   return (nLoops == nHistogramImgs && nLoops == nLoopImgs) ;
 }
 
-void Trace::Dbg(string msg) { cout << "DBG: "   << msg << endl ; }
+void Trace::Dbg(std::string msg) { std::cout << "DBG: "   << msg << std::endl ; }
 
-void Trace::Err(string msg) { cout << "ERROR: " << msg << endl ; }
+void Trace::Err(std::string msg) { std::cout << "ERROR: " << msg << std::endl ; }
 
 #if DEBUG_TRACE
 bool Trace::TraceEvs(Uint32 sceneN) { return ((DEBUG_TRACE_EVS) || !SanityCheck(sceneN)) ; }
@@ -110,14 +108,14 @@ bool Trace::TraceScene(const char* senderTemplate , Scene* scene)
   // view state dump
   TraceState(viewEvent , sender , VIEW_STATE_FMT , viewDescFormat ,
       scene->loops.size() , sdlScene->histogramImgs.size() , sdlScene->loopImgs.size() , isEq) ;
-  cout << endl ;
+  std::cout << std::endl ;
 
   return isEq ;
 }
 
-void Trace::TraceState(const char* event , const char* sender ,
+void Trace::TraceState(const char* event       , const char* sender     ,
                        const char* stateFormat , const char* descFormat ,
-                       bool bool0 , bool bool1 , bool bool2 , bool isEq)
+                       bool bool0 , bool bool1 , bool bool2 , bool /*isEq*/ )
 {
 
 #if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN
@@ -144,7 +142,7 @@ cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" <
   memcpy(Desc , desc , DescLen + 1) ;
 
   Event[EVENT_LEN] = State[STATE_LEN] = Desc[DESC_LEN] = '\0' ;
-  cout << Event << " " << State << " " << Desc << endl ;
+  std::cout << Event << " " << State << " " << Desc << std::endl ;
 
 #endif // #if DEBUG_TRACE
 
@@ -157,5 +155,5 @@ cout << "Trace::TraceState(): Desc("  << strlen(Desc)  << ")='" << Desc  << "'" 
 
 #if DRAW_DEBUG_TEXT
 void Trace::SetDbgTextC() { char dbg[TRACE_STATE_LEN] ; Uint32 sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "NextSceneN=%d SceneN=%d PeakN=%d" , Loopidity::NextSceneN , sceneN , Loopidity::Scenes[sceneN]->getCurrentPeakN()) ; LoopiditySdl::SetStatusC(dbg) ; }
-void Trace::SetDbgTextR() { char dbg[TRACE_STATE_LEN] ; Uint32 sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "%d%d%d %d%d%d" , Loopidity::GetIsRolling() , Loopidity::Scenes[sceneN]->shouldSaveLoop , Loopidity::Scenes[sceneN]->doesPulseExist , Loopidity::Scenes[sceneN]->loops.size() , Loopidity::SdlScenes[sceneN]->histogramImgs.size() , Loopidity::SdlScenes[sceneN]->loopImgs.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
+void Trace::SetDbgTextR() { char dbg[TRACE_STATE_LEN] ; Uint32 sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "%d%d%d %lu%lu%lu" , Loopidity::GetIsRolling() , Loopidity::Scenes[sceneN]->shouldSaveLoop , Loopidity::Scenes[sceneN]->doesPulseExist , Loopidity::Scenes[sceneN]->loops.size() , Loopidity::SdlScenes[sceneN]->histogramImgs.size() , Loopidity::SdlScenes[sceneN]->loopImgs.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
 #endif // #if DRAW_DEBUG_TEXT

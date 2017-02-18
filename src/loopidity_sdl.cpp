@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -42,9 +42,9 @@ SDL_Rect        LoopiditySdl::StatusRectC   = STATUS_RECT_C ;
 SDL_Rect        LoopiditySdl::StatusRectR   = STATUS_RECT_R ;
 TTF_Font*       LoopiditySdl::StatusFont    = 0 ;
 const SDL_Color LoopiditySdl::StatusColor   = STATUS_TEXT_COLOR ;
-string          LoopiditySdl::StatusTextL   = "" ;
-string          LoopiditySdl::StatusTextC   = "" ;
-string          LoopiditySdl::StatusTextR   = "" ;
+std::string     LoopiditySdl::StatusTextL   = "" ;
+std::string     LoopiditySdl::StatusTextC   = "" ;
+std::string     LoopiditySdl::StatusTextR   = "" ;
 
 // scenes
 SceneSdl**   LoopiditySdl::SdlScenes         = 0 ;
@@ -53,15 +53,15 @@ SDL_Surface* LoopiditySdl::HistogramGradient = 0 ;
 SDL_Surface* LoopiditySdl::LoopGradient      = 0 ;
 
 // scopes
-SDL_Rect        LoopiditySdl::ScopeRect      = SCOPE_RECT ;
-SDL_Rect        LoopiditySdl::MaskRect       = { 0 , 0 , 1 , 0 } ;
-SDL_Rect        LoopiditySdl::GradientRect   = { 0 , 0 , 0 , 0 } ;
-const Sint16    LoopiditySdl::Scope0         = SCOPE_0 ;
-const Uint16    LoopiditySdl::ScopeR         = SCOPE_R ;
-const float     LoopiditySdl::ScopePeakH     = SCOPE_PEAK_H ;
-vector<Sample>* LoopiditySdl::PeaksIn ;
-vector<Sample>* LoopiditySdl::PeaksOut ;
-Sample*         LoopiditySdl::PeaksTransient = 0 ;
+SDL_Rect             LoopiditySdl::ScopeRect      = SCOPE_RECT ;
+SDL_Rect             LoopiditySdl::MaskRect       = { 0 , 0 , 1 , 0 } ;
+SDL_Rect             LoopiditySdl::GradientRect   = { 0 , 0 , 0 , 0 } ;
+const Sint16         LoopiditySdl::Scope0         = SCOPE_0 ;
+const Uint16         LoopiditySdl::ScopeR         = SCOPE_R ;
+const float          LoopiditySdl::ScopePeakH     = SCOPE_PEAK_H ;
+std::vector<Sample>* LoopiditySdl::PeaksIn ;
+std::vector<Sample>* LoopiditySdl::PeaksOut ;
+Sample*              LoopiditySdl::PeaksTransient = 0 ;
 
 // DrawScenes() 'local' variables
 Uint16       LoopiditySdl::CurrentSceneN = 0 ;
@@ -80,8 +80,8 @@ SDL_Rect*    LoopiditySdl::SceneRect     = 0 ;
 
 bool LoopiditySdl::IsInitialized() { return !!Screen ; }
 
-bool LoopiditySdl::Init(SceneSdl** sdlScenes , vector<Sample>* peaksIn ,
-                        vector<Sample>* peaksOut , Sample* peaksTransient)
+bool LoopiditySdl::Init(SceneSdl**           sdlScenes , std::vector<Sample>* peaksIn       ,
+                        std::vector<Sample>* peaksOut  , Sample*              peaksTransient)
 {
   if (IsInitialized()) return false ;
   if (!sdlScenes || !peaksIn || !peaksOut || !peaksTransient) return false ;
@@ -271,7 +271,8 @@ void LoopiditySdl::DrawScopes()
 #endif // #if DRAW_SCOPES
 }
 
-void LoopiditySdl::DrawText(string text , SDL_Surface* surface , TTF_Font* font , SDL_Rect* screenRect , SDL_Rect* cropRect , SDL_Color fgColor)
+void LoopiditySdl::DrawText(std::string text       , SDL_Surface* surface  , TTF_Font* font   ,
+                            SDL_Rect*   screenRect , SDL_Rect*    cropRect , SDL_Color fgColor)
 {
 #if DRAW_STATUS
   if (!text.size()) return ;
@@ -293,13 +294,13 @@ void LoopiditySdl::DrawStatusArea()
 
 void LoopiditySdl::FlipScreen() { SDL_Flip(Screen) ; }
 
-void LoopiditySdl::Alert(string msg) { cout << msg << endl ; }
+void LoopiditySdl::Alert(std::string msg) { std::cout << msg << std::endl ; }
 
 
 // getters/settters
 
-void LoopiditySdl::SetStatusL(string text) { StatusTextL = text ; }
+void LoopiditySdl::SetStatusL(std::string text) { StatusTextL = text ; }
 
-void LoopiditySdl::SetStatusC(string text) { StatusTextC = text ; }
+void LoopiditySdl::SetStatusC(std::string text) { StatusTextC = text ; }
 
-void LoopiditySdl::SetStatusR(string text) { StatusTextR = text ; }
+void LoopiditySdl::SetStatusR(std::string text) { StatusTextR = text ; }
