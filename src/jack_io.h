@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -22,14 +22,7 @@
 #define _JACK_IO_H_
 
 
-#include <jack/jack.h>
-typedef jack_default_audio_sample_t Sample ;
 #include "loopidity.h"
-class Loop ;
-class Scene ;
-
-
-using namespace std ;
 
 
 class JackIO
@@ -80,15 +73,15 @@ class JackIO
 #endif // #if FIXED_N_AUDIO_PORTS
 
     // peaks data
-    static vector<Sample> PeaksIn ;                       // scope peaks (mono mix)
-    static vector<Sample> PeaksOut ;                      // scope peaks (mono mix)
+    static std::vector<Sample> PeaksIn ;                       // scope peaks (mono mix)
+    static std::vector<Sample> PeaksOut ;                      // scope peaks (mono mix)
 #if FIXED_N_AUDIO_PORTS
-    static Sample         TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
+    static Sample              TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
 #else // TODO:
-    static Sample         TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
+    static Sample              TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
 #endif // #if FIXED_N_AUDIO_PORTS
-    static Sample         TransientPeakInMix ;
-//    static Sample         TransientPeakOutMix ;
+    static Sample              TransientPeakInMix ;
+//    static Sample              TransientPeakOutMix ;
 
     // event structs
     static SDL_Event NewLoopEvent ;
@@ -148,13 +141,13 @@ class JackIO
     static Uint32    GetSampleRate(      void) ;
     static Uint32    GetNBytesPerSecond(void) ;
 */
-    static void            SetCurrentScene(   Scene* currentScene) ;
-    static void            SetNextScene(      Scene* nextScene) ;
-    static vector<Sample>* GetPeaksIn(        void) ;
-    static vector<Sample>* GetPeaksOut(       void) ;
-    static Sample*         GetTransientPeaks( void) ;
-    static Sample*         GetTransientPeakIn(void) ;
-//    static Sample*         GetTransientPeakOut(   void) ;
+    static void                 SetCurrentScene(   Scene* currentScene) ;
+    static void                 SetNextScene(      Scene* nextScene) ;
+    static std::vector<Sample>* GetPeaksIn(        void) ;
+    static std::vector<Sample>* GetPeaksOut(       void) ;
+    static Sample*              GetTransientPeaks( void) ;
+    static Sample*              GetTransientPeakIn(void) ;
+//    static Sample*              GetTransientPeakOut(   void) ;
 
     // helpers
     static void   ScanTransientPeaks(void) ;
@@ -180,116 +173,3 @@ class JackIO
 
 
 #endif // #ifndef _JACK_IO_H_
-
-
-/* NOTE: on RecordBuffer layout
-
-    to allow for dynamic adjustment of seams and compensation for SDL key event delay
-      the following are the buffer offsets used:
-
-        invariant                  -->
-            BeginFrameN <= beginFrameN <= currentFrameN < endFrameN <= EndFrameN
-        initially                  -->
-            beginFrameN     = currentFrameN = BeginFrameN = BufferMarginSize
-            endFrameN       = EndFrameN     = (RecordBufferSize - BufferSize)
-        on initial trigger         -->
-            beginFrameN     = currentFrameN - TriggerLatencySize
-        on accepting trigger       -->
-            if (currentFrameN > beginFrameN + MINIMUM_LOOP_DURATION) // (issue #12)
-                endFrameN     = currentFrameN
-                nFrames       = endFrameN - TriggerLatencySize - beginFrameN
-        after each rollover        -->
-            beginFrameN     = BeginFrameN
-            endFrameN       = BeginFrameN + nFrames
-        after first rollover       -->
-            currentFrameN   = BeginFrameN + TriggerLatencySize
-        after subsequent rollovers -->
-            currentFrameN   = BeginFrameN
-
-    all of the above offsets are multiples of BufferSize (aka nFramesPerPeriod)
-      excepting beginFrameN and nFrames
-
-    on each rollover (TODO: this is currently only done when copying base loops)
-        set currentFrameN = BeginFrameN (+ TriggerLatencySize if base loop)
-        copy tail end of RecordBuffer back to the beginning of RecordBuffer
-        this will be the LeadIn of the next loop (may or may not be part of a previous loop)
-            let begin = (beginFrameN + nFrames) - BufferMarginSize
-        initial base loop -->
-            RecordBuffer[begin] upto RecordBuffer[endFrameN]
-                --> RecordBuffer[0]
-        subsequent loops  -->
-            RecordBuffer[begin] upto RecordBuffer[endFrameN + TriggerLatencySize]
-                --> RecordBuffer[0]
-
-    on creation of each loop
-        copy the entire buffer to include per loop LeadIn
-            RecordBuffer[0] upto RecordBuffer[endFrameN]
-                --> NewLoop[0]
-
-    on creation of base loops
-        set beginFrameN   = BeginFrameN
-        set currentFrameN = BeginFrameN + TriggerLatencySize
-        set endFrameN     = BeginFrameN + nFrames
-        all subsequent loops will use beginFrameN and endFrameN (dynamically) as seams
-
-    on next rollover following creation of each loop
-        copy the leading BeginFrameN + BufferMarginSize to the end of the previous loop
-          regardless of creating a new loop from the current data
-        this will be the leadOut of the previous loop
-            RecordBuffer[BeginFrameN] upto RecordBuffer[BeginFrameN + BufferMarginSize]
-                --> PrevLoop[BeginFrameN + nFrames]
-
-
-                            INITIAL RECORD BUFFER
-          currentFrameN                                                 // dynamic offset
-           beginFrameN                                        endFrameN // dynamic offsets
-           BeginFrameN                                        EndFrameN // static offsets
-                |                                                 |
- |<-MarginSize->|<--------(RecordBufferSize - MarginSize)-------->|     // sizes
- |<---LeadIn--->|<-----------------RolloverRange----------------->|     // 'zones'
- |<-------------------------RecordBuffer------------------------->|     // buffer
-
-
-                              INITIAL BASE LOOP
-                 beginFrameN                       endFrameN                  // offsets
-thisLeadInBegin       |                                |                      // pointer
-       |              |                                |
- |<-?->|<-MarginSize->|<-----------nFrames------------>|<-MarginSize->|<-?->| // sizes
- |     |<---LeadIn--->|<--------RolloverRange--------->|<--LeadOut--->|     | // 'zones'
- |     |<-------------------Source-------------------->|              |     | // data
- |     |<--------------------Dest--------------------->|<--Pending--->|     | // data
- |     |<--------------------------NewLoop--------------------------->|     | // dest
- |<------------------------------RecordBuffer------------------------------>| // source
-
-
-                               SUBSEQUENT LOOPS
-           beginFrameN                       endFrameN                        // offsets
-thisLeadInBegin |                                |                            // pointer
- |              |                                |
- |<-MarginSize->|<-----------nFrames------------>|<-MarginSize->|<----?---->| // sizes
- |<---LeadIn--->|<--------RolloverRange--------->|<--LeadOut--->|           | // 'zones'
- |<-------------------Source-------------------->|              |           | // data
- |<--------------------Dest--------------------->|<--Pending--->|           | // data
- |<--------------------------NewLoop--------------------------->|           | // dest
- |<------------------------------RecordBuffer------------------------------>| // source
-
-
-                             SHIFT NEXT LEAD-IN
-           beginFrameN                      endFrameN                         // offsets
-                |         nextLeadInBegin       |                             // pointer
-                |                |              |
- |<-MarginSize->|                |<-MarginSize->|                           | // sizes
- |<----Dest---->|                |<---Source--->|                           | // data
- |<------------------------------RecordBuffer------------------------------>| // source/dest
-
-
-                        COPY PREVIOUS LEAD_OUT (TODO)
-           beginFrameN                       endFrameN                        // offsets
-                |           mixBegin             |                            // pointer
-                |              |                 |
- |<-MarginSize->|<-MarginSize->|                 |<-MarginSize->|           | // sizes
- |              |<---Source--->|                 |<----Dest---->|           | // data
- |<---LeadIn--->|<--------RolloverRange--------->|<--LeadOut--->|           | // 'zones'
- |<--------------------------NewLoop--------------------------->|           | // dest
- |<------------------------------RecordBuffer------------------------------>| // source
-*/

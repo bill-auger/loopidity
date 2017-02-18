@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -67,11 +67,11 @@ Sample* JackIO::LeadOutBuffer2 = 0 ; // SetMetadata()
 #endif // #if FIXED_N_AUDIO_PORTS
 
 // peaks data
-vector<Sample> JackIO::PeaksIn ;                         // Reset()
-vector<Sample> JackIO::PeaksOut ;                        // Reset()
-Sample         JackIO::TransientPeaks[N_PORTS] = {0.0} ;
-Sample         JackIO::TransientPeakInMix      = 0 ;
-//Sample         JackIO::TransientPeakOutMix     = 0 ;
+std::vector<Sample> JackIO::PeaksIn ;                         // Reset()
+std::vector<Sample> JackIO::PeaksOut ;                        // Reset()
+Sample              JackIO::TransientPeaks[N_PORTS] = {0.0} ;
+Sample              JackIO::TransientPeakInMix      = 0 ;
+//Sample              JackIO::TransientPeakOutMix     = 0 ;
 
 // event structs
 SDL_Event    JackIO::NewLoopEvent ;               // Init()
@@ -130,8 +130,8 @@ DEBUG_TRACE_JACK_INIT
   // initialize record buffers
   recordBufferSize /= N_BYTES_PER_FRAME ;
   RecordBufferSize  = !!(recordBufferSize) ? recordBufferSize : DEFAULT_BUFFER_SIZE ;
-  if (!(RecordBuffer1 = new (nothrow) Sample[RecordBufferSize]()) ||
-      !(RecordBuffer2 = new (nothrow) Sample[RecordBufferSize]())  )
+  if (!(RecordBuffer1 = new (std::nothrow) Sample[RecordBufferSize]()) ||
+      !(RecordBuffer2 = new (std::nothrow) Sample[RecordBufferSize]())  )
     return JACK_MEM_FAIL ;
 
   // initialize SDL event structs
@@ -223,9 +223,9 @@ void JackIO::SetCurrentScene(Scene* currentScene) { CurrentScene = currentScene 
 
 void JackIO::SetNextScene(Scene* nextScene) { NextScene = nextScene ; }
 
-vector<Sample>* JackIO::GetPeaksIn() { return &PeaksIn ; }
+std::vector<Sample>* JackIO::GetPeaksIn() { return &PeaksIn ; }
 
-vector<Sample>* JackIO::GetPeaksOut() { return &PeaksOut ; }
+std::vector<Sample>* JackIO::GetPeaksOut() { return &PeaksOut ; }
 
 Sample* JackIO::GetTransientPeaks() { return TransientPeaks ; }
 
@@ -333,7 +333,7 @@ Sample JackIO::GetPeak(Sample* buffer , Uint32 nFrames)
 
 // JACK server callbacks
 
-int JackIO::ProcessCallback(jack_nframes_t nFramesPerPeriod , void* unused)
+int JackIO::ProcessCallback(jack_nframes_t nFramesPerPeriod , void* /*unused*/)
 #if SCENE_NFRAMES_EDITABLE
 {
 DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
@@ -348,7 +348,7 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
   Sample* out2 = (Sample*)jack_port_get_buffer(OutputPort2 , nFramesPerPeriod) ;
 
   // index into the record buffers and mix out
-  list<Loop*>::iterator loopIter , loopsBeginIter , loopsEndIter ; Loop* aLoop ; float vol ;
+  std::list<Loop*>::iterator loopIter , loopsBeginIter , loopsEndIter ; Loop* aLoop ; float vol ;
   loopsBeginIter      = CurrentScene->loops.begin() ;
   loopsEndIter        = CurrentScene->loops.end() ;
   Uint32 sceneFrameN  = CurrentScene->currentFrameN , frameN ;
@@ -436,7 +436,7 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER
 // TODO: adjustable loop seams (issue #14)
 
     // copy audio samples - (see note on RecordBuffer layout in jack_io.h)
-    if ((NewLoopEventLoop = new (nothrow) Loop(nFrames + BufferMarginsSize)))
+    if ((NewLoopEventLoop = new (std::nothrow) Loop(nFrames + BufferMarginsSize)))
     {
 DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP
 
@@ -553,7 +553,7 @@ list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
     // create new Loop instance and copy record buffers to it
     if (CurrentScene->shouldSaveLoop && CurrentScene->loops.size() < Loopidity::N_LOOPS)
     {
-      if ((NewLoopEventLoop = new (nothrow) Loop(CurrentScene->nFrames)))
+      if ((NewLoopEventLoop = new (std::nothrow) Loop(CurrentScene->nFrames)))
       {
         memcpy(EventLoopCreationLoop->buffer1 , RecordBuffer1 , CurrentScene->nBytes) ;
         memcpy(EventLoopCreationLoop->buffer2 , RecordBuffer2 , CurrentScene->nBytes) ;
@@ -575,11 +575,11 @@ list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
 #endif // #if SCENE_NFRAMES_EDITABLE
 
 #if SCENE_NFRAMES_EDITABLE
-int JackIO::SampleRateCallback(jack_nframes_t sampleRate , void* unused)
+int JackIO::SampleRateCallback(jack_nframes_t sampleRate , void* /*unused*/)
   { SetMetadata(sampleRate , jack_get_buffer_size(Client)) ; return 0 ; }
 #endif // #if SCENE_NFRAMES_EDITABLE
 
-int JackIO::BufferSizeCallback(jack_nframes_t nFramesPerPeriod , void* unused)
+int JackIO::BufferSizeCallback(jack_nframes_t nFramesPerPeriod , void* /*unused*/)
 #if SCENE_NFRAMES_EDITABLE
   { SetMetadata(jack_get_sample_rate(Client) , nFramesPerPeriod) ; return 0 ; }
 #else
@@ -597,7 +597,7 @@ int JackIO::BufferSizeCallback(jack_nframes_t nFramesPerPeriod , void* unused)
 }
 #endif // #if SCENE_NFRAMES_EDITABLE
 
-void JackIO::ShutdownCallback(void* unused)
+void JackIO::ShutdownCallback(void* /*unused*/)
 {
   // close client and free resouces
   if (Client)        { jack_client_close(Client) ; }
@@ -640,10 +640,10 @@ void JackIO::SetMetadata(jack_nframes_t sampleRate , jack_nframes_t nFramesPerPe
 DEBUG_TRACE_JACK_SETMETADATA
 #  endif // #if INIT_JACK_BEFORE_SCENES
 /*
-  if ((LeadInBuffer1    = new (nothrow) Sample[NBytesPerSecond]()) &&
-      (LeadInBuffer2    = new (nothrow) Sample[NBytesPerSecond]()) &&
-      (LeadOutBuffer1   = new (nothrow) Sample[NBytesPerSecond]()) &&
-      (LeadOutBuffer2   = new (nothrow) Sample[NBytesPerSecond]()))
+  if ((LeadInBuffer1    = new (std::nothrow) Sample[NBytesPerSecond]()) &&
+      (LeadInBuffer2    = new (std::nothrow) Sample[NBytesPerSecond]()) &&
+      (LeadOutBuffer1   = new (std::nothrow) Sample[NBytesPerSecond]()) &&
+      (LeadOutBuffer2   = new (std::nothrow) Sample[NBytesPerSecond]()))
 #  if INIT_JACK_BEFORE_SCENES
     Loopidity::SetMetadata(SampleRate , NFramesPerPeriod , BeginFrameN , EndFrameN) ;
 #  else

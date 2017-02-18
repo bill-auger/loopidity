@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -200,11 +200,11 @@ DRAW_DEBUG_TEXT_R
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT
 }
 
-LoopSdl* SceneSdl::getLoopView(list<LoopSdl*>* imgs , Uint32 loopN)
+LoopSdl* SceneSdl::getLoopView(std::list<LoopSdl*>* imgs , Uint32 loopN)
 {
   if (loopN >= imgs->size()) return NULL ;
 
-  list<LoopSdl*>::iterator loopIter = imgs->begin() ; while (loopN--) ++loopIter ;
+  std::list<LoopSdl*>::iterator loopIter = imgs->begin() ; while (loopN--) ++loopIter ;
   return (*loopIter) ;
 }
 
@@ -417,8 +417,8 @@ DEBUG_TRACE_SCENESDL_DELETELOOP_IN
 
   if (loopN >= loopImgs.size()) return ;
 
-  list<LoopSdl*>::iterator histogramImgIter = histogramImgs.begin() ;
-  list<LoopSdl*>::iterator loopImgIter      = loopImgs.begin() ;
+  std::list<LoopSdl*>::iterator histogramImgIter = histogramImgs.begin() ;
+  std::list<LoopSdl*>::iterator loopImgIter      = loopImgs.begin() ;
   while (loopN--)             { ++histogramImgIter ; ++loopImgIter ; }
   if (!histogramImgs.empty()) histogramImgs.erase(histogramImgIter) ;
   if (!loopImgs.empty())      loopImgs.erase(loopImgIter) ;
@@ -434,7 +434,7 @@ SDL_Surface* SceneSdl::createHwSurface(Sint16 w , Sint16 h)
 SDL_Surface* SceneSdl::createSwSurface(Sint16 w , Sint16 h)
   { return SDL_CreateRGBSurface(SDL_SWSURFACE , w , h , PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
 
-string SceneSdl::makeDurationStatusText()
+std::string SceneSdl::makeDurationStatusText()
 {
   Uint32 nSeconds = scene->getTotalSeconds() ; char statusText[32] ;
   snprintf(statusText , 32 , "Scene: %d - %d:%02d:%02d" , sceneN ,
@@ -442,5 +442,5 @@ string SceneSdl::makeDurationStatusText()
           ((nSeconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR) ,
           ( nSeconds % SECONDS_PER_MINUTE)) ;
 
-  return string(statusText) ;
+  return std::string(statusText) ;
 }
