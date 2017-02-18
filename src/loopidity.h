@@ -1,20 +1,20 @@
-/*\ Loopidity - multitrack audio looper designed for live handsfree use
-|*| https://github.com/bill-auger/loopidity/issues/
-|*| Copyright 2013,2015 Bill Auger - https://bill-auger.github.io/
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
-|*| This file is part of Loopidity.
+|*|  This file is part of the Loopidity program.
 |*|
-|*| Loopidity is free software: you can redistribute it and/or modify
-|*| it under the terms of the GNU General Public License version 3
-|*| as published by the Free Software Foundation.
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
 |*|
-|*| Loopidity is distributed in the hope that it will be useful,
-|*| but WITHOUT ANY WARRANTY; without even the implied warranty of
-|*| MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-|*| GNU General Public License for more details.
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
 |*|
-|*| You should have received a copy of the GNU General Public License
-|*| along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
 
@@ -181,8 +181,15 @@
 #endif // _WIN32
 
 typedef jack_default_audio_sample_t Sample ;
+using namespace std ;
 
 // local includes
+class JackIO ;
+class LoopiditySdl ;
+class Loop ;
+class LoopSdl ;
+class Scene ;
+class SceneSdl ;
 #include "jack_io.h"
 #include "loopidity_sdl.h"
 #include "scene.h"
@@ -190,7 +197,6 @@ typedef jack_default_audio_sample_t Sample ;
 #include "trace.h"
 
 
-using namespace std ;
 
 
 class Loopidity

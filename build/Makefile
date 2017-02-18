@@ -62,6 +62,8 @@ before:
 	@test -d $(BINDIR)  || mkdir -p $(BINDIR)
 	@test -d $(DATADIR) || mkdir -p $(DATADIR)
 	@test -d $(OBJDIR)  || mkdir -p $(OBJDIR)
+	@test -d $(BINDIR) || mkdir -p $(BINDIR)
+	@test -d $(OBJDIR) || mkdir -p $(OBJDIR)
 
 out: before $(OBJECTS)
 	@echo "linking $(CONFIG) binary"
