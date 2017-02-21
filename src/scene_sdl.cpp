@@ -90,7 +90,7 @@ const Uint8  SceneSdl::SECONDS_PER_MINUTE = N_SECONDS_PER_MINUTE ;
 
 /* SceneSdl class side private functions */
 
-SceneSdl::SceneSdl(Scene* aScene) :
+SceneSdl::SceneSdl(Scene* a_scene , vector<Sample>* peaks_in) :
   // constants
   sceneT(      SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,
@@ -98,8 +98,9 @@ SceneSdl::SceneSdl(Scene* aScene) :
   sceneRect(   { 0 , sceneT , LoopiditySdl::WinRect.w , SceneH })
 {
   // model
-  scene  = aScene ;
-  sceneN = scene->getSceneN() ;
+  scene   = a_scene ;
+  sceneN  = scene->getSceneN() ;
+  peaksIn = peaks_in ;
 
   // drawScene() instance variables
   loopFrameColor  = STATE_IDLE_COLOR ;
@@ -118,8 +119,8 @@ SceneSdl::SceneSdl(Scene* aScene) :
   ringR         = 0 ;
   loopFrameL    = 0 ;
   loopFrameR    = 0 ;
-  scopeMaskRect = SCOPE_MASK_RECT ;
-  scopeGradRect = SCOPE_GRADIENT_RECT ;
+  scopeMaskRect = SCENE_MASK_RECT ;
+  scopeGradRect = SCENE_RECT ;
   histogramRect = HISTOGRAM_RECT ;
   histMaskRect  = HISTOGRAM_MASK_RECT ;
   histGradRect  = HISTOGRAM_GRADIENT_RECT ;
@@ -219,7 +220,7 @@ void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sce
 // TODO: for better scene scope responsiveness we could add another peaks cache with N_PEAKS_FINE/guiInterval samples granularity (e.g. peaksMed)
 // TODO: we could cache the rotImgs if need be but as of now she's pretty slick
 
-  SDL_FillRect(surface , 0 , LoopiditySdl::WinBgColor) ;
+  SDL_FillRect(surface , 0 , LoopiditySdl::WINDOW_BG_COLOR) ;
 
 #if DRAW_SCENE_SCOPE
   // draw peak gradient mask
@@ -253,8 +254,8 @@ void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sce
 #endif // #if DRAW_LOOPS
 
 #if DRAW_PEAK_RINGS
-    // draw the current and loudest peaks in this loop as rings
 // TODO: for efficiency these ringR could be computed and stored upon aLoopSdl creation
+    // draw the current and loudest peaks in this loop as rings
     ringR = (Sint16)(scene->hiLoopPeaks[loopN] * (float)PEAK_RADIUS) ;
     circleColor(surface , loopImg->loopC , Loops0 , ringR , LOOP_PEAK_MAX_COLOR) ;
     ringR = (Sint16)(scene->getLoop(loopN)->getPeakFine(currentPeakN) * (float)PEAK_RADIUS) ;
@@ -270,13 +271,13 @@ void SceneSdl::drawRecordingLoop(SDL_Surface* aSurface , Uint16 sceneProgress)
   loopL = LoopsL + (LoopW * scene->loops.size()) ;
 
   histFrameL = loopL - 1 ; histFrameR = histFrameL + HISTOGRAM_FRAME_R ;
-  drawFrame(aSurface , histFrameL , HistFramesT , histFrameR , HistFramesB , loopFrameColor) ;
+  LoopiditySdl::DrawBorder(aSurface , histFrameL , HistFramesT , histFrameR , HistFramesB , loopFrameColor) ;
   loopFrameL = histFrameL - BORDER_PAD ; loopFrameR = histFrameR + BORDER_PAD ;
-  drawFrame(aSurface , loopFrameL , LoopFrameT , loopFrameR , LoopFrameB , loopFrameColor) ;
+  LoopiditySdl::DrawBorder(aSurface , loopFrameL , LoopFrameT , loopFrameR , LoopFrameB , loopFrameColor) ;
 
   vlineColor(aSurface , loopL + sceneProgress , HistogramsT , HistogramsB , PEAK_CURRENT_COLOR) ;
 
-  loopC = loopL + PEAK_RADIUS ; ringR = *JackIO::GetTransientPeakIn() * (float)PEAK_RADIUS ;
+  loopC = loopL + PEAK_RADIUS ; ringR = (*peaksIn)[0] * (float)PEAK_RADIUS ;
   circleColor(aSurface , loopC , Loops0 , ringR , PEAK_CURRENT_COLOR) ;
 #endif
 }
@@ -284,7 +285,7 @@ void SceneSdl::drawRecordingLoop(SDL_Surface* aSurface , Uint16 sceneProgress)
 void SceneSdl::drawSceneStateIndicator(SDL_Surface* aSurface)
 {
   // scene frame
-  drawFrame(aSurface , SceneFrameL , sceneFrameT , SceneFrameR , sceneFrameB , sceneFrameColor) ;
+  LoopiditySdl::DrawBorder(aSurface , SceneFrameL , sceneFrameT , SceneFrameR , sceneFrameB , sceneFrameColor) ;
 
 //if (scene->sceneN == Loopidity::GetNextSceneN() && sceneFrameColor == STATE_PLAYING_COLOR)
   if (scene->sceneN != Loopidity::GetNextSceneN()) return ;
@@ -299,11 +300,8 @@ const Uint16 ToggleFrameR     = SceneFrameR + 4 ;
 
   // nextScene indicator frame
   Uint16 toggleFrameT = sceneFrameT - 5 ; Uint16 toggleFrameB = sceneFrameB + 5 ;
-  drawFrame(aSurface , ToggleFrameL , toggleFrameT , ToggleFrameR , toggleFrameB , ToggleFrameColor) ;
+  LoopiditySdl::DrawBorder(aSurface , ToggleFrameL , toggleFrameT , ToggleFrameR , toggleFrameB , ToggleFrameColor) ;
 }
-
-void SceneSdl::drawFrame(SDL_Surface* aSurface , Uint16 l , Uint16 t , Uint16 r , Uint16 b , Uint32 color)
-  { roundedRectangleColor(aSurface , l , t , r , b , 5 , color) ; }
 
 LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
 {
@@ -313,7 +311,7 @@ LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
   SDL_Surface* mutedSurface      = createSwSurface(HistSurfaceW , HistSurfaceH) ;
 
   // draw histogram border
-  drawFrame(playingSurface , 0 , 0 , HistFrameR , HistFrameB , STATE_PLAYING_COLOR) ;
+  LoopiditySdl::DrawBorder(playingSurface , 0 , 0 , HistFrameR , HistFrameB , STATE_PLAYING_COLOR) ;
 
   // draw histogram
   for (histPeakN = 0 ; histPeakN < N_PEAKS_COURSE ; ++histPeakN)
