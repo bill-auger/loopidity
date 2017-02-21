@@ -49,14 +49,14 @@
 #define SCENE_H                 ((Y_PADDING * 3) + HISTOGRAMS_H + LOOP_DIAMETER)
 #define SCENE_L                 (LOOPS_L - BORDER_PAD - 1)
 #define SCENE_R                 (SCENE_L + 999) // SCOPE_IMG is 1000x101 , LOOP_DIAMETER is 101 when PEAK_RADIUS is 50
-#define SCENE_T                 (HEADER_H + (BORDER_PAD * 2) + (SCENE_H * aScene->getSceneN()))
+#define SCENE_T                 (HEADER_H + (BORDER_PAD * 2) + (SCENE_H * a_scene->getSceneN()))
 #define SCENE_B                 (SCENE_T + SCENE_H)
 #define SCENE_FRAME_L           (SCENE_L - BORDER_PAD - 1)
 #define SCENE_FRAME_R           (SCENE_R + BORDER_PAD + 1)
 #define SCENE_FRAME_T           (SCENE_T + LOOP_FRAMES_T - BORDER_PAD - 1)
 #define SCENE_FRAME_B           (SCENE_T + LOOP_FRAMES_B + BORDER_PAD + 1)
-#define SCOPE_MASK_RECT         { 0 , 0 , SCENE_W , 0 }
-#define SCOPE_GRADIENT_RECT     { SCENE_L , 0 , 0 , 0 }
+#define SCENE_MASK_RECT         { 0 , 0 , SCENE_W , 0 }
+#define SCENE_RECT              { SCENE_L , 0 , 0 , 0 }
 #define HISTOGRAM_RECT          { 0 , HISTOGRAM_FRAMES_T , 0 , 0 }
 #define HISTOGRAM_MASK_RECT     { 0 , 0 , 1 , 0 }
 #define HISTOGRAM_GRADIENT_RECT { 0 , 0 , 0 , 0 }
@@ -68,16 +68,16 @@
 #define N_SECONDS_PER_MINUTE    60
 
 // colors
-#define SCOPE_PEAK_MAX_COLOR  0x800000ff
-#define SCOPE_PEAK_ZERO_COLOR 0x008000ff
-#define STATE_RECORDING_COLOR 0xff0000ff
-#define STATE_PENDING_COLOR   0xffff00ff
-#define STATE_PLAYING_COLOR   0x00ff00ff
-#define STATE_IDLE_COLOR      0x808080ff
-#define PEAK_CURRENT_COLOR    0xffff00ff
-#define HISTOGRAM_PEAK_COLOR  0x008000ff
-#define LOOP_PEAK_MAX_COLOR   0x800000ff
-#define LOOP_IMG_MASK_COLOR   0xffffffff
+#define SCOPE_PEAK_MAX_COLOR  0x800000FF
+#define SCOPE_PEAK_ZERO_COLOR 0x008000FF
+#define STATE_RECORDING_COLOR 0xFF0000FF
+#define STATE_PENDING_COLOR   0xFFFF00FF
+#define STATE_PLAYING_COLOR   0x00FF00FF
+#define STATE_IDLE_COLOR      0x808080FF
+#define PEAK_CURRENT_COLOR    0xFFFF00FF
+#define HISTOGRAM_PEAK_COLOR  0x008000FF
+#define LOOP_PEAK_MAX_COLOR   0x800000FF
+#define LOOP_IMG_MASK_COLOR   0xFFFFFFFF
 
 // loop states
 #define STATE_LOOP_PLAYING 1
@@ -163,10 +163,11 @@ class SceneSdl
     static const Uint8  MINUTES_PER_HOUR ;
     static const Uint8  SECONDS_PER_MINUTE ;
 
+
     /* SceneSdl class side private functions */
 
     // setup
-    SceneSdl(Scene* aScene) ;
+    SceneSdl(Scene* a_scene , vector<Sample>* peaks_in) ;
 
     // helpers
     static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
@@ -188,8 +189,9 @@ class SceneSdl
     /* SceneSdl instance side private varables */
 
     // model
-    Scene* scene ;
-    Uint8  sceneN ;
+    Scene*               scene ;
+    Uint8                sceneN ;
+    std::vector<Sample>* peaksIn ;
 
     // loop image caches
     std::list<LoopSdl*> histogramImgs ;
@@ -244,8 +246,6 @@ class SceneSdl
                                      Uint16 loopProgress) ;
     void     drawRecordingLoop(      SDL_Surface* aSurface , Uint16 loopProgress) ;
     void     drawSceneStateIndicator(SDL_Surface* aSurface) ;
-    void     drawFrame(              SDL_Surface* aSurface , Uint16 l , Uint16 t    ,
-                                     Uint16       r        , Uint16 b , Uint32 color) ;
     LoopSdl* drawHistogram(          Loop* aLoop) ;
     LoopSdl* drawLoop(               Loop* aLoop , Uint16 loopN) ;
 
