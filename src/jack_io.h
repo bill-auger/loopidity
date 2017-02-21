@@ -27,14 +27,18 @@
 
 class JackIO
 {
+  public:
+
+    /* JackIO class side public constants */
+
+    static const Uint8 N_INPUT_CHANNELS ;
+    static const Uint8 N_OUTPUT_CHANNELS ;
+
+
   private:
 
     /* JackIO class side private constants */
-
-    static const Uint32 N_PORTS ;
-    static const Uint32 N_INPUT_PORTS ;
-    static const Uint32 N_OUTPUT_PORTS ;
-    static const Uint32 N_TRANSIENT_PEAKS ;
+    static const Uint16 N_SCOPE_PEAKS ;
     static const Uint32 DEFAULT_BUFFER_SIZE ;
     static const Uint32 N_BYTES_PER_FRAME ;
     static const Uint32 GUI_UPDATE_IVL ;
@@ -47,6 +51,8 @@ class JackIO
 #if FIXED_N_AUDIO_PORTS
     static jack_port_t*   InputPort1 ;
     static jack_port_t*   InputPort2 ;
+    static jack_port_t*   InputPort3 ;
+    static jack_port_t*   InputPort4 ;
     static jack_port_t*   OutputPort1 ;
     static jack_port_t*   OutputPort2 ;
 #else // TODO: much
@@ -73,15 +79,15 @@ class JackIO
 #endif // #if FIXED_N_AUDIO_PORTS
 
     // peaks data
-    static std::vector<Sample> PeaksIn ;                       // scope peaks (mono mix)
-    static std::vector<Sample> PeaksOut ;                      // scope peaks (mono mix)
+    static std::vector<Sample> PeaksIn ;      // scope peaks (mono mix)
+    static std::vector<Sample> PeaksOut ;     // scope peaks (mono mix)
 #if FIXED_N_AUDIO_PORTS
-    static Sample              TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
+    static Sample              PeaksVuIn[] ;  // VU peaks (per channel)
+    static Sample              PeaksVuOut[] ; // VU peaks (per channel)
 #else // TODO:
-    static Sample              TransientPeaks[N_AUDIO_PORTS] ; // VU peaks (per channel)
+    static std::vector<Sample> PeaksVuIn ;    // VU peaks (per channel)
+    static std::vector<Sample> PeaksVuOut ;   // VU peaks (per channel)
 #endif // #if FIXED_N_AUDIO_PORTS
-    static Sample              TransientPeakInMix ;
-//    static Sample              TransientPeakOutMix ;
 
     // event structs
     static SDL_Event NewLoopEvent ;
@@ -141,17 +147,17 @@ class JackIO
     static Uint32    GetSampleRate(      void) ;
     static Uint32    GetNBytesPerSecond(void) ;
 */
-    static void                 SetCurrentScene(   Scene* currentScene) ;
-    static void                 SetNextScene(      Scene* nextScene) ;
-    static std::vector<Sample>* GetPeaksIn(        void) ;
-    static std::vector<Sample>* GetPeaksOut(       void) ;
-    static Sample*              GetTransientPeaks( void) ;
-    static Sample*              GetTransientPeakIn(void) ;
-//    static Sample*              GetTransientPeakOut(   void) ;
+    static void                 SetCurrentScene(Scene* currentScene) ;
+    static void                 SetNextScene   (Scene* nextScene) ;
+    static std::vector<Sample>* GetPeaksIn     (void) ;
+    static std::vector<Sample>* GetPeaksOut    (void) ;
+    static Sample*              GetPeaksVuIn   (void) ;
+    static Sample*              GetPeaksVuOut  (void) ;
 
     // helpers
-    static void   ScanTransientPeaks(void) ;
-    static Sample GetPeak(           Sample* buffer , Uint32 nFrames) ;
+    static void   ScanPeaks          (void) ;
+    static Sample GetPeak            (Sample* buffer , Uint32 nFrames) ;
+    static void   ResetTransientPeaks() ;
 
 
   private:
@@ -167,7 +173,8 @@ class JackIO
     // helpers
     static jack_port_t* RegisterPort(const char* portName , unsigned long portType) ;
 #if SCENE_NFRAMES_EDITABLE
-    static void         SetMetadata( jack_nframes_t sampleRate , jack_nframes_t nFramesPerPeriod) ;
+    static void         SetMetadata (jack_nframes_t sampleRate , jack_nframes_t nFramesPerPeriod) ;
+    static void         Rollover    () ;
 #endif // #if SCENE_NFRAMES_EDITABLE
 } ;
 
