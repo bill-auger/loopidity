@@ -76,7 +76,7 @@ Loop::~Loop() { delete buffer1 ; delete buffer2 ; }
 Sample Loop::getPeakFine(Uint32 peakN) { return peaksFine[peakN] ; }
 
 Sample Loop::getPeakCourse(Uint32 peakN) { return peaksCourse[peakN] ; }
-//Scene* Scene::DummyScene = new Scene(DUMMY_SCENEN) ;
+
 
 /* Scene class side private functions */
 #if INIT_JACK_BEFORE_SCENES
@@ -277,29 +277,29 @@ void Scene::scanPeaks(Loop* loop , Uint32 loopN)
 {
 DEBUG_TRACE_SCENE_SCANPEAKS_IN
 
-#if SCAN_LOOP_PEAKS_DATA
+#if SCAN_LOOP_PEAKS
   if (!loop || loopN >= Loopidity::N_LOOPS) return ;
 
   // fill fine peaks arrays
   Sample* peaks = loop->peaksFine ; Uint32 peakN , frameN ; Sample peak1 , peak2 ;
   for (peakN = 0 ; peakN < N_FINE_PEAKS ; ++peakN)
   {
-#if SCENE_NFRAMES_EDITABLE
-#  if INIT_JACK_BEFORE_SCENES
+#  if SCENE_NFRAMES_EDITABLE
+#    if INIT_JACK_BEFORE_SCENES
     frameN       = BeginFrameN + (nFramesPerPeak * peakN) ;
-#  else
+#    else
     frameN       = BUFFER_MARGIN_SIZE + (nFramesPerPeak * peakN) ;
-#  endif // #if INIT_JACK_BEFORE_SCENES
-#else
+#    endif // INIT_JACK_BEFORE_SCENES
+#  else // SCENE_NFRAMES_EDITABLE
     frameN       = nFramesPerPeak * peakN ;
-#endif // #if SCENE_NFRAMES_EDITABLE
+#  endif // SCENE_NFRAMES_EDITABLE
     peak1        = JackIO::GetPeak(&(loop->buffer1[frameN]) , nFramesPerPeak) ;
     peak2        = JackIO::GetPeak(&(loop->buffer2[frameN]) , nFramesPerPeak) ;
 #  if FIXED_N_AUDIO_PORTS
-    peaks[peakN] = (peak1 + peak2) / N_INPUT_CHANNELS ;
-#  else
-    peaks[peakN] = (peak1 + peak2) / N_INPUT_CHANNELS ;
-#  endif // #if FIXED_N_AUDIO_PORTS
+    peaks[peakN] = (peak1 + peak2) / JackIO::N_OUTPUT_CHANNELS ;
+#  else // FIXED_N_AUDIO_PORTS
+    peaks[peakN] = (peak1 + peak2) / JackIO::N_OUTPUT_CHANNELS ;
+#  endif // FIXED_N_AUDIO_PORTS
 
     // find the loudest peak for this loop
     if (hiLoopPeaks[loopN] < peaks[peakN]) hiLoopPeaks[loopN] = peaks[peakN] ;
@@ -317,7 +317,7 @@ DEBUG_TRACE_SCENE_SCANPEAKS_IN
     peakN                  = (Uint32)(FinePeaksPerCoursePeak * (float)histPeakN) ;
     peaksCourse[histPeakN] = JackIO::GetPeak(&peaks[peakN] , NFinePeaksPerCoursePeak) ;
   }
-#endif // #if SCAN_LOOP_PEAKS_DATA
+#endif // SCAN_LOOP_PEAKS
 
 DEBUG_TRACE_SCENE_SCANPEAKS_OUT
 }
