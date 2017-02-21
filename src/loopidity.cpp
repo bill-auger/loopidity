@@ -47,7 +47,10 @@ Uint32 Loopidity::NextSceneN    = 0 ;
 // runtime flags
 #if WAIT_FOR_JACK_INIT
 bool Loopidity::IsJackReady           = false ;
-#endif // #if WAIT_FOR_JACK_INIT
+#endif // WAIT_FOR_JACK_INIT
+#if  INIT_JACK_BEFORE_SCENES
+bool Loopidity::IsInitialized         = false ;
+#endif // INIT_JACK_BEFORE_SCENES
 bool Loopidity::IsRolling             = false ;
 bool Loopidity::ShouldSceneAutoChange = false ;
 bool Loopidity::IsEditMode            = false ;
@@ -59,29 +62,31 @@ bool Loopidity::IsEditMode            = false ;
 
 int Loopidity::Main(int argc , char** argv)
 {
-  // 'singleton' sanity check
-  if (IsInitialized()) return false ;
+  // sanity checks
+#if INIT_JACK_BEFORE_SCENES
+  if (IsInitialized          ) return false ;
+#else // INIT_JACK_BEFORE_SCENES
+  if (IsInitialized()        ) return false ;
+#endif // INIT_JACK_BEFORE_SCENES
+  if (N_SCENES + 2 < N_SCENES) return false ;
 
   // parse command line arguments
-  bool isMonitorInputs = true , isAutoSceneChange = true ; Uint32 recordBufferSize ;
+  bool   shouldMonitorInputs  = true ;
+  bool   shouldAutoSceneChange = true ;
+  Uint32 recordBufferSize ;
   for (int argN = 0 ; argN < argc ; ++argN)
-    if      (!strcmp(argv[argN] , MONITOR_ARG))      isMonitorInputs   = false ;
-    else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) isAutoSceneChange = false ;
+    if      (!strcmp(argv[argN] , MONITOR_ARG))      shouldMonitorInputs   = false ;
+    else if (!strcmp(argv[argN] , SCENE_CHANGE_ARG)) shouldAutoSceneChange = false ;
     // TODO: user defined buffer sizes via command line
 #if FIXED_AUDIO_BUFFER_SIZE
-    else if (!strcmp(argv[argN] , BUFFER_SIZE_ARG)) isAutoSceneChange = !!(bufferSize = arg) ;
+    else if (!strcmp(argv[argN] , BUFFER_SIZE_ARG)) shouldAutoSceneChange = !!(bufferSize = arg) ;
 #else
   recordBufferSize = 0 ;
 #endif // #if FIXED_AUDIO_BUFFER_SIZE
 
-  // initialize Loopidity (controller) and instantiate Scenes (models and SdlScenes (views))
-  if (!Init(isMonitorInputs , isAutoSceneChange , recordBufferSize)) return Cleanup(EXIT_FAILURE) ;
-
-  // initialize LoopiditySdl (view)
-  vector<Sample>* peaksIn  = JackIO::GetPeaksIn() ;
-  vector<Sample>* peaksOut = JackIO::GetPeaksOut() ;
-  Sample* transientPeaks   = JackIO::GetTransientPeaks() ;
-  if (!LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , transientPeaks))
+  // initialize Loopidity (controller), JackIO (controller), and LoopiditySdl (main view)
+  //     and instantiate Scenes (models) and SdlScenes (views)
+  if (!Init(shouldMonitorInputs , shouldAutoSceneChange , recordBufferSize))
     return Cleanup(EXIT_FAILURE) ;
 
 DEBUG_TRACE_LOOPIDITY_MAIN_MID
@@ -119,14 +124,16 @@ if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
     else { SDL_Delay(1) ; continue ; }
 
     // draw high priority
-    JackIO::ScanTransientPeaks() ;
+    JackIO::ScanPeaks() ;
     LoopiditySdl::DrawScenes() ;
 #if SCENE_NFRAMES_EDITABLE
-    if (IsEditMode) LoopiditySdl::DrawEditScopes() ;
-    else LoopiditySdl::DrawTransientScopes() ;
+    if (IsEditMode) LoopiditySdl::DrawEditor() ;
+    else            LoopiditySdl::DrawScopes() ;
 #else
     LoopiditySdl::DrawScopes() ;
 #endif // #if SCENE_NFRAMES_EDITABLE
+    LoopiditySdl::DrawVUs() ;
+    JackIO::ResetTransientPeaks() ;
 
     // draw low priority
     if (!(guiLongCount = (guiLongCount + 1) % GUI_UPDATE_LOW_PRIORITY_NICE))
@@ -204,11 +211,13 @@ void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OU
 
 // setup
 
-#if WAIT_FOR_JACK_INIT
-  bool Loopidity::IsInitialized() { return IsJackReady && !!Scenes[0] && !!SdlScenes[0] ; }
-#else
-  bool Loopidity::IsInitialized() { return !!Scenes[0] ; }
-#endif // #if WAIT_FOR_JACK_INIT
+#if ! INIT_JACK_BEFORE_SCENES
+#  if WAIT_FOR_JACK_INIT
+bool Loopidity::IsInitialized() { return IsJackReady && !!Scenes[0] && !!SceneSdl[0] ; }
+#  else // #if WAIT_FOR_JACK_INIT
+bool Loopidity::IsInitialized() { return !!Scenes[0] ; }
+#  endif // #if WAIT_FOR_JACK_INIT
+#endif // INIT_JACK_BEFORE_SCENES
 bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
                      Uint32 recordBufferSize                                 )
 {
@@ -216,24 +225,27 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
   if (!shouldAutoSceneChange) ToggleAutoSceneChange() ;
 
 #if INIT_JACK_BEFORE_SCENES
-  // sanity checks
-  if (N_SCENES + 2 < N_SCENES) return false ;
 
   // initialize JACK
   switch (JackIO::Init(shouldMonitorInputs , recordBufferSize))
   {
-    case JACK_MEM_FAIL: LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return false ;
-    case JACK_SW_FAIL:  LoopiditySdl::Alert(JACK_SW_FAIL_MSG       ) ; return false ;
-    case JACK_HW_FAIL:  LoopiditySdl::Alert(JACK_HW_FAIL_MSG       ) ; return false ;
-    default:            break ;
+    case JACK_MEM_FAIL: LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return false ; break ;
+    case JACK_SW_FAIL:  LoopiditySdl::Alert(JACK_SW_FAIL_MSG       ) ; return false ; break ;
+    case JACK_HW_FAIL:  LoopiditySdl::Alert(JACK_HW_FAIL_MSG       ) ; return false ; break ;
+    default:                                                                          break ;
   }
 
 #  if WAIT_FOR_JACK_INIT
   // wait for JACK metadata
   while (!IsJackReady && (InitJackTimeout -= 100) > 0) usleep(100000) ;
   if (!IsJackReady) return false ; // via SetMetadata()
-#  endif // #if WAIT_FOR_JACK_INIT
-#endif // #if INIT_JACK_BEFORE_SCENES
+#  endif // WAIT_FOR_JACK_INIT
+#endif // INIT_JACK_BEFORE_SCENES
+
+  std::vector<Sample>* peaksIn    = JackIO::GetPeaksIn() ;
+  std::vector<Sample>* peaksOut   = JackIO::GetPeaksOut() ;
+  Sample*              peaksVuIn  = JackIO::GetPeaksVuIn() ;
+  Sample*              peaksVuOut = JackIO::GetPeaksVuOut() ;
 
   // instantiate Scenes (models) and SdlScenes (views)
   for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
@@ -242,11 +254,11 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
     {
 #if INIT_JACK_BEFORE_SCENES
       Scenes   [sceneN] = new Scene(sceneN) ;
-      SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN]) ;
-#else
+      SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN] , peaksIn) ;
+#else // INIT_JACK_BEFORE_SCENES
       Scenes   [sceneN] = new Scene(sceneN , JackIO::GetRecordBufferSize()) ;
-      SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN]) ;
-#endif // #if INIT_JACK_BEFORE_SCENES
+      SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN] , peaksIn) ;
+#endif // INIT_JACK_BEFORE_SCENES
     }
     catch(exception& ex) { LoopiditySdl::Alert(ex.what()) ; return false ; }
 
@@ -254,22 +266,37 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
   }
 
 #if INIT_JACK_BEFORE_SCENES
-  JackIO::Reset(Scenes[0]) ; return true ;
-#else
+  JackIO::Reset(Scenes[0]) ;
+#else // INIT_JACK_BEFORE_SCENES
   // initialize JACK
   switch (JackIO::Init(Scenes[0] , shouldMonitorInputs , recordBufferSize))
   {
-    case JACK_MEM_FAIL: LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return false ;
-    case JACK_SW_FAIL:  LoopiditySdl::Alert(JACK_SW_FAIL_MSG       ) ; return false ;
-    case JACK_HW_FAIL:  LoopiditySdl::Alert(JACK_HW_FAIL_MSG       ) ; return false ;
-    default:            break ;
+    case JACK_MEM_FAIL: LoopiditySdl::Alert(INSUFFICIENT_MEMORY_MSG) ; return false ; break ;
+    case JACK_SW_FAIL:  LoopiditySdl::Alert(JACK_SW_FAIL_MSG       ) ; return false ; break ;
+    case JACK_HW_FAIL:  LoopiditySdl::Alert(JACK_HW_FAIL_MSG       ) ; return false ; break ;
+    default:                                                                          break ;
   }
 #  if WAIT_FOR_JACK_INIT
   // wait for JACK metadata
   while (!IsJackReady && (InitJackTimeout -= 100) > 0) usleep(100000) ;
-  if (!IsJackReady) return false ; // via SetMetadata()
-#  endif // #if WAIT_FOR_JACK_INIT
-#endif // #if INIT_JACK_BEFORE_SCENES
+  if (!IsJackReady)                                    return false ; // via SetMetadata()
+#  endif // WAIT_FOR_JACK_INIT
+#endif // INIT_JACK_BEFORE_SCENES
+
+  // initialize LoopiditySdl (view)
+#if INIT_JACK_BEFORE_SCENES
+  IsInitialized = LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , peaksVuIn , peaksVuOut) ;
+
+  if (!IsInitialized) Cleanup(EXIT_FAILURE) ;
+
+  return IsInitialized ;
+#else // INIT_JACK_BEFORE_SCENES
+  bool is_initialized = LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , peaksVuIn , peaksVuOut) ;
+
+  if (!is_initialized) Cleanup(EXIT_FAILURE) ;
+
+  return is_initialized ;
+#endif // INIT_JACK_BEFORE_SCENES
 }
 
 #if INIT_JACK_BEFORE_SCENES
@@ -484,7 +511,9 @@ DEBUG_TRACE_LOOPIDITY_TOGGLELOOPISMUTED_OUT
 }
 
 void Loopidity::ToggleSceneIsMuted()
-  { Scene* scene = Scenes[CurrentSceneN] ; scene->isMuted = !scene->isMuted ; }
+{
+  Scene* scene = Scenes[CurrentSceneN] ; scene->isMuted = !scene->isMuted ;
+}
 
 void Loopidity::ToggleEditMode() { IsEditMode = !IsEditMode ; }
 

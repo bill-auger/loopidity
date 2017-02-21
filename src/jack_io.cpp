@@ -21,15 +21,24 @@
 #include "jack_io.h"
 
 
+/* JackIO class side public constants */
+
+#if FIXED_N_AUDIO_PORTS
+const Uint8 JackIO::N_INPUT_CHANNELS  = N_IN_CHANNELS ;
+const Uint8 JackIO::N_OUTPUT_CHANNELS = N_OUT_CHANNELS ;
+#else // FIXED_N_AUDIO_PORTS // see loopidity.h
+const Uint8 JackIO::MAX_INPUT_CHANNELS  = MAX_INPUT_CHANNELS ;
+const Uint8 JackIO::MAX_OUTPUT_CHANNELS = MAX_OUTPUT_CHANNELS ;
+// also pvt MAX_PORTS below
+#endif // FIXED_N_AUDIO_PORTS
+
+
 /* JackIO class side private constants */
 
-const Uint32 JackIO::N_PORTS              = N_AUDIO_PORTS ;
-const Uint32 JackIO::N_INPUT_PORTS        = N_INPUT_CHANNELS ;
-const Uint32 JackIO::N_OUTPUT_PORTS       = N_OUTPUT_CHANNELS ;
-const Uint32 JackIO::N_TRANSIENT_PEAKS    = N_PEAKS_TRANSIENT ;
-const Uint32 JackIO::DEFAULT_BUFFER_SIZE  = DEFAULT_AUDIO_BUFFER_SIZE ;
-const Uint32 JackIO::N_BYTES_PER_FRAME    = sizeof(Sample) ;
-const Uint32 JackIO::GUI_UPDATE_IVL       = GUI_UPDATE_INTERVAL ;
+const Uint16 JackIO::N_SCOPE_PEAKS       = N_PEAKS_SCOPE ;
+const Uint32 JackIO::DEFAULT_BUFFER_SIZE = DEFAULT_AUDIO_BUFFER_SIZE ;
+const Uint32 JackIO::N_BYTES_PER_FRAME   = sizeof(Sample) ;
+const Uint32 JackIO::GUI_UPDATE_IVL      = GUI_UPDATE_INTERVAL ;
 
 
 /* JackIO class side private varables */
@@ -39,6 +48,8 @@ jack_client_t* JackIO::Client      = 0 ; // Init()
 #if FIXED_N_AUDIO_PORTS
 jack_port_t*   JackIO::InputPort1  = 0 ; // Init()
 jack_port_t*   JackIO::InputPort2  = 0 ; // Init()
+jack_port_t*   JackIO::InputPort3  = 0 ; // Init()
+jack_port_t*   JackIO::InputPort4  = 0 ; // Init()
 jack_port_t*   JackIO::OutputPort1 = 0 ; // Init()
 jack_port_t*   JackIO::OutputPort2 = 0 ; // Init()
 #else // TODO: much
@@ -62,16 +73,16 @@ Sample* JackIO::LeadInBuffer2  = 0 ; // SetMetadata()
 Sample* JackIO::LeadOutBuffer1 = 0 ; // SetMetadata()
 Sample* JackIO::LeadOutBuffer2 = 0 ; // SetMetadata()
 */
-#  endif // #if SCENE_NFRAMES_EDITABLE
-#else // TODO: much
-#endif // #if FIXED_N_AUDIO_PORTS
+#  endif // SCENE_NFRAMES_EDITABLE
+#else // FIXED_N_AUDIO_PORTS
+// TODO: much
+#endif // FIXED_N_AUDIO_PORTS
 
 // peaks data
-vector<Sample> JackIO::PeaksIn ;                         // Reset()
-vector<Sample> JackIO::PeaksOut ;                        // Reset()
-Sample         JackIO::TransientPeaks[N_PORTS] = {0.0} ;
-Sample         JackIO::TransientPeakInMix      = 0 ;
-//Sample         JackIO::TransientPeakOutMix     = 0 ;
+vector<Sample> JackIO::PeaksIn ;                               // Reset()
+vector<Sample> JackIO::PeaksOut ;                              // Reset()
+Sample         JackIO::PeaksVuIn [N_INPUT_CHANNELS ] = {0.0} ;
+Sample         JackIO::PeaksVuOut[N_OUTPUT_CHANNELS] = {0.0} ;
 
 // event structs
 SDL_Event    JackIO::NewLoopEvent ;               // Init()
@@ -127,7 +138,7 @@ DEBUG_TRACE_JACK_INIT
   Reset(currentScene) ; ShouldMonitorInputs = shouldMonitorInputs ;
 #endif // #if INIT_JACK_BEFORE_SCENES
 
-  // initialize record buffers
+  // initialize playback and record buffers
   recordBufferSize /= N_BYTES_PER_FRAME ;
   RecordBufferSize  = !!(recordBufferSize) ? recordBufferSize : DEFAULT_BUFFER_SIZE ;
   if (!(RecordBuffer1 = new (nothrow) Sample[RecordBufferSize]()) ||
@@ -145,7 +156,7 @@ DEBUG_TRACE_JACK_INIT
   SceneChangeEvent.user.data2 = 0 ; // unused
 
   // register JACK client
-  if (!(Client = jack_client_open(APP_NAME , JackNoStartServer , NULL)))
+  if (!(Client = jack_client_open(JACK_NAME , JackNoStartServer , NULL)))
     return JACK_SW_FAIL ;
 
 #if INIT_JACK_BEFORE_SCENES
@@ -162,17 +173,22 @@ DEBUG_TRACE_JACK_INIT
 
   // register I/O ports
 #if INIT_JACK_BEFORE_SCENES
-  if (!(InputPort1  = RegisterPort(JACK_INPUT1_PORT_NAME  , JackPortIsInput))  ||
-      !(InputPort2  = RegisterPort(JACK_INPUT2_PORT_NAME  , JackPortIsInput))  ||
+  if (!(InputPort1  = RegisterPort(JACK_INPUT1_PORT_NAME  , JackPortIsInput )) ||
+      !(InputPort2  = RegisterPort(JACK_INPUT2_PORT_NAME  , JackPortIsInput )) ||
+      !(InputPort3  = RegisterPort(JACK_INPUT3_PORT_NAME  , JackPortIsInput )) ||
+      !(InputPort4  = RegisterPort(JACK_INPUT4_PORT_NAME  , JackPortIsInput )) ||
       !(OutputPort1 = RegisterPort(JACK_OUTPUT1_PORT_NAME , JackPortIsOutput)) ||
-      !(OutputPort2 = RegisterPort(JACK_OUTPUT2_PORT_NAME , JackPortIsOutput)))
+      !(OutputPort2 = RegisterPort(JACK_OUTPUT2_PORT_NAME , JackPortIsOutput))  )
     return JACK_HW_FAIL ;
 #else
-  if (!(InputPort1  = RegisterPort(JACK_INPUT1_PORT_NAME  , JackPortIsInput))  ||
-      !(InputPort2  = RegisterPort(JACK_INPUT2_PORT_NAME  , JackPortIsInput))  ||
+  if (!(InputPort1  = RegisterPort(JACK_INPUT1_PORT_NAME  , JackPortIsInput )) ||
+      !(InputPort2  = RegisterPort(JACK_INPUT2_PORT_NAME  , JackPortIsInput )) ||
+      !(InputPort3  = RegisterPort(JACK_INPUT3_PORT_NAME  , JackPortIsInput )) ||
+      !(InputPort4  = RegisterPort(JACK_INPUT4_PORT_NAME  , JackPortIsInput )) ||
       !(OutputPort1 = RegisterPort(JACK_OUTPUT1_PORT_NAME , JackPortIsOutput)) ||
       !(OutputPort2 = RegisterPort(JACK_OUTPUT2_PORT_NAME , JackPortIsOutput)) ||
-      jack_activate(Client)) return JACK_HW_FAIL ;
+      jack_activate(Client)                                                     )
+    return JACK_HW_FAIL ;
 #endif // #if INIT_JACK_BEFORE_SCENES
 
   // propogate server state
@@ -190,18 +206,18 @@ DEBUG_TRACE_JACK_RESET
 //  CurrentScene   = NextScene  = currentScene ;
 //  CurrentSceneN  = NextSceneN = currentScene->sceneN ;
 //  BytesPerPeriod = FramesPerPeriod = 0 ;
-  BytesPerPeriod = 0 ;
+    // BytesPerPeriod is critical - do not reset this unless BufferSizeCallback will fire before next ProcessCallback
+//  BytesPerPeriod = 0 ;
 
-  // initialize scope/VU peaks cache
-  for (Uint32 peakN = 0 ; peakN < N_TRANSIENT_PEAKS ; ++peakN)
-    { PeaksIn.push_back(0.0) ; PeaksOut.push_back(0.0) ; }
+  // initialize/reset scope/VU peaks cache
+  while (PeaksIn .size() < N_SCOPE_PEAKS) PeaksIn .push_back(0.0) ;
+  while (PeaksOut.size() < N_SCOPE_PEAKS) PeaksOut.push_back(0.0) ;
+  std::fill_n(PeaksIn .begin() , N_SCOPE_PEAKS , 0.0) ;
+  std::fill_n(PeaksOut.begin() , N_SCOPE_PEAKS , 0.0) ;
 
 #if INIT_JACK_BEFORE_SCENES
-  // destroy dummy Scene
-//  if (DummyScene) { delete DummyScene ; DummyScene = 0 ; }
-
   // begin processing audio
-  jack_activate(Client) ;
+  if (!Loopidity::IsInitialized) jack_activate(Client) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
 }
 
@@ -227,18 +243,16 @@ vector<Sample>* JackIO::GetPeaksIn() { return &PeaksIn ; }
 
 vector<Sample>* JackIO::GetPeaksOut() { return &PeaksOut ; }
 
-Sample* JackIO::GetTransientPeaks() { return TransientPeaks ; }
+Sample* JackIO::GetPeaksVuIn() { return PeaksVuIn ; }
 
-Sample* JackIO::GetTransientPeakIn() { return &TransientPeakInMix ; }
-
-//Sample* JackIO::GetTransientPeakOut() { return &TransientPeakOutMix ; }
+Sample* JackIO::GetPeaksVuOut() { return PeaksVuOut ; }
 
 
 // helpers
 
-void JackIO::ScanTransientPeaks()
+void JackIO::ScanPeaks()
 {
-#if SCAN_TRANSIENT_PEAKS_DATA
+#if SCAN_PEAKS
 // TODO; first NFramesPerGuiInterval duplicated?
 #  if SCENE_NFRAMES_EDITABLE
 // TODO: next version currentFrameN will never be < BufferMarginSize (assert BufferMarginSize >> NFramesPerGuiInterval)
@@ -268,7 +282,7 @@ void JackIO::ScanTransientPeaks()
   Uint32 frameN = CurrentScene->currentFrameN ;
   frameN        = (frameN < FramesPerGuiInterval) ? 0 : frameN - FramesPerGuiInterval ;
 
-  // initialize with inputs
+  // initialize with captured inputs
   Sample peakIn1 = GetPeak(&(RecordBuffer1[frameN]) , FramesPerGuiInterval) ;
   Sample peakIn2 = GetPeak(&(RecordBuffer2[frameN]) , FramesPerGuiInterval) ;
 
@@ -283,33 +297,23 @@ void JackIO::ScanTransientPeaks()
     peakOut1 += GetPeak(&(loop->buffer1[frameN]) , FramesPerGuiInterval) * loop->vol ;
     peakOut2 += GetPeak(&(loop->buffer2[frameN]) , FramesPerGuiInterval) * loop->vol ;
   }
-#  endif // #if SCENE_NFRAMES_EDITABLE
+#  endif // SCENE_NFRAMES_EDITABLE
 
+  // average as mono
 #  if FIXED_N_AUDIO_PORTS
-  Sample peakIn  = (peakIn1 + peakIn2)   / N_INPUT_PORTS ;
-  Sample peakOut = (peakOut1 + peakOut2) / N_OUTPUT_PORTS ;
+  Sample peakIn  = (peakIn1  + peakIn2 ) / N_OUTPUT_CHANNELS ;
+  Sample peakOut = (peakOut1 + peakOut2) / N_OUTPUT_CHANNELS ;
   if (peakOut > 1.0) peakOut = 1.0 ;
-#  else
-  Sample peakIn  = (peakIn1 + peakIn2)   / N_INPUT_PORTS ;
-  Sample peakOut = (peakOut1 + peakOut2) / N_OUTPUT_PORTS ;
+#  else // FIXED_N_AUDIO_PORTS
+  Sample peakIn  = (peakIn1  + peakIn2 ) / NOutputPorts ; // NOutputPorts nyi
+  Sample peakOut = (peakOut1 + peakOut2) / NOutputPorts ; // NOutputPorts nyi
   if (peakOut > 1.0) peakOut = 1.0 ;
-#  endif // #if FIXED_N_AUDIO_PORTS
+#  endif // FIXED_N_AUDIO_PORTS
 
-  // load scope peaks (mono mix)
-  PeaksIn.pop_back()  ; PeaksIn.insert(PeaksIn.begin()   , peakIn) ;
+  // load scope peaks cache (mono mix)
+  PeaksIn .pop_back() ; PeaksIn .insert(PeaksIn .begin() , peakIn ) ;
   PeaksOut.pop_back() ; PeaksOut.insert(PeaksOut.begin() , peakOut) ;
-
-  // load VU peaks (per channel)
-#  if FIXED_N_AUDIO_PORTS
-  TransientPeakInMix = peakIn ;   //TransientPeakOutMix = peakOut ;
-  TransientPeaks[0]  = peakIn1 ;  TransientPeaks[1]   = peakIn2 ;
-  TransientPeaks[2]  = peakOut1 ; TransientPeaks[3]   = peakOut2 ;
-#  else // TODO: magic #s ~= N_PORTS (see #def)
-  TransientPeakInMix = peakIn ;   //TransientPeakOutMix = peakOut ;
-  TransientPeaks[0]  = peakIn1 ;  TransientPeaks[1]   = peakIn2 ;
-  TransientPeaks[2]  = peakOut1 ; TransientPeaks[3]   = peakOut2 ;
-#  endif // #if FIXED_N_AUDIO_PORTS
-#endif // #if SCAN_TRANSIENT_PEAKS_DATA
+#endif // SCAN_PEAKS
 }
 
 Sample JackIO::GetPeak(Sample* buffer , Uint32 nFrames)
@@ -322,10 +326,17 @@ Sample JackIO::GetPeak(Sample* buffer , Uint32 nFrames)
   try // TODO: this function is unsafe
   {
     for (Uint32 frameN = 0 ; frameN < nFrames ; ++frameN)
-      { Sample sample = fabs(buffer[frameN]) ; if (peak < sample) peak = sample ; }
+    { Sample sample = fabs(buffer[frameN]) ; if (peak < sample) peak = sample ; }
   }
   catch(int ex) { ERR(GETPEAK_ERROR_MSG) ; }
   return peak ;
+}
+
+void JackIO::ResetTransientPeaks()
+{
+  // reset transient caches each GUI frame (we are blindly updating max on each audio frame)
+  std::fill_n(PeaksVuIn  , JackIO::N_INPUT_CHANNELS  , 0.0) ;
+  std::fill_n(PeaksVuOut , JackIO::N_OUTPUT_CHANNELS , 0.0) ;
 }
 
 
@@ -341,167 +352,60 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
 //if (!CurrentScene->loops.size()) return 0 ; // KLUDGE: win init
 
 #  if JACK_IO_READ_WRITE
+#    if FIXED_N_AUDIO_PORTS
   // get JACK buffers
   Sample* in1  = (Sample*)jack_port_get_buffer(InputPort1  , nFramesPerPeriod) ;
-  Sample* out1 = (Sample*)jack_port_get_buffer(OutputPort1 , nFramesPerPeriod) ;
   Sample* in2  = (Sample*)jack_port_get_buffer(InputPort2  , nFramesPerPeriod) ;
+  Sample* in3  = (Sample*)jack_port_get_buffer(InputPort3  , nFramesPerPeriod) ;
+  Sample* in4  = (Sample*)jack_port_get_buffer(InputPort4  , nFramesPerPeriod) ;
+  Sample* out1 = (Sample*)jack_port_get_buffer(OutputPort1 , nFramesPerPeriod) ;
   Sample* out2 = (Sample*)jack_port_get_buffer(OutputPort2 , nFramesPerPeriod) ;
+#    else // FIXED_N_AUDIO_PORTS // TODO:
+#    endif // FIXED_N_AUDIO_PORTS
 
   // index into the record buffers and mix out
   list<Loop*>::iterator loopIter , loopsBeginIter , loopsEndIter ; Loop* aLoop ; float vol ;
   loopsBeginIter      = CurrentScene->loops.begin() ;
   loopsEndIter        = CurrentScene->loops.end() ;
+  Uint32 mixFrameN    = CurrentScene->currentFrameN ;//+ BufferMarginSize ;
   Uint32 sceneFrameN  = CurrentScene->currentFrameN , frameN ;
-  Uint32 offsetFrameN = CurrentScene->currentFrameN ;//+ BufferMarginSize ;
-  Uint32 mixFrameN    = offsetFrameN ;
   for (frameN = 0 ; frameN < nFramesPerPeriod ; ++frameN && ++mixFrameN && ++sceneFrameN)
   {
-    // write input to outputs mix buffers
-    if (!ShouldMonitorInputs) RecordBuffer1[mixFrameN] = RecordBuffer2[mixFrameN] = 0 ;
-    else { RecordBuffer1[mixFrameN] = in1[frameN] ; RecordBuffer2[mixFrameN] = in2[frameN] ; }
+    // write inputs to record buffers
+    RecordBuffer1[mixFrameN] = in1[frameN] + in3[frameN] ;
+    RecordBuffer2[mixFrameN] = in2[frameN] + in4[frameN] ;
 
-    // mix unmuted tracks into outputs mix buffers
+    // write inputs to outputs
+    out1[frameN] = (ShouldMonitorInputs) ? RecordBuffer1[mixFrameN] : 0.0 ;
+    out2[frameN] = (ShouldMonitorInputs) ? RecordBuffer2[mixFrameN] : 0.0 ;
+
+    // mix unmuted tracks into outputs
     for (loopIter = loopsBeginIter ; loopIter != loopsEndIter ; ++loopIter)
     {
       if (CurrentScene->isMuted && (*loopIter)->isMuted) continue ;
 
       aLoop = *loopIter ; vol = aLoop->vol ;
-      RecordBuffer1[mixFrameN] += aLoop->buffer1[sceneFrameN] * vol ;
-      RecordBuffer2[mixFrameN] += aLoop->buffer2[sceneFrameN] * vol ;
+      out1[frameN] += aLoop->buffer1[sceneFrameN] * vol ;
+      out2[frameN] += aLoop->buffer2[sceneFrameN] * vol ;
     }
   }
-
-  // write output mix buffers to outputs and write input to record buffers
-  Sample* mixBegin1 = RecordBuffer1 + offsetFrameN ;
-  Sample* mixBegin2 = RecordBuffer2 + offsetFrameN ;
-  memcpy(out1      , mixBegin1 , BytesPerPeriod) ;
-  memcpy(out2      , mixBegin2 , BytesPerPeriod) ;
-  memcpy(mixBegin1 , in1       , BytesPerPeriod) ;
-  memcpy(mixBegin2 , in2       , BytesPerPeriod) ;
 #  endif // #if JACK_IO_READ_WRITE
 
-  // increment ring buffer index
+#    if FIXED_N_AUDIO_PORTS
+  // load VU peaks cache (per channel)
+  Sample peak ;
+  if ((peak = GetPeak(in1  , nFramesPerPeriod)) > PeaksVuIn [0]) PeaksVuIn [0] = peak ;
+  if ((peak = GetPeak(in2  , nFramesPerPeriod)) > PeaksVuIn [1]) PeaksVuIn [1] = peak ;
+  if ((peak = GetPeak(in3  , nFramesPerPeriod)) > PeaksVuIn [2]) PeaksVuIn [2] = peak ;
+  if ((peak = GetPeak(in4  , nFramesPerPeriod)) > PeaksVuIn [3]) PeaksVuIn [3] = peak ;
+  if ((peak = GetPeak(out1 , nFramesPerPeriod)) > PeaksVuOut[0]) PeaksVuOut[0] = peak ;
+  if ((peak = GetPeak(out2 , nFramesPerPeriod)) > PeaksVuOut[1]) PeaksVuOut[1] = peak ;
+#    else // FIXED_N_AUDIO_PORTS // TODO:
+#    endif // FIXED_N_AUDIO_PORTS
+
+  // increment ring buffer index or rollover
   if (!((CurrentScene->currentFrameN += nFramesPerPeriod) % CurrentScene->endFrameN))
-    CurrentScene->currentFrameN = BeginFrameN ;
-  else return 0 ;
-
-  Uint32 beginFrameN = CurrentScene->beginFrameN ;
-  Uint32 endFrameN   = CurrentScene->endFrameN ;
-  Uint32 nLoops      = CurrentScene->loops.size() ;
-  Uint32 nFrames     = CurrentScene->nFrames ;
-  bool   isBaseLoop  = !nLoops ;
-
-DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER
-
-  // sanity checks
-#  if ALLOW_BUFFER_ROLLOVER
-#    if INIT_JACK_BEFORE_SCENES
-  if (endFrameN > EndFrameN) endFrameN = EndFrameN ; // manual trigger (quite unlikely)
-  else if (isBaseLoop &&
-          (endFrameN == EndFrameN   || // rollover before base loop exists
-           endFrameN <= beginFrameN || nFrames < MinLoopSize))
-    { CurrentScene->endFrameN = EndFrameN ; return 0 ; }
-#    else // INIT_JACK_BEFORE_SCENES
-  if (isBaseLoop &&
-      (endFrameN == RecordBufferSize || // rollover while recording base loop
-      endFrameN <= beginFrameN || nFrames < MinLoopSize))
-    { CurrentScene->endFrameN = RecordBufferSize ; return 0 ; }
-#    endif // #if INIT_JACK_BEFORE_SCENES
-#  else // ALLOW_BUFFER_ROLLOVER
-#    if INIT_JACK_BEFORE_SCENES
-  // bail if currentFrameN rolls over implicitly (issue #11)
-  if (isBaseLoop && endFrameN == EndFrameN)
-    { Loopidity::ResetCurrentScene() ; return 0 ; }
-  // bail if loop too short (issue #12)
-  if (isBaseLoop && nFrames < MinLoopSize)
-    { CurrentScene->endFrameN = EndFrameN ; return 0 ; }
-#    else // INIT_JACK_BEFORE_SCENES
-  // bail if currentFrameN rolls over implicitly (issue #11)
-  if (isBaseLoop && endFrameN == RecordBufferSize)
-    { Loopidity::ResetCurrentScene() ; return 0 ; }
-  // bail if loop too short (issue #12)
-  if (isBaseLoop && nFrames < MinLoopSize)
-    { CurrentScene->endFrameN = RecordBufferSize ; return 0 ; }
-#    endif // #if INIT_JACK_BEFORE_SCENES
-#  endif // #if ALLOW_BUFFER_ROLLOVER
-
-  // unmute 'paused' loops
-#  if AUTO_UNMUTE_LOOPS_ON_ROLLOVER
-  CurrentScene->isMuted = false ;
-#  endif // #if AUTO_UNMUTE_LOOPS_ON_ROLLOVER
-
-  // create new Loop instance
-  if (CurrentScene->shouldSaveLoop && nLoops < Loopidity::N_LOOPS)
-  {
-// TODO: adjustable loop seams (issue #14)
-
-    // copy audio samples - (see note on RecordBuffer layout in jack_io.h)
-    if ((NewLoopEventLoop = new (nothrow) Loop(nFrames + BufferMarginsSize)))
-    {
-DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP
-
-#  if JACK_IO_COPY
-      size_t  thisLeadInFrameN = beginFrameN       - BufferMarginSize ;
-      size_t  nextLeadInFrameN = thisLeadInFrameN  + nFrames ;
-      Sample* thisLeadInBegin1 = RecordBuffer1     + thisLeadInFrameN ;
-      Sample* thisLeadInBegin2 = RecordBuffer2     + thisLeadInFrameN ;
-      Sample* nextLeadInBegin1 = RecordBuffer1     + nextLeadInFrameN ;
-      Sample* nextLeadInBegin2 = RecordBuffer2     + nextLeadInFrameN ;
-//       Sample* loopBegin1       = RecordBuffer1 +  beginFrameN ;//+ BufferMarginSize ;
-//       Sample* loopBegin2       = RecordBuffer2 +  beginFrameN ;//+ BufferMarginSize ;
-//       Sample* leadOutBegin1    = RecordBuffer1 + endFrameN   + BufferMarginSize ;
-//       Sample* leadOutBegin2    = RecordBuffer2 + endFrameN   + BufferMarginSize ;
-//      Uint32 nLoopBytes  = CurrentScene->nFrames * N_BYTES_PER_FRAME ;
-      size_t  nThisLoopBytes   = BufferMarginBytes + CurrentScene->nBytes ;
-      size_t  nNextLeadInBytes = BufferMarginBytes ;
-
-      // copy record buffers to new Loop
-//         memcpy(NewLoop->buffer1 , loopBegin1 , nLoopBytes) ;
-//         memcpy(NewLoop->buffer2 , loopBegin2 , nLoopBytes) ;
-//       memcpy(NewLoop->buffer1 , leadInBegin1 , nLoopBytes + BufferMarginBytes) ;
-//       memcpy(NewLoop->buffer2 , leadInBegin1 , nLoopBytes + BufferMarginBytes) ;
-      memcpy(NewLoopEventLoop->buffer1 , thisLeadInBegin1 , nThisLoopBytes) ;
-      memcpy(NewLoopEventLoop->buffer2 , thisLeadInBegin2 , nThisLoopBytes) ;
-#  endif // #if JACK_IO_COPY
-
-      if (isBaseLoop)
-      {
-        // copy leading and trailing seconds to auxiliary buffers for editing seam
-//         memcpy(LeadInBuffer1  , leadInBegin1  , BufferMarginBytes) ;
-//         memcpy(LeadInBuffer2  , leadInBegin2  , BufferMarginBytes) ;
-//           memcpy(LeadOutBuffer1 , leadOutBegin1 , BufferMarginBytes) ;
-//           memcpy(LeadOutBuffer2 , leadOutBegin2 , BufferMarginBytes) ;
-#  if JACK_IO_COPY
-        // 'shift' last BufferMarginSize + TriggerLatencySize back for next loop leadIn
-        nNextLeadInBytes += TriggerLatencyBytes ;
-        memcpy(RecordBuffer1 , nextLeadInBegin1 , nNextLeadInBytes) ;
-        memcpy(RecordBuffer2 , nextLeadInBegin2 , nNextLeadInBytes) ;
-#  endif // #if JACK_IO_COPY
-
-        // align buffer indicies to base loop
-        CurrentScene->beginFrameN   = BeginFrameN ;
-        CurrentScene->currentFrameN = BeginFrameN + TriggerLatencySize ;
-        CurrentScene->endFrameN     = BeginFrameN + nFrames ;
-      }
-
-      NewLoopEventSceneN = CurrentScene->sceneN ; SDL_PushEvent(&NewLoopEvent) ;
-    }
-    else Loopidity::OOM() ;
-  }
-/*
-#if JACK_IO_COPY
-  // copy trunctuated TriggerLatencySize to beginning of RecordBuffer for next loop
-  Uint32 nLeadInBytes = TriggerLatencySize * N_BYTES_PER_FRAME ;
-  memcpy(RecordBuffer1 + BufferMarginSize , leadOutBegin1 , nLeadInBytes) ;
-  memcpy(RecordBuffer2 + BufferMarginSize , leadOutBegin2 , nLeadInBytes) ;
-#endif // #if JACK_IO_COPY
-*/
-  // switch to NextScene if necessary
-  if (CurrentScene != NextScene)
-  {
-    CurrentScene = NextScene ; SceneChangeEventSceneN = NextScene->sceneN ;
-    SDL_PushEvent(&SceneChangeEvent) ;
-  }
+  { CurrentScene->currentFrameN = BeginFrameN ; Rollover() ; }
 
   return 0 ;
 }
@@ -604,6 +508,8 @@ void JackIO::ShutdownCallback(void* unused)
   if (Client)        { free(Client) ;         Client        = 0 ; }
   if (InputPort1)    { free(InputPort1) ;     InputPort1    = 0 ; }
   if (InputPort2)    { free(InputPort2) ;     InputPort2    = 0 ; }
+  if (InputPort3)    { free(InputPort3) ;     InputPort3    = 0 ; }
+  if (InputPort4)    { free(InputPort4) ;     InputPort4    = 0 ; }
   if (OutputPort1)   { free(OutputPort1) ;    OutputPort1   = 0 ; }
   if (OutputPort2)   { free(OutputPort2) ;    OutputPort2   = 0 ; }
   if (RecordBuffer1) { delete RecordBuffer1 ; RecordBuffer1 = 0 ; }
@@ -615,7 +521,7 @@ void JackIO::ShutdownCallback(void* unused)
 // helpers
 
 jack_port_t* JackIO::RegisterPort(const char* portName , unsigned long portFlags)
-  { return jack_port_register(Client , portName , JACK_DEFAULT_AUDIO_TYPE , portFlags , 0) ; }
+{ return jack_port_register(Client , portName , JACK_DEFAULT_AUDIO_TYPE , portFlags , 0) ; }
 
 #if SCENE_NFRAMES_EDITABLE
 void JackIO::SetMetadata(jack_nframes_t sampleRate , jack_nframes_t nFramesPerPeriod)
@@ -655,5 +561,127 @@ DEBUG_TRACE_JACK_SETMETADATA
                                   MinLoopSize , TriggerLatencySize ,
                                   BeginFrameN , EndFrameN                              } ;
   Loopidity::SetMetadata(&sceneMetadata) ;
+}
+
+void JackIO::Rollover()
+{
+  // rollover
+  Uint32 beginFrameN = CurrentScene->beginFrameN ;
+  Uint32 endFrameN   = CurrentScene->endFrameN ;
+  Uint32 nLoops      = CurrentScene->loops.size() ;
+  Uint32 nFrames     = CurrentScene->nFrames ;
+  bool   isBaseLoop  = !nLoops ;
+
+DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER
+
+  // sanity checks
+#  if ALLOW_BUFFER_ROLLOVER
+#    if INIT_JACK_BEFORE_SCENES
+  if (endFrameN > EndFrameN) endFrameN = EndFrameN ; // manual trigger (quite unlikely)
+  else if (isBaseLoop &&
+          (endFrameN == EndFrameN   || // rollover before base loop exists
+           endFrameN <= beginFrameN || nFrames < MinLoopSize))
+    { CurrentScene->endFrameN = EndFrameN ; return ; }
+#    else // INIT_JACK_BEFORE_SCENES
+  if (isBaseLoop &&
+      (endFrameN == RecordBufferSize || // rollover while recording base loop
+      endFrameN <= beginFrameN || nFrames < MinLoopSize))
+    { CurrentScene->endFrameN = RecordBufferSize ; return ; }
+#    endif // #if INIT_JACK_BEFORE_SCENES
+#  else // ALLOW_BUFFER_ROLLOVER
+#    if INIT_JACK_BEFORE_SCENES
+  // bail if currentFrameN rolls over implicitly (issue #11)
+  if (isBaseLoop && endFrameN == EndFrameN)
+    { Loopidity::ResetCurrentScene() ; return ; }
+  // bail if loop too short (issue #12)
+  if (isBaseLoop && nFrames < MinLoopSize)
+    { CurrentScene->endFrameN = EndFrameN ; return ; }
+#    else // INIT_JACK_BEFORE_SCENES
+  // bail if currentFrameN rolls over implicitly (issue #11)
+  if (isBaseLoop && endFrameN == RecordBufferSize)
+    { Loopidity::ResetCurrentScene() ; return ; }
+  // bail if loop too short (issue #12)
+  if (isBaseLoop && nFrames < MinLoopSize)
+    { CurrentScene->endFrameN = RecordBufferSize ; return ; }
+#    endif // #if INIT_JACK_BEFORE_SCENES
+#  endif // #if ALLOW_BUFFER_ROLLOVER
+
+  // unmute 'paused' loops
+#  if AUTO_UNMUTE_LOOPS_ON_ROLLOVER
+  CurrentScene->isMuted = false ;
+#  endif // #if AUTO_UNMUTE_LOOPS_ON_ROLLOVER
+
+  // create new Loop instance
+  if (CurrentScene->shouldSaveLoop && nLoops < Loopidity::N_LOOPS)
+  {
+// TODO: adjustable loop seams (issue #14)
+
+    // copy audio samples - (see note on RecordBuffer layout in jack_io.h)
+    if ((NewLoopEventLoop = new (nothrow) Loop(nFrames + BufferMarginsSize)))
+    {
+DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP
+
+#  if JACK_IO_COPY
+      size_t  thisLeadInFrameN = beginFrameN       - BufferMarginSize ;
+      size_t  nextLeadInFrameN = thisLeadInFrameN  + nFrames ;
+      Sample* thisLeadInBegin1 = RecordBuffer1     + thisLeadInFrameN ;
+      Sample* thisLeadInBegin2 = RecordBuffer2     + thisLeadInFrameN ;
+      Sample* nextLeadInBegin1 = RecordBuffer1     + nextLeadInFrameN ;
+      Sample* nextLeadInBegin2 = RecordBuffer2     + nextLeadInFrameN ;
+//       Sample* loopBegin1       = RecordBuffer1 +  beginFrameN ;//+ BufferMarginSize ;
+//       Sample* loopBegin2       = RecordBuffer2 +  beginFrameN ;//+ BufferMarginSize ;
+//       Sample* leadOutBegin1    = RecordBuffer1 + endFrameN   + BufferMarginSize ;
+//       Sample* leadOutBegin2    = RecordBuffer2 + endFrameN   + BufferMarginSize ;
+//      Uint32 nLoopBytes  = CurrentScene->nFrames * N_BYTES_PER_FRAME ;
+      size_t  nThisLoopBytes   = BufferMarginBytes + CurrentScene->nBytes ;
+      size_t  nNextLeadInBytes = BufferMarginBytes ;
+
+      // copy record buffers to new Loop
+//         memcpy(NewLoop->buffer1 , loopBegin1 , nLoopBytes) ;
+//         memcpy(NewLoop->buffer2 , loopBegin2 , nLoopBytes) ;
+//       memcpy(NewLoop->buffer1 , leadInBegin1 , nLoopBytes + BufferMarginBytes) ;
+//       memcpy(NewLoop->buffer2 , leadInBegin1 , nLoopBytes + BufferMarginBytes) ;
+      memcpy(NewLoopEventLoop->buffer1 , thisLeadInBegin1 , nThisLoopBytes) ;
+      memcpy(NewLoopEventLoop->buffer2 , thisLeadInBegin2 , nThisLoopBytes) ;
+#  endif // #if JACK_IO_COPY
+
+      if (isBaseLoop)
+      {
+        // copy leading and trailing seconds to auxiliary buffers for editing seam
+//         memcpy(LeadInBuffer1  , leadInBegin1  , BufferMarginBytes) ;
+//         memcpy(LeadInBuffer2  , leadInBegin2  , BufferMarginBytes) ;
+//           memcpy(LeadOutBuffer1 , leadOutBegin1 , BufferMarginBytes) ;
+//           memcpy(LeadOutBuffer2 , leadOutBegin2 , BufferMarginBytes) ;
+#  if JACK_IO_COPY
+        // 'shift' last BufferMarginSize + TriggerLatencySize back for next loop leadIn
+        nNextLeadInBytes += TriggerLatencyBytes ;
+        memcpy(RecordBuffer1 , nextLeadInBegin1 , nNextLeadInBytes) ;
+        memcpy(RecordBuffer2 , nextLeadInBegin2 , nNextLeadInBytes) ;
+#  endif // #if JACK_IO_COPY
+
+        // align buffer indicies to base loop
+        CurrentScene->beginFrameN   = BeginFrameN ;
+        CurrentScene->currentFrameN = BeginFrameN + TriggerLatencySize ;
+        CurrentScene->endFrameN     = BeginFrameN + nFrames ;
+      }
+
+      NewLoopEventSceneN = CurrentScene->sceneN ; SDL_PushEvent(&NewLoopEvent) ;
+    }
+    else Loopidity::OOM() ;
+  }
+/*
+#if JACK_IO_COPY
+  // copy trunctuated TriggerLatencySize to beginning of RecordBuffer for next loop
+  Uint32 nLeadInBytes = TriggerLatencySize * N_BYTES_PER_FRAME ;
+  memcpy(RecordBuffer1 + BufferMarginSize , leadOutBegin1 , nLeadInBytes) ;
+  memcpy(RecordBuffer2 + BufferMarginSize , leadOutBegin2 , nLeadInBytes) ;
+#endif // #if JACK_IO_COPY
+*/
+  // switch to NextScene if necessary
+  if (CurrentScene != NextScene)
+  {
+    CurrentScene = NextScene ; SceneChangeEventSceneN = NextScene->sceneN ;
+    SDL_PushEvent(&SceneChangeEvent) ;
+  }
 }
 #endif // #if SCENE_NFRAMES_EDITABLE
