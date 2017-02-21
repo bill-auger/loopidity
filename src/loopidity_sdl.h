@@ -25,7 +25,11 @@
 #include "loopidity.h"
 
 
-// intervals
+// common
+#define GUIPAD  4
+#define GUIPAD2 (GUI_PAD * 2)
+
+// timer intervals
 #define GUI_UPDATE_INTERVAL          125
 #define GUI_UPDATE_LOW_PRIORITY_NICE 8   // n high priority updates to pass
 
@@ -51,18 +55,40 @@
 #define HEADER_RECT_C    { (Sint16)HEADER_X , 0 , 0 , 0 }
 
 // scope magnitudes
-#define N_PEAKS_TRANSIENT 480 // TODO: maybe set this to scene width/2
-#define SCOPE_W           (N_PEAKS_TRANSIENT * 2)
-#define SCOPE_H           (PEAK_RADIUS * 2)
-#define SCOPE_L           (WIN_CENTER - N_PEAKS_TRANSIENT)
-#define SCOPE_R           (WIN_CENTER + N_PEAKS_TRANSIENT)
-//#define SCOPE_T           (WinRect.h - (STATUS_H * 2) - SCOPE_H)
-#define SCOPE_T           (HEADER_H + Y_PADDING + (SCENE_H * Loopidity::N_SCENES))
-#define SCOPE_0           (SCOPE_T + (SCOPE_H / 2)) ;
-#define SCOPE_PEAK_H      ((float)SCOPE_H / 2.0)
-#define SCOPE_RECT        { (Sint16)SCOPE_L , (Sint16)SCOPE_T , SCOPE_W + 1 , SCOPE_H + 1 }
+#define N_PEAKS_SCOPE     420 // TODO: maybe set this to scene width/2
+#define SCOPE_W           N_PEAKS_SCOPE
+#define SCOPES_H          (PEAK_RADIUS * 2)
+#define SCOPEINL          (WIN_CENTER + GUI_PAD)
+#define SCOPEOUTR         (WIN_CENTER - GUI_PAD)
+#define SCOPEINR          (SCOPE_IN_L  + N_PEAKS_SCOPE)
+#define SCOPEOUTL         (SCOPE_OUT_R - N_PEAKS_SCOPE)
+//#define SCOPES_T           (WinRect.h - (STATUS_H * 2) - SCOPES_H)
+#define SCOPES_T          (HEADER_H + Y_PADDING + (SCENE_H * Loopidity::N_SCENES))
+#define SCOPE_0           (SCOPES_T + (SCOPES_H / 2)) ;
+#define SCOPEPEAKH        ((float)SCOPES_H / 2.0)
+#define SCOPE_IN_RECT     { (Sint16)SCOPE_IN_L  , (Sint16)SCOPES_T , SCOPE_W + 1 , SCOPES_H + 1 }
+#define SCOPE_OUT_RECT    { (Sint16)SCOPE_OUT_L , (Sint16)SCOPES_T , SCOPE_W + 1 , SCOPES_H + 1 }
+#define SCOPE_MASK_RECT   { 0 , 0 , 1 , 0 } ;
+#define SCOPE_RECT        { 0 , 0 , 0 , 0 } ;
 #define SCOPE_LOUD        0.95
 #define SCOPE_OPTIMAL     0.8
+
+// edit histogram
+#define EDITOR_RECT { (Sint16)SCOPE_OUT_L , (Sint16)SCOPES_T , SCOPE_W + 2 + GUI_PAD2 , SCOPES_H }
+
+// VUs magnitudes
+#define VUW           12
+#define VUSH          SCOPES_H
+#define VUSB          SCOPES_T + SCOPES_H
+#define VUS_T         SCOPES_T
+#define VUS_IN_W      (GUI_PAD + ((VU_W + GUI_PAD) * JackIO::N_INPUT_CHANNELS ))
+#define VUS_OUT_W     (GUI_PAD + ((VU_W + GUI_PAD) * JackIO::N_OUTPUT_CHANNELS))
+#define VUSINL        (SCOPE_IN_R  + GUI_PAD2           )
+#define VUSOUTL       (SCOPE_OUT_L - GUI_PAD - VUS_OUT_W)
+#define VUS_IN_RECT   { (Sint16)VUS_IN_L  , (Sint16)VUS_T , (Uint16)VUS_IN_W  , VUS_H }
+#define VUS_OUT_RECT  { (Sint16)VUS_OUT_L , (Sint16)VUS_T , (Uint16)VUS_OUT_W , VUS_H }
+#define VUS_MASK_RECT { 0 , 0 , VU_W , 0 } ;
+#define VU_RECT       { 0 , 0 , 0    , 0 } ;
 
 // status magnitudes
 #define STATUS_FONT_SIZE 12
@@ -100,12 +126,17 @@
 #define HEADER_TEXT_COLOR      { 255 , 0 , 255 , 0 }
 #define STATUS_FONT_PATH       PURISA_TTF_PATH
 #define STATUS_TEXT_COLOR      { 255 , 0 , 255 , 0 }
-#define INSCOPE_QUIET_COLOR    0x00ff00ff
-#define INSCOPE_OPTIMAL_COLOR  0xffff00ff
-#define INSCOPE_LOUD_COLOR     0xff0000ff
-#define OUTSCOPE_QUIET_COLOR   0x00ff00ff
-#define OUTSCOPE_OPTIMAL_COLOR 0xffff00ff
-#define OUTSCOPE_LOUD_COLOR    0xff0000ff
+#define WINDOWBGCOLOR          0xFF111111
+#define VUSINBGCOLOR           0xFF221122
+#define VUSOUTBGCOLOR          0xFF112222 // NOTE: SDL_FillRect()          takes 0xAARRGGBB
+#define VUSINBORDERCOLOR       0x882288FF // NOTE: roundedRectangleColor() takes 0xRRGGBBAA
+#define VUSOUTBORDERCOLOR      0x228888FF
+// #define INSCOPE_QUIET_COLOR    0x00ff00FF
+// #define INSCOPE_OPTIMAL_COLOR  0xFFFF00FF
+// #define INSCOPE_LOUD_COLOR     0xFF0000FF
+// #define OUTSCOPE_QUIET_COLOR   0x00FF00FF
+// #define OUTSCOPE_OPTIMAL_COLOR 0xFFFF00FF
+// #define OUTSCOPE_LOUD_COLOR    0xFF0000FF
 
 // string constants
 #define HEADER_TEXT                 "This is Loopidity"
@@ -135,10 +166,14 @@ class LoopiditySdl
 
     /* LoopiditySdl class side private variables */
 
+    // common
+    static const Uint8 GUI_PAD ;
+    static const Uint8 GUI_PAD2 ;
+
     // window
     static SDL_Surface* Screen ;
     static SDL_Rect     WinRect ;
-    static Uint32       WinBgColor ;
+    static const Uint32 WINDOW_BG_COLOR ;
     static const Uint16 WinCenter ;
 
     // header
@@ -163,17 +198,46 @@ class LoopiditySdl
     static SDL_Surface* ScopeGradient ;
     static SDL_Surface* HistogramGradient ;
     static SDL_Surface* LoopGradient ;
+    static SDL_Surface* VuGradient ;
 
     // scopes
+    static const Uint32         SCOPE_IN_BG_COLOR ;
+    static const Uint32         SCOPE_OUT_BG_COLOR ;
+    static const Uint32         SCOPE_IN_BORDER_COLOR ;
+    static const Uint32         SCOPE_OUT_BORDER_COLOR ;
+    static const Uint16         SCOPE_IN_L ;
+    static const Uint16         SCOPE_IN_R ;
+    static const Uint16         SCOPE_OUT_L ;
+    static const Uint16         SCOPE_OUT_R ;
+    static const Sint16         SCOPES_M ;
+    static const float          SCOPE_PEAK_H ;
+    static SDL_Rect             ScopeInRect ;
+    static SDL_Rect             ScopeOutRect ;
+    static SDL_Rect             ScopeMaskRect ;
     static SDL_Rect             ScopeRect ;
-    static SDL_Rect             MaskRect ;
-    static SDL_Rect             GradientRect ;
-    static const Sint16         Scope0 ;
-    static const Uint16         ScopeR ;
-    static const float          ScopePeakH ;
     static std::vector<Sample>* PeaksIn ;
     static std::vector<Sample>* PeaksOut ;
-    static Sample*              PeaksTransient ;
+
+    // edit histogram
+    static SDL_Rect EditorRect ;
+
+    // VUs
+    static const Uint32   VUS_IN_BORDER_COLOR ;
+    static const Uint32   VUS_OUT_BORDER_COLOR ;
+    static const Uint32   VUS_IN_BG_COLOR ;
+    static const Uint32   VUS_OUT_BG_COLOR ;
+    static const Uint8    VU_W ;
+    static const Uint16   VUS_H ;
+    static const Uint16   VUS_B ;
+    static const Uint16   VUS_IN_L ;
+    static const Uint16   VUS_OUT_L ;
+    static       SDL_Rect VusInRect  ;
+    static       SDL_Rect VusOutRect  ;
+    static       SDL_Rect VuMaskRect ;
+    static       SDL_Rect VuRect ;
+    static const float    VuPeakH ;
+    static       Sample*  PeaksVuIn ;
+    static       Sample*  PeaksVuOut ;
 
     // DrawScenes() 'local' variables
     static Uint16       CurrentSceneN ;
@@ -190,8 +254,9 @@ class LoopiditySdl
 
     // setup
     static bool IsInitialized(void) ; // TODO: make singleton
-    static bool Init(         SceneSdl**           sdlScenes , std::vector<Sample>* peaksIn       ,
-                              std::vector<Sample>* peaksOut  , Sample*              peaksTransient) ;
+    static bool Init(         SceneSdl**           sdlScenes  , std::vector<Sample>* peaksIn   ,
+                              std::vector<Sample>* peaksOut   , Sample*              peaksVuIn ,
+                              Sample*              peaksVuOut                                  ) ;
     static void SdlError(     const char* functionName) ;
     static void TtfError(     const char* functionName) ;
     static void Cleanup(      void) ;
@@ -201,16 +266,20 @@ class LoopiditySdl
     static void BlankScreen(        void) ;
     static void DrawScenes(         void) ;
 #if SCENE_NFRAMES_EDITABLE
-    static void DrawEditScopes(     void) ;
-    static void DrawTransientScopes(void) ;
-#else
-    static void DrawScopes(         void) ;
+    static void DrawEditor(         void) ;
 #endif // #if SCENE_NFRAMES_EDITABLE
+    static void DrawScopes(         void) ;
+    static void DrawScope (         std::vector<Sample>* peaks , Uint16 peaks_x , Uint16 peak_n) ;
+    static void DrawVUs(            void) ;
+    static void DrawVU(             Sample* peaks , Uint16 vu_x , Uint8 channel_n) ;
     static void DrawText(           std::string text     , SDL_Surface* surface    ,
                                     TTF_Font*   font     , SDL_Rect*    screenRect ,
                                     SDL_Rect*   cropRect , SDL_Color    fgColor    ) ;
     static void DrawStatusArea(     void) ;
     static void FlipScreen(         void) ;
+    static void DrawBorder(         SDL_Surface* a_surface , Uint16 l , Uint16 t    ,
+                                    Uint16       r         , Uint16 b , Uint32 color) ;
+    static void DrawBorder(         SDL_Surface* a_surface , SDL_Rect a_rect , Uint32 color) ;
     static void Alert(              std::string msg) ;
 
     // getters/settters

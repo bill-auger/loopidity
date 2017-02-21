@@ -38,13 +38,13 @@
 #define HANDLE_KEYBOARD_EVENTS        1
 #define HANDLE_MOUSE_EVENTS           0
 #define HANDLE_USER_EVENTS            1
-#define SCAN_LOOP_PEAKS_DATA          1
-#define SCAN_TRANSIENT_PEAKS_DATA     1
+#define SCAN_LOOP_PEAKS               1
 #define SCAN_PEAKS                    1
 #define DRAW_STATUS                   1
 #define DRAW_SCENES                   1
-#define DRAW_SCOPES                   1
 #define DRAW_EDIT_HISTOGRAM           SCENE_NFRAMES_EDITABLE && 1
+#define DRAW_SCOPES                   1
+#define DRAW_VUS                      1
 #define DRAW_DEBUG_TEXT               1
 #define AUTO_UNMUTE_LOOPS_ON_ROLLOVER 1
 
@@ -101,14 +101,12 @@
 #define NUM_LOOPS                  9 // per scene
 #define LOOP_VOL_INC               0.1
 #if FIXED_N_AUDIO_PORTS
-#  define N_INPUT_CHANNELS         2
-#  define N_OUTPUT_CHANNELS        2
-#  define N_AUDIO_PORTS            N_INPUT_CHANNELS + N_OUTPUT_CHANNELS
-#else // TODO: implement setting N_CHANNELS via cmd line arg - GetTransientPeaks and updateVUMeters are especially brittle now
-#  define N_INPUT_CHANNELS         2 // TODO: nyi - only used for memory check and scope cache
-#  define N_OUTPUT_CHANNELS        2 // TODO: nyi - only used for N_AUDIO_PORTS
-#  define N_AUDIO_PORTS            N_INPUT_CHANNELS + N_OUTPUT_CHANNELS // TODO: nyi - only used for scope cache
-#endif // #if FIXED_N_AUDIO_PORTS
+#  define N_IN_CHANNELS            4
+#  define N_OUT_CHANNELS           2
+#else  // FIXED_N_AUDIO_PORTS        // TODO: implement setting N_*_CHANNELS via cmd line arg - GetTransientPeaks and updateVUMeters are especially brittle now
+#  define MAX_INPUT_CHANNELS       2 // TODO: nyi - N_INPUT_CHANNELS currently used only used for memory check and scope cache
+#  define MAX_OUTPUT_CHANNELS      2 // TODO: nyi - N_OUTPUT_CHANNELS currently used only for scope cache
+#endif // FIXED_N_AUDIO_PORTS
 #if SCENE_NFRAMES_EDITABLE
 #  define BUFFER_MARGIN_SIZE       SampleRate
 #  define TRIGGER_LATENCY_SIZE     1280 // nFrames - kludge to compensate for keyboard delay - optimized for BufferSize <= 128
@@ -135,8 +133,11 @@
 //#define CONNECT_ARG             "--connect"
 #define MONITOR_ARG             "--nomon"
 #define SCENE_CHANGE_ARG        "--noautoscenechange"
-#define JACK_INPUT1_PORT_NAME   "inL"
-#define JACK_INPUT2_PORT_NAME   "inR"
+#define JACK_NAME               "loopidity"
+#define JACK_INPUT1_PORT_NAME   "in1"
+#define JACK_INPUT2_PORT_NAME   "in2"
+#define JACK_INPUT3_PORT_NAME   "in3"
+#define JACK_INPUT4_PORT_NAME   "in4"
 #define JACK_OUTPUT1_PORT_NAME  "outL"
 #define JACK_OUTPUT2_PORT_NAME  "outR"
 #define INVALID_METADATA_MSG    "ERROR: Scene metadata state insane"
@@ -207,6 +208,10 @@ class Loopidity
 
     static const Uint32 N_SCENES ;
     static const Uint32 N_LOOPS ;
+#if ! FIXED_N_AUDIO_PORTS
+    static const Uint8  N_INPUT_CHANNELS ;
+    static const Uint8  N_OUTPUT_CHANNELS ;
+#endif // FIXED_N_AUDIO_PORTS
 
 
   private:
@@ -228,7 +233,10 @@ class Loopidity
     // runtime flags
 #if WAIT_FOR_JACK_INIT
     static bool IsJackReady ;
-#endif // #if WAIT_FOR_JACK_INIT
+#endif // WAIT_FOR_JACK_INIT
+#if INIT_JACK_BEFORE_SCENES
+    static bool IsInitialized ;
+#endif // INIT_JACK_BEFORE_SCENES
     static bool IsRolling ;
     static bool ShouldSceneAutoChange ;
     static bool IsEditMode ;
@@ -258,10 +266,13 @@ class Loopidity
 
 
 private:
+
     /* Loopidity class side private functions */
 
     // setup
-    static bool IsInitialized(void) ; // TODO: make singleton
+#if ! INIT_JACK_BEFORE_SCENES
+    static bool IsInitialized() ;
+#endif // INIT_JACK_BEFORE_SCENES
     static bool Init(         bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
                               Uint32 recordBufferSize                                 ) ;
 #if INIT_JACK_BEFORE_SCENES
