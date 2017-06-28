@@ -169,7 +169,13 @@ void SceneSdl::reset()
   histogramImgs.clear() ; loopImgs.clear() ;
 }
 
-void SceneSdl::cleanup() { SDL_FreeSurface(activeSceneSurface) ; SDL_FreeSurface(inactiveSceneSurface) ; }
+void SceneSdl::cleanup()
+{
+  if (!!activeSceneSurface  )
+  { SDL_FreeSurface(activeSceneSurface  ) ; activeSceneSurface   = nullptr ; }
+  if (!!inactiveSceneSurface)
+  { SDL_FreeSurface(inactiveSceneSurface) ; inactiveSceneSurface = nullptr ; }
+}
 
 
 // getters/setters
