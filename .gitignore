@@ -1,5 +1,15 @@
+
 build/*
-!build/debian
-!build/Makefile
 !build/generate-makefile.sh
 !build/loopidity.cbp
+obs/*
+!obs/debian.changelog
+!obs/debian.compat
+!obs/debian.control
+!obs/debian.copyright
+!obs/debian.rules
+!obs/loopidity.dsc
+!obs/loopidity.spec
+!obs/PKGBUILD
+!obs/README.md
+!obs/_service
