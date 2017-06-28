@@ -338,7 +338,7 @@ if (exit_status) cout << INIT_FAIL_MSG << endl ;
 #endif
 
   for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
-    if (SdlScenes[sceneN]) SdlScenes[sceneN]->cleanup() ;
+    if (!!SdlScenes[sceneN]) SdlScenes[sceneN]->cleanup() ;
   LoopiditySdl::Cleanup() ;
 
   return exit_status ;
