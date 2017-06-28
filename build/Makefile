@@ -6,6 +6,7 @@ ifndef PREFIX
   PREFIX = /usr/local
 endif
 BINDIR     = ./bin
+DATADIR    = ./share/loopidity
 ASSETSDIR  = ../assets
 INSTALLDIR = $(DESTDIR)$(PREFIX)
 ifeq (${MSYSTEM},MINGW32)
@@ -58,16 +59,17 @@ all: before out after
 
 before:
 	@echo "building $(CONFIG) configuration"
-	@test -d $(BINDIR) || mkdir -p $(BINDIR)
-	@test -d $(OBJDIR) || mkdir -p $(OBJDIR)
+	@test -d $(BINDIR)  || mkdir -p $(BINDIR)
+	@test -d $(DATADIR) || mkdir -p $(DATADIR)
+	@test -d $(OBJDIR)  || mkdir -p $(OBJDIR)
 
 out: before $(OBJECTS)
 	@echo "linking $(CONFIG) binary"
 	@$(LD) -o $(BINDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS)
 
 after: before $(ASSETS)
-	@echo "copying assets to bin directory"
-	@cp --no-clobber $(ASSETS) $(BINDIR)/
+	@echo "copying assets to data directory"
+	@cp --no-clobber $(ASSETS) $(DATADIR)/
 
 
 $(OBJECTS): $(OBJDIR)/%.o: ../src/%.cpp
@@ -78,6 +80,7 @@ $(OBJECTS): $(OBJDIR)/%.o: ../src/%.cpp
 clean:
 	@echo "cleaning $(CONFIG) configuration"
 	@rm -rf $(BINDIR)
+	@rm -rf $(DATADIR)
 	@rm -rf $(OBJDIR)/*.o
 
 
