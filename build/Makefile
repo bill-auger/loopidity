@@ -6,7 +6,6 @@ ifndef PREFIX
   PREFIX = /usr/local
 endif
 BINDIR     = ./bin
-DATADIR    = ./share/loopidity
 ASSETSDIR  = ../assets
 INSTALLDIR = $(DESTDIR)$(PREFIX)
 ifeq (${MSYSTEM},MINGW32)
@@ -20,7 +19,7 @@ CXX = g++
 AR  = ar
 LD  = g++
 
-CFLAGS = -std=gnu++0x -MMD -Wall -Werror -Wextra
+CFLAGS = -std=gnu++0x -Wall -MMD
 ifeq ($(CONFIG),debug)
   CFLAGS  += -g -DDEBUG=1
   LDFLAGS  =
@@ -59,9 +58,6 @@ all: before out after
 
 before:
 	@echo "building $(CONFIG) configuration"
-	@test -d $(BINDIR)  || mkdir -p $(BINDIR)
-	@test -d $(DATADIR) || mkdir -p $(DATADIR)
-	@test -d $(OBJDIR)  || mkdir -p $(OBJDIR)
 	@test -d $(BINDIR) || mkdir -p $(BINDIR)
 	@test -d $(OBJDIR) || mkdir -p $(OBJDIR)
 
@@ -70,8 +66,8 @@ out: before $(OBJECTS)
 	@$(LD) -o $(BINDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS)
 
 after: before $(ASSETS)
-	@echo "copying assets to data directory"
-	@cp --no-clobber $(ASSETS) $(DATADIR)/
+	@echo "copying assets to bin directory"
+	@cp --no-clobber $(ASSETS) $(BINDIR)/
 
 
 $(OBJECTS): $(OBJDIR)/%.o: ../src/%.cpp
@@ -82,7 +78,6 @@ $(OBJECTS): $(OBJDIR)/%.o: ../src/%.cpp
 clean:
 	@echo "cleaning $(CONFIG) configuration"
 	@rm -rf $(BINDIR)
-	@rm -rf $(DATADIR)
 	@rm -rf $(OBJDIR)/*.o
 
 
