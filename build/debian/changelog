@@ -1,6 +1,0 @@
-loopidity (0.13.000) whatever; urgency=medium
-
-  * initial debian package
-  * package created with FPM
-
- -- bill-auger@programmer.net  Fri, 28 Aug 2015 04:20:42 -0400

@@ -1,37 +1,10 @@
 language:       cpp
 compiler:       gcc
 before_install:
-  - VERSION=0.14.000
   - BUILD_DIR=/home/travis/build/bill-auger/loopidity/build
-  - DEB_DIR=$BUILD_DIR/debian
-  - BIN_DIR=$DEB_DIR/usr/bin
-  - DEB_PKG=loopidity_"$VERSION"_amd64.deb
   - sudo apt-get update -qq
   - sudo apt-get install -y libsdl1.2-dev libsdl-gfx1.2-dev libsdl-ttf2.0-dev
                             libx11-dev libjack-jackd2-dev
-  - gem install fpm package_cloud --no-rdoc --no-ri
-  - sudo cp $DEB_DIR/SDL_ttf.pc /usr/lib/x86_64-linux-gnu/pkgconfig/SDL_ttf.pc
+  - sudo cp $BUILD_DIR/../ci/SDL_ttf.pc /usr/lib/x86_64-linux-gnu/pkgconfig/SDL_ttf.pc
 script:         >
-  cd $BUILD_DIR                                                     &&
-  make && mkdir -p $BIN_DIR && mv bin/loopidity $BIN_DIR/loopidity  &&
-  fpm -s dir -t deb --name loopidity --version $VERSION              \
-    -C              $DEB_DIR                                         \
-    --package       $DEB_DIR/loopidity_VERSION_ARCH.deb              \
-    --license       'GPL3'                                           \
-    --maintainer    'bill-auger@programmer.net'                      \
-    --vendor        'https://github.com/bill-auger/loopidity'        \
-    --url           'https://github.com/bill-auger/loopidity'        \
-    --depends       'libsdl1.2debian'                                \
-    --depends       'libsdl-gfx1.2-4'                                \
-    --depends       'libsdl-ttf2.0-0'                                \
-    --description   'loopidity
-                    \n\nA multi-track multi-channel audio looper
-                    designed for live handsfree use.'                \
-    --deb-changelog $DEB_DIR/changelog                               \
-    --deb-priority  'optional'                                       \
-    --category      'sound'                                          \
-    usr/                                                            &&
-  echo "$DEB_PKG deb package built successfully"
-after_success:
-  - package_cloud yank ninjam/loopidity/ubuntu/trusty          $DEB_PKG
-  - package_cloud push ninjam/loopidity/ubuntu/trusty $DEB_DIR/$DEB_PKG
+  cd $BUILD_DIR && make && stat bin/loopidity
