@@ -1,0 +1,22 @@
+Source:        loopidity
+Maintainer:    bill-auger <bill-auger@programmer.net>
+Section:       sound
+Priority:      extra
+Build-Depends: build-essential, debhelper (>= 4.1.16), libjack-jackd2-dev,
+               libsdl1.2-dev, libsdl-gfx1.2-dev, libsdl-ttf2.0-dev, libx11-dev
+Homepage:      https://github.com/bill-auger/loopidity/
+
+Package:       loopidity
+Architecture:  any
+Section:       sound
+Priority:      extra
+Depends:       ${shlibs:Depends}, libx11-6, jackd
+Description:   Multi-track multi-channel looping audio recorder designed for live hands-free use
+ Loopidity is a native GNU/Linux and Windows application built with
+ the SDL framework and using the JACK Connection Kit for audio I/O.
+ Loopidity is designed so that the most useful functions can be controlled
+ using as few buttons as possible (a small number of foot pedals for example).
+ The Loopidity state graph is kept as small and linear as possible
+ so that it can be easily memorized; as not to hinder the creative workflow,
+ but to quickly become an intuitive activity.
+Homepage:      https://github.com/bill-auger/loopidity/

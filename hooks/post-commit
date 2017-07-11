@@ -1,0 +1,48 @@
+#!/bin/bash
+
+source hooks/common.inc
+
+
+echo "running post-commit hooks"
+
+if ! (($IS_PACKAGING_BRANCH))
+then # set "release" tag
+     for revision_tag in $REVISION_TAGS
+     do echo "removing revision tag '$revision_tag'"
+        git tag -d $revision_tag
+     done
+     echo "adding revision tag '$VERSION_STRING'"
+     git tag $VERSION_STRING
+else # implode tarball
+     tarball=obs/$VERSION_STRING.tar.gz
+     deb_tarball=loopidity_$VERSION.orig.tar.gz
+     deb_diffball=loopidity_$VERSION-1.diff.gz
+     rm obs/*.tar.gz obs/*.sig 2> /dev/null
+     git archive --prefix=$GITHUB_REPO_NAME-$VERSION/ -o $tarball $VERSION_STRING
+
+     # generate tarball metadata
+     MD5SUM=$(md5sum $tarball | cut -d ' ' -f 1)
+     SHA1SUM="$(sha1sum $tarball | cut -d ' ' -f 1)                        "
+     SHA256SUM="$(sha256sum $tarball | cut -d ' ' -f 1)"
+     FILESIZE=$(wc -c $tarball | cut -d ' ' -f 1)
+     MD5SUMS="'$KEY_MD5SUM' '$MD5SUM' SKIP SKIP"
+
+     # inject tarball metadata into packaging files
+     sed -i -e "s/^md5sums=.*$/md5sums=($MD5SUMS)/"            $PKGBUILD_FILE
+     tail -n 7 $DSC_FILE | wc -c | xargs -I {} truncate        $DSC_FILE -s -{} ;
+     (($(grep -c "pre-commit"        $DSC_FILE) - 1)) && echo "$DSC_FILE malformed" && exit 1
+     (($(grep -c "Checksums-Sha1:"   $DSC_FILE)    )) && echo "$DSC_FILE malformed"
+     (($(grep -c "Checksums-Sha256:" $DSC_FILE)    )) && echo "$DSC_FILE malformed"
+     (($(grep -c "Files:"            $DSC_FILE)    )) && echo "$DSC_FILE malformed"
+     echo "Checksums-Sha1:"                                 >> $DSC_FILE
+     echo " $SHA1SUM $FILESIZE $deb_tarball"                >> $DSC_FILE
+     echo "Checksums-Sha256:"                               >> $DSC_FILE
+     echo " $SHA256SUM $FILESIZE $deb_tarball"              >> $DSC_FILE
+     echo "Files:"                                          >> $DSC_FILE
+     echo " $FAUXSUM $FAUXSIZE $deb_tarball"                >> $DSC_FILE
+     echo " $FAUXSUM $FAUXSIZE $deb_diffball"               >> $DSC_FILE
+
+     # sign
+     gpg --detach-sign --yes $tarball
+     gpg --detach-sign --yes $PKGBUILD_FILE
+fi

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+source hooks/common.inc
+
+
+echo "running pre-commit hooks"
+
+echo "upgrading version to '$VERSION_STRING'"
+if ! (($IS_PACKAGING_BRANCH))
+then # inject version string into build files
+     sed -i -e "s/^VERSION =.*$/VERSION = $VERSION_STRING/"     $MAKE_FILE
+     git add                                                    $MAKE_FILE
+else # inject version string into packaging files
+     sed -i -e "s/\/.*</\/$VERSION_STRING\.tar\.gz</"           $SERVICE_FILE
+     git add                                                    $SERVICE_FILE
+     sed -i -e "s/^pkgver=.*$/pkgver=$VERSION/"                 $PKGBUILD_FILE
+     sed -i -e "s/^validpgpkeys=.*$/validpgpkeys=('$GPG_KEY')/" $PKGBUILD_FILE
+     git add                                                    $PKGBUILD_FILE
+     sed -i -e "s/^Version:.*$/Version:       $VERSION/"        $SPEC_FILE
+     tail -n 2 $SPEC_FILE | wc -c | xargs -I {} truncate        $SPEC_FILE -s -{} ;
+     (($(grep -c "GIT-HOOK-SENTINEL" $SPEC_FILE) - 1)) && echo "$SPEC_FILE malformed" && exit 1
+     (($(grep -c "%changelog"        $SPEC_FILE) - 1)) && echo "$SPEC_FILE malformed" && exit 1
+     echo "* $(date '+%a %b %d %Y') $(git config user.name)" >> $SPEC_FILE
+     echo "- $VERSION_STRING"                                >> $SPEC_FILE
+     git add                                                    $SPEC_FILE
+     sed -i -e "s/^Version:.*$/Version:           $VERSION-1/"  $DSC_FILE
+     git add                                                    $DSC_FILE
+fi
