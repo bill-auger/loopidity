@@ -1,12 +1,15 @@
 
+VERSION = v0.14.003
+
 ifndef DESTDIR
   DESTDIR =
 endif
 ifndef PREFIX
   PREFIX = /usr/local
 endif
-BINDIR     = ./bin
-DATADIR    = ./share/loopidity
+BUILDDIR   = ../build
+BINDIR     = bin
+DATADIR    = share/loopidity
 ASSETSDIR  = ../assets
 INSTALLDIR = $(DESTDIR)$(PREFIX)
 ifeq (${MSYSTEM},MINGW32)
@@ -20,16 +23,16 @@ CXX = g++
 AR  = ar
 LD  = g++
 
-CFLAGS = -std=gnu++0x -Wall -MMD
+CFLAGS = -std=gnu++0x -Wall -MMD -DVERSION=$(VERSION)
 ifeq ($(CONFIG),debug)
   CFLAGS  += -g -DDEBUG=1
   LDFLAGS  =
-  OBJDIR   = ./obj/Debug/__/src
+  OBJDIR   = $(BUILDDIR)/obj/debug/src
   TARGET   = loopidity-dbg
 else
   CFLAGS  += -O3
   LDFLAGS  = -s
-  OBJDIR   = ./obj/Release/__/src
+  OBJDIR   = $(BUILDDIR)/obj/release/src
   TARGET   = loopidity
   CONFIG   = 'release'
 endif
@@ -59,46 +62,45 @@ all: before out after
 
 before:
 	@echo "building $(CONFIG) configuration"
-	@test -d $(BINDIR)  || mkdir -p $(BINDIR)
-	@test -d $(DATADIR) || mkdir -p $(DATADIR)
-	@test -d $(OBJDIR)  || mkdir -p $(OBJDIR)
+	@test -d $(BUILDDIR)/$(BINDIR)  || mkdir -p $(BUILDDIR)/$(BINDIR)
+	@test -d $(BUILDDIR)/$(DATADIR) || mkdir -p $(BUILDDIR)/$(DATADIR)
+	@test -d $(BUILDDIR)/$(OBJDIR)  || mkdir -p $(BUILDDIR)/$(OBJDIR)
 
 out: before $(OBJECTS)
 	@echo "linking $(CONFIG) binary"
-	@$(LD) -o $(BINDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS)
-
-after: before $(ASSETS)
-	@echo "copying assets to data directory"
-	@cp --no-clobber $(ASSETS) $(DATADIR)/
-
+	@$(LD) -o $(BUILDDIR)/$(BINDIR)/$(TARGET) $(OBJECTS) $(LDFLAGS)
 
 $(OBJECTS): $(OBJDIR)/%.o: ../src/%.cpp
 	@echo "  -> compiling $*.cpp"
-	@$(CXX) $(CFLAGS) -c $< -o $@
+	@$(CXX) $(CFLAGS) -c $(BUILDDIR)/$< -o $@
+
+after: before out $(ASSETS)
+	@echo "copying assets to data directory"
+	@cp --no-clobber $(ASSETS) $(BUILDDIR)/$(DATADIR)/
 
 
 clean:
-	@echo "cleaning $(CONFIG) configuration"
-	@rm -rf $(BINDIR)
-	@rm -rf $(DATADIR)
-	@rm -rf $(OBJDIR)/*.o
+	@echo "cleaning all configurations"
+	rm -rf $(BUILDDIR)/$(BINDIR)/
+	rm -rf $(BUILDDIR)/$(DATADIR)/
+	rm -rf $(BUILDDIR)/$(OBJDIR)/
 
 
 assert-writable:
-	@mkdir -p $(INSTALLDIR)/bin
-	@mkdir -p $(INSTALLDIR)/share/loopidity
-	@touch $(INSTALLDIR)/bin/$(TARGET) 2> /dev/null || \
+	@mkdir -p $(INSTALLDIR)/$(BINDIR)
+	@mkdir -p $(INSTALLDIR)/$(DATADIR)
+	@touch $(INSTALLDIR)/$(BINDIR)/$(TARGET) 2> /dev/null || \
           (echo '\nsuperuser privileges required - exiting\n' && exit 255)
 
 install: all assert-writable
 	@echo installing loopidity
-	@install -Dm 755 $(BINDIR)/$(TARGET) $(INSTALLDIR)/bin/
-	@install -Dm 644 $(ASSETS)           $(INSTALLDIR)/share/loopidity/
+	@install -Dm 755 $(BINDIR)/$(TARGET) $(INSTALLDIR)/$(BINDIR)/
+	@install -Dm 644 $(ASSETS)           $(INSTALLDIR)/$(DATADIR)/
 
 uninstall: assert-writable
 	@echo uninstalling loopidity
-	@rm     $(INSTALLDIR)/bin/$(TARGET)    2> /dev/null
-	@rm -rf $(INSTALLDIR)/share/loopidity/ 2> /dev/null
+	@rm     $(INSTALLDIR)/$(BINDIR)/$(TARGET) 2> /dev/null
+	@rm -rf $(INSTALLDIR)/$(DATADIR)/         2> /dev/null
 
 
 -include $(OBJECTS:%.o=%.d)
