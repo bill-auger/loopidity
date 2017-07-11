@@ -1,0 +1,38 @@
+# Maintainer: bill-auger <bill-auger@programmer.net>
+pkgname=loopidity
+pkgver=0.00.000
+pkgrel=1
+pkgdesc="Multi-track, multi-channel, looping audio recorder designed for live hands-free use"
+arch=('i686' 'x86_64')
+url='https://github.com/bill-auger/loopidity/'
+license=('GPL')
+depends=('jack' 'sdl_gfx' 'sdl_ttf')
+makedepends=() # libx11 libjack-jackd2
+conflicts=('loopidity-git')
+source=("https://bill-auger.github.io/bill-auger.key"
+        "https://github.com/bill-auger/${pkgname}/archive/v$pkgver.tar.gz"
+        "https://github.com/bill-auger/${pkgname}/releases/download/v$pkgver/v$pkgver.tar.gz.sigg"
+        "https://github.com/bill-auger/${pkgname}/releases/download/v$pkgver/PKGBUILD.sigg")
+md5sums=('01234567ABCDEF01234567ABCDEF0123' '01234567ABCDEF01234567ABCDEF0123' SKIP SKIP)
+validpgpkeys=('01234567ABCDEF01234567ABCDEF01234567ABCD')
+
+rootdir="${pkgname}-${pkgver}"
+
+
+prepare() {
+  gpg --import bill-auger.key
+  gpg --verify v${pkgver}.tar.gz.sigg v${pkgver}.tar.gz
+  gpg --verify PKGBUILD.sigg          ../PKGBUILD
+}
+
+build() {
+  cd ${rootdir}/
+  ./configure
+  make
+}
+
+package() {
+  cd ${rootdir}/
+  make DESTDIR="${pkgdir}/" install
+}
+
