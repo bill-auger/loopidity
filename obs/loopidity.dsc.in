@@ -1,0 +1,12 @@
+Format:            3.0 (quilt)
+Source:            loopidity
+Binary:            loopidity
+Architecture:      any
+Version:           0.00.000-0
+Maintainer:        bill-auger <bill-auger@programmer.net>
+Homepage:          https://github.com/bill-auger/loopidity/
+Build-Depends:     debhelper (>=9), dh-autoreconf, libjack-jackd2-dev,
+                   libsdl1.2-dev, libsdl-gfx1.2-dev, libsdl-ttf2.0-dev, libx11-dev
+Standards-Version: 3.9.8
+Package-List:
+ loopidity deb sound optional arch=any

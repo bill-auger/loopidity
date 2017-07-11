@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --with autoreconf
+
+
+override_dh_auto_install:
+	make install DESTDIR=$(CURDIR)/debian/loopidity AM_UPDATE_INFO_DIR=no
+	rm $(CURDIR)/debian/loopidity/usr/share/doc/loopidity/COPYING.fonts
+	rm $(CURDIR)/debian/loopidity/usr/share/doc/loopidity/COPYING
+	rm $(CURDIR)/debian/loopidity/usr/share/loopidity/Purisa.ttf

@@ -1,0 +1,36 @@
+# Maintainer: bill-auger <bill-auger@programmer.net>
+pkgname=loopidity
+pkgver=0.00.000
+pkgrel=1
+pkgdesc="Multi-track, multi-channel, looping audio recorder designed for live hands-free use"
+arch=( 'i686' 'x86_64' )
+url='https://github.com/bill-auger/loopidity/'
+license=( 'GPL' )
+depends=( 'jack' 'libx11' 'sdl' 'sdl_gfx' 'sdl_ttf' )
+makedepends=()
+conflicts=( 'loopidity-git' )
+source=( "https://github.com/bill-auger/${pkgname}/archive/v$pkgver.tar.gz" )
+md5sums=( '01234567ABCDEF01234567ABCDEF0123' )
+
+rootdir="${pkgname}-${pkgver}"
+
+
+prepare() {
+  # kludge
+  sed --in-place "s/^AC_CHECK_HEADER(\[SDL\/SDL_gfxPrimitives.h\].*//" ${rootdir}/configure.ac
+  sed --in-place "s/^AC_CHECK_HEADER(\[SDL\/SDL_rotozoom.h\].*//"      ${rootdir}/configure.ac
+  [ -f /usr/include/SDL/SDL_gfxPrimitives.h ]
+  [ -f /usr/include/SDL/SDL_rotozoom.h      ]
+}
+
+build() {
+  cd ${rootdir}/
+  autoreconf -fi
+  ./configure --prefix=/usr
+  make
+}
+
+package() {
+  cd ${rootdir}/
+  make DESTDIR="${pkgdir}/" install
+}

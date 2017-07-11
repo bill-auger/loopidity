@@ -71,6 +71,7 @@ obs/*
 !obs/debian.rules
 !obs/loopidity-Debian_8.0.dsc.in
 !obs/loopidity.dsc.in
+!obs/loopidity-xUbuntu_16.04.dsc.in
 !obs/loopidity.spec.in
 !obs/PKGBUILD.in
 !obs/README.md
