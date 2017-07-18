@@ -1,7 +1,56 @@
 
-build/*
-!build/generate-makefile.sh
-!build/loopidity.cbp
+# autotools and build files
+*
+!AUTHORS
+!ChangeLog
+!compile
+!configure.ac
+!configure
+!CONTRIBUTING*
+!COPYING
+!depcomp
+!INSTALL
+!install-sh
+!LICENSE
+!Makefile.am
+!Makefile.in
+!missing
+!mk
+!NEWS
+!README*
+!TODO
+
+# binary assets
+!assets/
+assets/*
+!assets/COPYING.fonts
+!assets/COPYING.images
+!assets/histogram_gradient.bmp
+!assets/LICENSES
+!assets/loop_gradient.argb.bmp
+!assets/Purisa.ttf
+!assets/README.md
+!assets/scope_gradient.bmp
+
+# debian packaging
+!debian/
+debian/*
+!debian/source/
+debian/source/*
+!debian/source/format
+!debian/changelog
+!debian/compat
+!debian/control
+!debian/copyright
+!debian/rules
+
+# documentation
+!doc/
+doc/*
+!doc/buffer-layout.txt
+
+# obs packaging
+!obs/
 obs/*
 !obs/debian.changelog
 !obs/debian.compat
@@ -13,3 +62,20 @@ obs/*
 !obs/PKGBUILD
 !obs/README.md
 !obs/_service
+
+# sources
+!src/
+src/*
+!src/jack_io.cpp
+!src/jack_io.h
+!src/loopidity.cpp
+!src/loopidity.h
+!src/loopidity_sdl.cpp
+!src/loopidity_sdl.h
+!src/main.cpp
+!src/scene.cpp
+!src/scene.h
+!src/scene_sdl.cpp
+!src/scene_sdl.h
+!src/trace.cpp
+!src/trace.h

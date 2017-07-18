@@ -617,7 +617,7 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER
 // TODO: adjustable loop seams (issue #14)
 
     // copy audio samples - (see note on RecordBuffer layout in jack_io.h)
-    if ((NewLoopEventLoop = new (nothrow) Loop(nFrames + BufferMarginsSize)))
+    if ((NewLoopEventLoop = new (std::nothrow) Loop(nFrames + BufferMarginsSize)))
     {
 DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP
 

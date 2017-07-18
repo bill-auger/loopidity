@@ -167,7 +167,7 @@ class SceneSdl
     /* SceneSdl class side private functions */
 
     // setup
-    SceneSdl(Scene* a_scene , vector<Sample>* peaks_in) ;
+    SceneSdl(Scene* a_scene , std::vector<Sample>* peaks_in) ;
 
     // helpers
     static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
