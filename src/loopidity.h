@@ -161,25 +161,28 @@
 // dependencies
 
 #include <cstdlib>
-#include <exception>           // Scene::Scene()
+#include <exception>    // Scene::Scene()
 #include <iostream>
 #include <list>
 #include <sstream>
 #include <string>
 #include <vector>
+#ifndef _WIN32
+#  include <unistd.h>   // Loopidity::Init()
+#  include <X11/Xlib.h> // LoopiditySdl::Init()
+#endif // _WIN32
 
 #include <jack/jack.h>
-#include <SDL.h>
-#include <SDL_gfxPrimitives.h>
-#include <SDL_rotozoom.h>
-#include <SDL_ttf.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_gfxPrimitives.h>
+#include <SDL/SDL_rotozoom.h>
+#include <SDL/SDL_ttf.h>
+
 #ifdef _WIN32
 #  undef main
 #  define snprintf _snprintf
-#else // _WIN32
-#  include <unistd.h>            // Loopidity::Init()
-#  include <X11/Xlib.h>          // LoopiditySdl::Init()
 #endif // _WIN32
+
 
 typedef jack_default_audio_sample_t Sample ;
 using namespace std ;
@@ -196,8 +199,6 @@ class SceneSdl ;
 #include "scene.h"
 #include "scene_sdl.h"
 #include "trace.h"
-
-
 
 
 class Loopidity
