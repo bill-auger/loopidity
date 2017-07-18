@@ -66,7 +66,10 @@
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN         if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: EVT_SCENE_CHANGED --> Loopidity::OnSceneChange(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::OnSceneChange(%d)  IN" , Scenes[CurrentSceneN])) return ;
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT        if (TRACE_OUT(NextSceneN))    TRACE_SCENE("Loopidity::OnSceneChange(%d)  OUT" , nextScene) ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                                                 TRACE_SCENE("Loopidity::OOM(%d)   IN" , Scenes[CurrentSceneN]) ;
-#else
+#  define DEBUG_TRACE_LOOPIDITY_CLEANUP                  if (DEBUG_TRACE_EVS && exit_status != 0)                  \
+    { cout << (N_SCENES + 2 < N_SCENES) ? "Loopidity::Cleanup(): N_SCENES out of range - quitting" :               \
+              (ASSETS_DIR.empty()     ) ? "Loopidity::Cleanup(): cannot locate assets - quitting"  : "") << endl ; }
+#else // #if DEBUG_TRACE_LOOPIDITY
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_MID                 ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_OUT                 ;
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN  ;
@@ -90,6 +93,7 @@
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN         ;
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT        ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                   ;
+#  define DEBUG_TRACE_LOOPIDITY_CLEANUP                  ;
 #endif // #if DEBUG_TRACE_LOOPIDITY
 
 #if DEBUG_TRACE_JACK
