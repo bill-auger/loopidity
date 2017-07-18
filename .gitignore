@@ -39,20 +39,27 @@ assets/*
 # debian packaging
 !debian/
 debian/*
-!debian/source/
-debian/source/*
-!debian/source/format
 !debian/changelog
 !debian/compat
 !debian/control
 !debian/copyright
+!debian/gbp.conf
+!debian/loopidity.manpages
 !debian/rules
+!debian/watch
+!debian/patches/
+debian/patches/*
+!debian/patches/remove-fonts
+!debian/patches/series
+!debian/source/
+debian/source/*
+!debian/source/format
 
 # documentation
 !doc/
 doc/*
 !doc/buffer-layout.txt
-!doc/loopidity.7
+!doc/loopidity.1
 
 # obs packaging
 !obs/
@@ -88,5 +95,7 @@ src/constants/*
 !src/scene.h
 !src/scene_sdl.cpp
 !src/scene_sdl.h
-!src/trace.cpp
-!src/trace.h
+!src/trace/
+src/trace/*
+!src/trace/trace.cpp
+!src/trace/trace.h
