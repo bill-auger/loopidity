@@ -40,12 +40,11 @@
 
 typedef float Sample ; // jack_default_audio_sample_t
 
-class SceneSdl ;
-#include "jack_io.h"
 #include "loopidity_sdl.h"
 #include "scene.h"
+#include "jack_io.h"
 #include "scene_sdl.h"
-#include "trace.h"
+#include "trace/trace.h"
 
 
 class Loopidity

@@ -27,9 +27,6 @@
 
 #include "loopidity.h"
 
-class Loop ;
-class Scene ;
-
 
 class JackIO
 {

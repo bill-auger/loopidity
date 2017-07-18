@@ -1,14 +1,18 @@
-language:       cpp
-compiler:       gcc
-dist:           trusty
+language: cpp
+compiler: gcc
+dist:     trusty
+branches:
+  only:
+  - master
+  - development
+
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libsdl1.2-dev libsdl-gfx1.2-dev libsdl-ttf2.0-dev
                             libx11-dev libjack-jackd2-dev
 script:
-  - make -C src/
-  - stat build/bin/loopidity                          > /dev/null
-  - stat build/share/loopidity/histogram_gradient.bmp > /dev/null
-  - stat build/share/loopidity/loop_gradient.argb.bmp > /dev/null
-  - stat build/share/loopidity/scope_gradient.bmp     > /dev/null
-  - stat build/share/loopidity/Purisa.ttf             > /dev/null
+  - autoreconf -if
+  - ./configure
+  - make
+  - sudo make install
+  - make installcheck
