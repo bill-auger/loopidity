@@ -161,25 +161,28 @@
 // dependencies
 
 #include <cstdlib>
-#include <exception>           // Scene::Scene()
+#include <exception>    // Scene::Scene()
 #include <iostream>
 #include <list>
 #include <sstream>
 #include <string>
 #include <vector>
+#ifndef _WIN32
+#  include <unistd.h>   // Loopidity::Init()
+#  include <X11/Xlib.h> // LoopiditySdl::Init()
+#endif // _WIN32
 
 #include <jack/jack.h>
-#include <SDL.h>
-#include <SDL_gfxPrimitives.h>
-#include <SDL_rotozoom.h>
-#include <SDL_ttf.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_gfxPrimitives.h>
+#include <SDL/SDL_rotozoom.h>
+#include <SDL/SDL_ttf.h>
+
 #ifdef _WIN32
 #  undef main
 #  define snprintf _snprintf
-#else // _WIN32
-#  include <unistd.h>            // Loopidity::Init()
-#  include <X11/Xlib.h>          // LoopiditySdl::Init()
 #endif // _WIN32
+
 
 typedef jack_default_audio_sample_t Sample ;
 using namespace std ;
@@ -198,8 +201,6 @@ class SceneSdl ;
 #include "trace.h"
 
 
-
-
 class Loopidity
 {
   friend class JackIO ;
@@ -209,11 +210,12 @@ class Loopidity
 
     /* Loopidity class side public constants */
 
-    static const Uint32 N_SCENES ;
-    static const Uint32 N_LOOPS ;
+    static const Uint32      N_SCENES ;
+    static const Uint32      N_LOOPS ;
+    static const std::string ASSETS_DIR ;
 #if ! FIXED_N_AUDIO_PORTS
-    static const Uint8  N_INPUT_CHANNELS ;
-    static const Uint8  N_OUTPUT_CHANNELS ;
+    static const Uint8       N_INPUT_CHANNELS ;
+    static const Uint8       N_OUTPUT_CHANNELS ;
 #endif // FIXED_N_AUDIO_PORTS
 
 
@@ -253,12 +255,11 @@ class Loopidity
     static int Main(int argc , char** argv) ;
 
     // getters/setters
-    static std::string GetAssetsPath(std::string filename) ;
 //    static void         SetNFramesPerPeriod(   Uint32 nFrames) ;
-    static Uint32      GetCurrentSceneN(void) ;
-    static Uint32      GetNextSceneN(   void) ;
-//    static Uint32 GetLoopPos(    void) ;
-    static bool        GetIsRolling(    void) ;
+    static Uint32 GetCurrentSceneN(void) ;
+    static Uint32 GetNextSceneN(   void) ;
+//     static Uint32 GetLoopPos(    void) ;
+    static bool   GetIsRolling(    void) ;
 //    static bool         GetShouldSaveLoop(     void) ;
 //    static bool         GetDoesPulseExist(     void) ;
 //    static bool         GetIsEditMode(         void) ;
@@ -273,22 +274,23 @@ private:
     /* Loopidity class side private functions */
 
     // setup
+    static std::string GetAssetsDir() ;
 #if ! INIT_JACK_BEFORE_SCENES
-    static bool IsInitialized() ;
+    static bool        IsInitialized() ;
 #endif // INIT_JACK_BEFORE_SCENES
-    static bool Init(         bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
-                              Uint32 recordBufferSize                                 ) ;
+    static bool        Init(         bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
+                                     Uint32 recordBufferSize                                 ) ;
 #if INIT_JACK_BEFORE_SCENES
 #  if SCENE_NFRAMES_EDITABLE
-    static void SetMetadata(  SceneMetadata* sceneMetadata) ;
+    static void        SetMetadata(  SceneMetadata* sceneMetadata) ;
 #  else
-    static void SetMetadata(  Uint32 sampleRate       , Uint32 nFramesPerPeriod ,
-                              Uint32 recordBufferSize                           ) ;
+    static void        SetMetadata(  Uint32 sampleRate       , Uint32 nFramesPerPeriod ,
+                                     Uint32 recordBufferSize                           ) ;
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #else
-    static void SetMetadata(  Uint32 sampleRate , Uint32 nFramesPerPeriod) ;
+    static void        SetMetadata(  Uint32 sampleRate , Uint32 nFramesPerPeriod) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
-    static int  Cleanup(      int retval) ;
+    static int         Cleanup(      int retval) ;
 
     // event handlers
     static void HandleKeyEvent(  SDL_Event* event) ;
