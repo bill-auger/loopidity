@@ -158,9 +158,9 @@ bool LoopiditySdl::Init(SceneSdl**      sdlScenes  , vector<Sample>* peaksIn   ,
 */
 
   // load images
-  std::string scope_img_path     = Loopidity::GetAssetsPath(SCOPE_IMG_PATH    ) ;
-  std::string histogram_img_path = Loopidity::GetAssetsPath(HISTOGRAM_IMG_PATH) ;
-  std::string loop_img_path      = Loopidity::GetAssetsPath(LOOP_IMG_PATH     ) ;
+  std::string scope_img_path     = Loopidity::ASSETS_DIR + SCOPE_IMG_PATH     ;
+  std::string histogram_img_path = Loopidity::ASSETS_DIR + HISTOGRAM_IMG_PATH ;
+  std::string loop_img_path      = Loopidity::ASSETS_DIR + LOOP_IMG_PATH      ;
   if (!(ScopeGradient     = SDL_LoadBMP(scope_img_path    .c_str())   ) ||
       !(HistogramGradient = SDL_LoadBMP(histogram_img_path.c_str())   ) ||
       !(LoopGradient      = SDL_LoadBMP(loop_img_path     .c_str())   ) ||
@@ -168,8 +168,8 @@ bool LoopiditySdl::Init(SceneSdl**      sdlScenes  , vector<Sample>* peaksIn   ,
     { SdlError(SDL_LOADBMP_ERROR_TEXT) ; return false ; }
 
   // load fonts
-  std::string header_font_path = Loopidity::GetAssetsPath(HEADER_FONT_PATH) ;
-  std::string status_font_path = Loopidity::GetAssetsPath(STATUS_FONT_PATH) ;
+  std::string header_font_path = Loopidity::ASSETS_DIR + HEADER_FONT_PATH ;
+  std::string status_font_path = Loopidity::ASSETS_DIR + STATUS_FONT_PATH ;
   if (TTF_Init()) { TtfError(TTF_INIT_ERROR_MSG) ; return false ; }
   if (!(HeaderFont = TTF_OpenFont(header_font_path.c_str() , HEADER_FONT_SIZE)) ||
       !(StatusFont = TTF_OpenFont(status_font_path.c_str() , STATUS_FONT_SIZE))  )
