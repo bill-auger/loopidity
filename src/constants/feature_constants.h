@@ -46,7 +46,7 @@
 #endif // #if DRAW_SCENES
 
 #if DRAW_DEBUG_TEXT
-#  include "../trace.h"
+#  include "../trace/trace.h"
 #  define DRAW_DEBUG_TEXT_L Trace::SetDbgTextC() ;
 #  define DRAW_DEBUG_TEXT_R Trace::SetDbgTextR() ;
 #else
