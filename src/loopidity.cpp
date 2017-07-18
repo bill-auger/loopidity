@@ -18,14 +18,18 @@
 \*/
 
 
+// #include <sys/types.h>
+#include <sys/stat.h>
+
 #include "loopidity.h"
 #include "scene.h"
 
 
 /* Loopidity class side public constants */
 
-const Uint32 Loopidity::N_SCENES = NUM_SCENES ;
-const Uint32 Loopidity::N_LOOPS  = NUM_LOOPS ;
+const Uint32      Loopidity::N_SCENES   = NUM_SCENES ;
+const Uint32      Loopidity::N_LOOPS    = NUM_LOOPS ;
+const std::string Loopidity::ASSETS_DIR = GetAssetsDir() ;
 
 
 /* Loopidity class side private varables */
@@ -69,9 +73,10 @@ int Loopidity::Main(int argc , char** argv)
   if (IsInitialized()        ) return false ;
 #endif // INIT_JACK_BEFORE_SCENES
   if (N_SCENES + 2 < N_SCENES) return false ;
+  if (ASSETS_DIR.empty()     ) return false ;
 
   // parse command line arguments
-  bool   shouldMonitorInputs  = true ;
+  bool   shouldMonitorInputs   = true ;
   bool   shouldAutoSceneChange = true ;
   Uint32 recordBufferSize ;
   for (int argN = 0 ; argN < argc ; ++argN)
@@ -155,13 +160,14 @@ DEBUG_TRACE_LOOPIDITY_MAIN_OUT
 
 // getters/setters
 
-std::string Loopidity::GetAssetsPath(std::string filename)
+std::string Loopidity::GetAssetsDir()
 {
   // determine proper path to assets on the current system
-  std::string this_path ;
-  std::string assets_path ;
+  std::string this_bin ;
+  std::string this_dir ;
+
 #ifdef _WIN32
-this_path="./" ; // FIXME
+this_dir="./" ; // FIXME
 /* TODO:
   std::vector<wchar_t> path_buffer ;
   DWORD n_wchars = 0 ;
@@ -172,20 +178,26 @@ this_path="./" ; // FIXME
   }
   pathBuf.resize(n_wchars) ;
   wstring path(path_buffer.begin() , path_buffer.end()) ;
-  this_path = std::wstring_convert<std::codecvt_utf8<wchar_t> , wchar_t> converterX.to_bytes(path) ;
+  this_dir = std::wstring_convert<std::codecvt_utf8<wchar_t> , wchar_t> converterX.to_bytes(path) ;
 */
 #else // _WIN32
 #define SCRATCH_BUFFER_SIZE 2048
   char path_buffer[SCRATCH_BUFFER_SIZE] ;
   if (::readlink("/proc/self/exe" , path_buffer , SCRATCH_BUFFER_SIZE) > 0)
-    this_path = std::string(path_buffer) ;
+    this_bin = std::string(path_buffer) ;
+  this_dir = this_bin.substr(0 , this_bin.find_last_of("/\\")) ;
 #endif // _WIN32
-  this_path   = this_path.substr(0 , this_path.find_last_of("/\\")) ;
-  assets_path = this_path + "/../share/loopidity/" + filename ;
 
-printf("Loopidity::GetAssetsPath() loading asset=%s\n\n" , assets_path.c_str());
+  std::string assets_dir = this_dir + "/assets" ;
+  std::string data_dir   = LOOPIDITY_DATADIR ;
+  struct stat stats ;
 
-  return assets_path ;
+  bool does_assets_dir_exist = stat(assets_dir.c_str() , &stats) == 0 && stats.st_mode & S_IFDIR ;
+  bool does_data_dir_exist   = stat(data_dir.c_str()   , &stats) == 0 && stats.st_mode & S_IFDIR ;
+  bool is_uninstalled        = does_assets_dir_exist && this_dir.compare(LOOPIDITY_BINDIR) != 0 ;
+
+  return (does_data_dir_exist) ? data_dir   + "/" :
+         (is_uninstalled     ) ? assets_dir + "/" : "" ;
 }
 
 Uint32 Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
@@ -336,9 +348,7 @@ void Loopidity::SetMetadata(Uint32 sampleRate , Uint32 nFramesPerPeriod)
 
 int Loopidity::Cleanup(int exit_status)
 {
-#if DEBUG_TRACE
-if (exit_status) std::cout << INIT_FAIL_MSG << std::endl ;
-#endif
+DEBUG_TRACE_LOOPIDITY_CLEANUP
 
   for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
     if (!!SdlScenes[sceneN]) SdlScenes[sceneN]->cleanup() ;
