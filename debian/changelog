@@ -1,0 +1,14 @@
+loopidity (0.14.003-1) unstable; urgency=medium
+
+  * updated to new upstream version
+  * package conforms to debian specs
+
+ -- bill-auger <bill-auger@programmer.net>  Wed, 12 Jul 2017 04:20:42 -0420
+
+
+loopidity (0.13.000) unstable; urgency=medium
+
+  * initial debian package
+  * package created with FPM
+
+ -- bill-auger <bill-auger@programmer.net>  Fri, 28 Aug 2015 04:20:42 -0420
