@@ -90,7 +90,7 @@ const Uint8  SceneSdl::SECONDS_PER_MINUTE = N_SECONDS_PER_MINUTE ;
 
 /* SceneSdl class side private functions */
 
-SceneSdl::SceneSdl(Scene* a_scene , vector<Sample>* peaks_in) :
+SceneSdl::SceneSdl(Scene* a_scene , std::vector<Sample>* peaks_in) :
   // constants
   sceneT(      SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,

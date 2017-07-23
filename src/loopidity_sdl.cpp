@@ -297,7 +297,7 @@ void LoopiditySdl::DrawScopes()
 #endif // #if DRAW_SCOPES
 }
 
-void LoopiditySdl::DrawScope(vector<Sample>* peaks , Uint16 peaks_r , Uint16 peak_n)
+void LoopiditySdl::DrawScope(std::vector<Sample>* peaks , Uint16 peaks_r , Uint16 peak_n)
 {
   Uint16 peak_x   = peaks_r - peak_n ;
   Uint16 peak_h   = (Uint16)((*peaks)[peak_n] * SCOPE_PEAK_H) ;

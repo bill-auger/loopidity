@@ -386,7 +386,7 @@ void Loopidity::HandleMouseEvent(SDL_Event* event)
 {
   Uint16 x = event->button.x ; Uint16 y = event->button.y ;
   if (x < MOUSE_SCENES_L || x > MOUSE_SCENES_R ||
-      y < MOUSE_SCENES_T || y > MOUSE_SCENES_B) return ;
+      y < MOUSE_SCENES_T || y > MOUSE_SCENES_B  ) return ;
 
 #if HANDLE_MOUSE_EVENTS
   Uint32 sceneN = (y - MOUSE_SCENES_T) / SCENE_H ;

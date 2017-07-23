@@ -85,8 +85,8 @@ class JackIO
     static Sample              PeaksVuIn[] ;  // VU peaks (per channel)
     static Sample              PeaksVuOut[] ; // VU peaks (per channel)
 #else // TODO:
-    static vector<Sample>      PeaksVuIn ;    // VU peaks (per channel)
-    static vector<Sample>      PeaksVuOut ;   // VU peaks (per channel)
+    static std::vector<Sample> PeaksVuIn ;    // VU peaks (per channel)
+    static std::vector<Sample> PeaksVuOut ;   // VU peaks (per channel)
 #endif // #if FIXED_N_AUDIO_PORTS
 
     // event structs
@@ -180,116 +180,3 @@ class JackIO
 
 
 #endif // #ifndef _JACK_IO_H_
-
-
-/* NOTE: on RecordBuffer layout
-
-    to allow for dynamic adjustment of seams and compensation for SDL key event delay
-      the following are the buffer offsets used:
-
-        invariant                  -->
-            BeginFrameN <= beginFrameN <= currentFrameN < endFrameN <= EndFrameN
-        initially                  -->
-            beginFrameN     = currentFrameN = BeginFrameN = BufferMarginSize
-            endFrameN       = EndFrameN     = (RecordBufferSize - BufferSize)
-        on initial trigger         -->
-            beginFrameN     = currentFrameN - TriggerLatencySize
-        on accepting trigger       -->
-            if (currentFrameN > beginFrameN + MINIMUM_LOOP_DURATION) // (issue #12)
-                endFrameN     = currentFrameN
-                nFrames       = endFrameN - TriggerLatencySize - beginFrameN
-        after each rollover        -->
-            beginFrameN     = BeginFrameN
-            endFrameN       = BeginFrameN + nFrames
-        after first rollover       -->
-            currentFrameN   = BeginFrameN + TriggerLatencySize
-        after subsequent rollovers -->
-            currentFrameN   = BeginFrameN
-
-    all of the above offsets are multiples of BufferSize (aka nFramesPerPeriod)
-      excepting beginFrameN and nFrames
-
-    on each rollover (TODO: this is currently only done when copying base loops)
-        set currentFrameN = BeginFrameN (+ TriggerLatencySize if base loop)
-        copy tail end of RecordBuffer back to the beginning of RecordBuffer
-        this will be the LeadIn of the next loop (may or may not be part of a previous loop)
-            let begin = (beginFrameN + nFrames) - BufferMarginSize
-        initial base loop -->
-            RecordBuffer[begin] upto RecordBuffer[endFrameN]
-                --> RecordBuffer[0]
-        subsequent loops  -->
-            RecordBuffer[begin] upto RecordBuffer[endFrameN + TriggerLatencySize]
-                --> RecordBuffer[0]
-
-    on creation of each loop
-        copy the entire buffer to include per loop LeadIn
-            RecordBuffer[0] upto RecordBuffer[endFrameN]
-                --> NewLoop[0]
-
-    on creation of base loops
-        set beginFrameN   = BeginFrameN
-        set currentFrameN = BeginFrameN + TriggerLatencySize
-        set endFrameN     = BeginFrameN + nFrames
-        all subsequent loops will use beginFrameN and endFrameN (dynamically) as seams
-
-    on next rollover following creation of each loop
-        copy the leading BeginFrameN + BufferMarginSize to the end of the previous loop
-          regardless of creating a new loop from the current data
-        this will be the leadOut of the previous loop
-            RecordBuffer[BeginFrameN] upto RecordBuffer[BeginFrameN + BufferMarginSize]
-                --> PrevLoop[BeginFrameN + nFrames]
-
-
-                            INITIAL RECORD BUFFER
-          currentFrameN                                                 // dynamic offset
-           beginFrameN                                        endFrameN // dynamic offsets
-           BeginFrameN                                        EndFrameN // static offsets
-                |                                                 |
- |<-MarginSize->|<--------(RecordBufferSize - MarginSize)-------->|     // sizes
- |<---LeadIn--->|<-----------------RolloverRange----------------->|     // 'zones'
- |<-------------------------RecordBuffer------------------------->|     // buffer
-
-
-                              INITIAL BASE LOOP
-                 beginFrameN                       endFrameN                  // offsets
-thisLeadInBegin       |                                |                      // pointer
-       |              |                                |
- |<-?->|<-MarginSize->|<-----------nFrames------------>|<-MarginSize->|<-?->| // sizes
- |     |<---LeadIn--->|<--------RolloverRange--------->|<--LeadOut--->|     | // 'zones'
- |     |<-------------------Source-------------------->|              |     | // data
- |     |<--------------------Dest--------------------->|<--Pending--->|     | // data
- |     |<--------------------------NewLoop--------------------------->|     | // dest
- |<------------------------------RecordBuffer------------------------------>| // source
-
-
-                               SUBSEQUENT LOOPS
-           beginFrameN                       endFrameN                        // offsets
-thisLeadInBegin |                                |                            // pointer
- |              |                                |
- |<-MarginSize->|<-----------nFrames------------>|<-MarginSize->|<----?---->| // sizes
- |<---LeadIn--->|<--------RolloverRange--------->|<--LeadOut--->|           | // 'zones'
- |<-------------------Source-------------------->|              |           | // data
- |<--------------------Dest--------------------->|<--Pending--->|           | // data
- |<--------------------------NewLoop--------------------------->|           | // dest
- |<------------------------------RecordBuffer------------------------------>| // source
-
-
-                             SHIFT NEXT LEAD-IN
-           beginFrameN                      endFrameN                         // offsets
-                |         nextLeadInBegin       |                             // pointer
-                |                |              |
- |<-MarginSize->|                |<-MarginSize->|                           | // sizes
- |<----Dest---->|                |<---Source--->|                           | // data
- |<------------------------------RecordBuffer------------------------------>| // source/dest
-
-
-                        COPY PREVIOUS LEAD_OUT (TODO)
-           beginFrameN                       endFrameN                        // offsets
-                |           mixBegin             |                            // pointer
-                |              |                 |
- |<-MarginSize->|<-MarginSize->|                 |<-MarginSize->|           | // sizes
- |              |<---Source--->|                 |<----Dest---->|           | // data
- |<---LeadIn--->|<--------RolloverRange--------->|<--LeadOut--->|           | // 'zones'
- |<--------------------------NewLoop--------------------------->|           | // dest
- |<------------------------------RecordBuffer------------------------------>| // source
-*/

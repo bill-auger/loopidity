@@ -167,7 +167,7 @@ class SceneSdl
     /* SceneSdl class side private functions */
 
     // setup
-    SceneSdl(Scene* aScene , vector<Sample>* peaksIn) ;
+    SceneSdl(Scene* aScene , std::vector<Sample>* peaksIn) ;
 
     // helpers
     static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
@@ -189,9 +189,9 @@ class SceneSdl
     /* SceneSdl instance side private varables */
 
     // model
-    Scene*          scene ;
-    Uint8           sceneN ;
-    vector<Sample>* peaksIn ;
+    Scene*               scene ;
+    Uint8                sceneN ;
+    std::vector<Sample>* peaksIn ;
 
     // loop image caches
     std::list<LoopSdl*> histogramImgs ;
@@ -250,13 +250,13 @@ class SceneSdl
     LoopSdl* drawLoop(               Loop* aLoop , Uint16 loopN) ;
 
     // images
-    void  addLoop(   Loop* newLoop , Uint16 nLoops) ;
-    void  deleteLoop(Uint8 loopN) ;
+    void addLoop(   Loop* newLoop , Uint16 nLoops) ;
+    void deleteLoop(Uint8 loopN) ;
 
     // helpers
-    SDL_Surface*  createHwSurface(       Sint16 w , Sint16 h) ;
-    SDL_Surface*  createSwSurface(       Sint16 w , Sint16 h) ;
-    std::string   makeDurationStatusText(void) ;
+    SDL_Surface* createHwSurface(       Sint16 w , Sint16 h) ;
+    SDL_Surface* createSwSurface(       Sint16 w , Sint16 h) ;
+    std::string  makeDurationStatusText(void) ;
 } ;
 
 
