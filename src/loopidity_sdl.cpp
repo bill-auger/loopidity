@@ -18,67 +18,52 @@
 \*/
 
 
+#include "feature_switches.h"
+#include "view_constants.h"
 #include "loopidity_sdl.h"
 
 
-/* LoopiditySdl class side private variables */
+/* LoopiditySdl class side private constants */
+
 
 // common
 const Uint8 LoopiditySdl::GUI_PAD  = GUIPAD ;
 const Uint8 LoopiditySdl::GUI_PAD2 = GUI_PAD * 2 ;
 
 // window
-SDL_Surface* LoopiditySdl::Screen          = 0 ;             // Init()
-SDL_Rect     LoopiditySdl::WinRect         = WIN_RECT ;
 const Uint32 LoopiditySdl::WINDOW_BG_COLOR = WINDOWBGCOLOR ;
 const Uint16 LoopiditySdl::WinCenter       = WIN_CENTER ;
 
 // header
-SDL_Rect        LoopiditySdl::HeaderRectDim = HEADER_RECT_DIM ;
-SDL_Rect        LoopiditySdl::HeaderRectC   = HEADER_RECT_C ;
-TTF_Font*       LoopiditySdl::HeaderFont    = 0 ;                 // Init()
-const SDL_Color LoopiditySdl::HeaderColor   = HEADER_TEXT_COLOR ;
+const SDL_Color LoopiditySdl::HeaderColor = HEADER_TEXT_COLOR ;
 
 // status
-SDL_Rect        LoopiditySdl::StatusRectDim = STATUS_RECT_DIM ;
-SDL_Rect        LoopiditySdl::StatusRectL   = STATUS_RECT_L ;
-SDL_Rect        LoopiditySdl::StatusRectC   = STATUS_RECT_C ;
-SDL_Rect        LoopiditySdl::StatusRectR   = STATUS_RECT_R ;
-TTF_Font*       LoopiditySdl::StatusFont    = 0 ;                 // Init()
-const SDL_Color LoopiditySdl::StatusColor   = STATUS_TEXT_COLOR ;
-std::string     LoopiditySdl::StatusTextL   = "" ;
-std::string     LoopiditySdl::StatusTextC   = "" ;
-std::string     LoopiditySdl::StatusTextR   = "" ;
+const SDL_Color LoopiditySdl::StatusColor = STATUS_TEXT_COLOR ;
 
 // scenes
-SceneSdl**   LoopiditySdl::SdlScenes         = 0 ; // Init()
-SDL_Surface* LoopiditySdl::ScopeGradient     = 0 ; // Init()
-SDL_Surface* LoopiditySdl::HistogramGradient = 0 ; // Init()
-SDL_Surface* LoopiditySdl::LoopGradient      = 0 ; // Init()
-SDL_Surface* LoopiditySdl::VuGradient        = 0 ; // Init()
+const Uint8  LoopiditySdl::N_SCENES = NUM_SCENES ;
+const Uint8  LoopiditySdl::N_LOOPS  = NUM_LOOPS ;
 
 // scopes
-const Uint32         LoopiditySdl::SCOPE_IN_BG_COLOR      = WINDOW_BG_COLOR ;
-const Uint32         LoopiditySdl::SCOPE_OUT_BG_COLOR     = WINDOW_BG_COLOR ;
-const Uint32         LoopiditySdl::SCOPE_IN_BORDER_COLOR  = STATE_RECORDING_COLOR ;
-const Uint32         LoopiditySdl::SCOPE_OUT_BORDER_COLOR = STATE_PLAYING_COLOR ;
-const Uint16         LoopiditySdl::SCOPE_IN_L             = SCOPEINL ;
-const Uint16         LoopiditySdl::SCOPE_OUT_R            = SCOPEOUTR ;
-const Uint16         LoopiditySdl::SCOPE_IN_R             = SCOPEINR ;
-const Uint16         LoopiditySdl::SCOPE_OUT_L            = SCOPEOUTL ;
-const Sint16         LoopiditySdl::SCOPES_M               = SCOPE_0 ;
-const float          LoopiditySdl::SCOPE_PEAK_H           = SCOPEPEAKH ;
-SDL_Rect             LoopiditySdl::ScopeInRect            = SCOPE_IN_RECT ;
-SDL_Rect             LoopiditySdl::ScopeOutRect           = SCOPE_OUT_RECT ;
-SDL_Rect             LoopiditySdl::ScopeMaskRect          = SCOPE_MASK_RECT ;
-SDL_Rect             LoopiditySdl::ScopeRect              = SCOPE_RECT ;
-std::vector<Sample>* LoopiditySdl::PeaksIn ;                                        // Init()
-std::vector<Sample>* LoopiditySdl::PeaksOut ;                                       // Init()
-
-// edit histogram
-SDL_Rect LoopiditySdl::EditorRect = EDITOR_RECT ;
+const Uint32 LoopiditySdl::SCOPE_IN_BG_COLOR      = WINDOW_BG_COLOR ;
+const Uint32 LoopiditySdl::SCOPE_OUT_BG_COLOR     = WINDOW_BG_COLOR ;
+const Uint32 LoopiditySdl::SCOPE_IN_BORDER_COLOR  = STATE_RECORDING_COLOR ;
+const Uint32 LoopiditySdl::SCOPE_OUT_BORDER_COLOR = STATE_PLAYING_COLOR ;
+const Uint16 LoopiditySdl::SCOPE_IN_L             = SCOPEINL ;
+const Uint16 LoopiditySdl::SCOPE_OUT_R            = SCOPEOUTR ;
+const Uint16 LoopiditySdl::SCOPE_IN_R             = SCOPEINR ;
+const Uint16 LoopiditySdl::SCOPE_OUT_L            = SCOPEOUTL ;
+const Sint16 LoopiditySdl::SCOPES_M               = SCOPE_0 ;
+const float  LoopiditySdl::SCOPE_PEAK_H           = SCOPEPEAKH ;
 
 // VUs
+#if FIXED_N_AUDIO_PORTS
+const Uint8  LoopiditySdl::N_INPUT_CHANNELS     = N_IN_CHANNELS ;
+const Uint8  LoopiditySdl::N_OUTPUT_CHANNELS    = N_OUT_CHANNELS ;
+#else // FIXED_N_AUDIO_PORTS // see loopidity.h
+const Uint8  LoopiditySdl::MAX_INPUT_CHANNELS   = MAX_IN_CHANNELS ;
+const Uint8  LoopiditySdl::MAX_OUTPUT_CHANNELS  = MAX_OUT_CHANNELS ;
+#endif // FIXED_N_AUDIO_PORTS
 const Uint32 LoopiditySdl::VUS_IN_BORDER_COLOR  = VUSINBORDERCOLOR ;
 const Uint32 LoopiditySdl::VUS_OUT_BORDER_COLOR = VUSOUTBORDERCOLOR ;
 const Uint32 LoopiditySdl::VUS_IN_BG_COLOR      = VUSINBGCOLOR ;
@@ -88,12 +73,54 @@ const Uint16 LoopiditySdl::VUS_H                = VUSH ;
 const Uint16 LoopiditySdl::VUS_B                = VUSB ;
 const Uint16 LoopiditySdl::VUS_IN_L             = VUSINL ;
 const Uint16 LoopiditySdl::VUS_OUT_L            = VUSOUTL ;
-SDL_Rect     LoopiditySdl::VusInRect            = VUS_IN_RECT ;
-SDL_Rect     LoopiditySdl::VusOutRect           = VUS_OUT_RECT ;
-SDL_Rect     LoopiditySdl::VuMaskRect           = VUS_MASK_RECT ;
-SDL_Rect     LoopiditySdl::VuRect               = VU_RECT ;
-Sample*      LoopiditySdl::PeaksVuIn            = nullptr ;           // Init()
-Sample*      LoopiditySdl::PeaksVuOut           = nullptr ;           // Init()
+
+
+/* LoopiditySdl class side private variables */
+
+// window
+SDL_Surface* LoopiditySdl::Screen  = 0 ;        // Init()
+SDL_Rect     LoopiditySdl::WinRect = WIN_RECT ;
+
+// header
+SDL_Rect  LoopiditySdl::HeaderRectDim = HEADER_RECT_DIM ;
+SDL_Rect  LoopiditySdl::HeaderRectC   = HEADER_RECT_C ;
+TTF_Font* LoopiditySdl::HeaderFont    = 0 ;               // Init()
+
+// status
+SDL_Rect    LoopiditySdl::StatusRectDim = STATUS_RECT_DIM ;
+SDL_Rect    LoopiditySdl::StatusRectL   = STATUS_RECT_L ;
+SDL_Rect    LoopiditySdl::StatusRectC   = STATUS_RECT_C ;
+SDL_Rect    LoopiditySdl::StatusRectR   = STATUS_RECT_R ;
+TTF_Font*   LoopiditySdl::StatusFont    = 0 ;               // Init()
+std::string LoopiditySdl::StatusTextL   = "" ;
+std::string LoopiditySdl::StatusTextC   = "" ;
+std::string LoopiditySdl::StatusTextR   = "" ;
+
+// scenes
+SceneSdl**   LoopiditySdl::SdlScenes         = 0 ; // Init()
+SDL_Surface* LoopiditySdl::ScopeGradient     = 0 ; // Init()
+SDL_Surface* LoopiditySdl::HistogramGradient = 0 ; // Init()
+SDL_Surface* LoopiditySdl::LoopGradient      = 0 ; // Init()
+SDL_Surface* LoopiditySdl::VuGradient        = 0 ; // Init()
+
+// scopes
+SDL_Rect             LoopiditySdl::ScopeInRect   = SCOPE_IN_RECT ;
+SDL_Rect             LoopiditySdl::ScopeOutRect  = SCOPE_OUT_RECT ;
+SDL_Rect             LoopiditySdl::ScopeMaskRect = SCOPE_MASK_RECT ;
+SDL_Rect             LoopiditySdl::ScopeRect     = SCOPE_RECT ;
+std::vector<Sample>* LoopiditySdl::PeaksIn ;                         // Init()
+std::vector<Sample>* LoopiditySdl::PeaksOut ;                        // Init()
+
+// edit histogram
+SDL_Rect LoopiditySdl::EditorRect = EDITOR_RECT ;
+
+// VUs
+SDL_Rect LoopiditySdl::VusInRect  = VUS_IN_RECT ;
+SDL_Rect LoopiditySdl::VusOutRect = VUS_OUT_RECT ;
+SDL_Rect LoopiditySdl::VuMaskRect = VUS_MASK_RECT ;
+SDL_Rect LoopiditySdl::VuRect     = VU_RECT ;
+Sample*  LoopiditySdl::PeaksVuIn  = nullptr ;       // Init()
+Sample*  LoopiditySdl::PeaksVuOut = nullptr ;       // Init()
 
 // DrawScenes() 'local' variables
 Uint16       LoopiditySdl::CurrentSceneN = 0 ;
@@ -114,7 +141,7 @@ bool LoopiditySdl::IsInitialized() { return !!Screen ; }
 
 bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* peaksIn   ,
                         std::vector<Sample>* peaksOut   , Sample*              peaksVuIn ,
-                        Sample*              peaksVuOut                                  )
+                        Sample*              peaksVuOut , std::string          assetsDir )
 {
   // sanity checks
   if (IsInitialized()                                                 ) return false ;
@@ -158,9 +185,9 @@ bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* p
 */
 
   // load images
-  std::string scope_img_path     = Loopidity::ASSETS_DIR + SCOPE_IMG_PATH     ;
-  std::string histogram_img_path = Loopidity::ASSETS_DIR + HISTOGRAM_IMG_PATH ;
-  std::string loop_img_path      = Loopidity::ASSETS_DIR + LOOP_IMG_PATH      ;
+  std::string scope_img_path     = assetsDir + SCOPE_IMG_PATH     ;
+  std::string histogram_img_path = assetsDir + HISTOGRAM_IMG_PATH ;
+  std::string loop_img_path      = assetsDir + LOOP_IMG_PATH      ;
   if (!(ScopeGradient     = SDL_LoadBMP(scope_img_path    .c_str())   ) ||
       !(HistogramGradient = SDL_LoadBMP(histogram_img_path.c_str())   ) ||
       !(LoopGradient      = SDL_LoadBMP(loop_img_path     .c_str())   ) ||
@@ -168,8 +195,8 @@ bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* p
     { SdlError(SDL_LOADBMP_ERROR_TEXT) ; return false ; }
 
   // load fonts
-  std::string header_font_path = Loopidity::ASSETS_DIR + HEADER_FONT_PATH ;
-  std::string status_font_path = Loopidity::ASSETS_DIR + STATUS_FONT_PATH ;
+  std::string header_font_path = assetsDir + HEADER_FONT_PATH ;
+  std::string status_font_path = assetsDir + STATUS_FONT_PATH ;
   if (TTF_Init()) { TtfError(TTF_INIT_ERROR_MSG) ; return false ; }
   if (!(HeaderFont = TTF_OpenFont(header_font_path.c_str() , HEADER_FONT_SIZE)) ||
       !(StatusFont = TTF_OpenFont(status_font_path.c_str() , STATUS_FONT_SIZE))  )
@@ -199,11 +226,11 @@ void LoopiditySdl::BlankScreen() { SDL_FillRect(Screen , 0 , WINDOW_BG_COLOR) ; 
 
 void LoopiditySdl::DrawHeader() { DrawText(HEADER_TEXT , Screen , HeaderFont , &HeaderRectC , &HeaderRectDim , HeaderColor) ; }
 
-void LoopiditySdl::DrawScenes()
+void LoopiditySdl::DrawScenes(Uint8 currentSceneN , Uint8 nextSceneN)
 {
 #if DRAW_SCENES
-  CurrentSceneN = Loopidity::GetCurrentSceneN() ; NextSceneN = Loopidity::GetNextSceneN() ;
-  for (SceneN = 0 ; SceneN < Loopidity::N_SCENES ; ++SceneN)
+  CurrentSceneN = currentSceneN ; NextSceneN = nextSceneN ;
+  for (SceneN = 0 ; SceneN < N_SCENES ; ++SceneN)
   {
     SdlScene = SdlScenes[SceneN] ; SceneRect = const_cast<SDL_Rect*>(&SdlScene->sceneRect) ;
     SDL_FillRect(Screen , SceneRect , WINDOW_BG_COLOR) ;
@@ -215,14 +242,14 @@ void LoopiditySdl::DrawScenes()
       SdlScene->drawScene(SceneSurface , CurrentPeakN , SceneProgress) ;
 
 #if DRAW_RECORDING_LOOP
-      if (SdlScene->scene->loops.size() < Loopidity::N_LOOPS)
+      if (SdlScene->scene->loops.size() < N_LOOPS)
         SdlScene->drawRecordingLoop(SceneSurface , SceneProgress) ;
 #endif
     }
     else SceneSurface = SdlScene->inactiveSceneSurface ;
 
     SDL_BlitSurface(SceneSurface , 0 , Screen , SceneRect) ;
-    SdlScene->drawSceneStateIndicator(Screen) ;
+    SdlScene->drawSceneStateIndicator(Screen , nextSceneN) ;
   }
 
 //SDL_FillRect(Screen , SceneRect , WINDOW_BG_COLOR) ;
@@ -231,12 +258,12 @@ DRAW_DEBUG_TEXT_L
 }
 
 #if SCENE_NFRAMES_EDITABLE
-void LoopiditySdl::DrawEditor()
+void LoopiditySdl::DrawEditor(Uint8 currentSceneN)
 {
 #  if DRAW_EDIT_HISTOGRAM
   SDL_FillRect(Screen , &EditorRect , WINDOW_BG_COLOR) ;
 
-  CurrentSceneN       = Loopidity::GetCurrentSceneN() ;
+  CurrentSceneN       = currentSceneN ;
   Scene* currentScene = SdlScenes[CurrentSceneN]->scene ;
   Loop* baseLoop      = currentScene->getLoop(0) ;
   if (baseLoop)
@@ -313,9 +340,9 @@ void LoopiditySdl::DrawVUs()
   SDL_FillRect(Screen , &VusInRect  , VUS_IN_BG_COLOR     ) ;
   SDL_FillRect(Screen , &VusOutRect , VUS_OUT_BG_COLOR    ) ;
 
-  for (int channelN = 0 ; channelN < JackIO::N_INPUT_CHANNELS  ; ++channelN)
+  for (int channelN = 0 ; channelN < N_INPUT_CHANNELS  ; ++channelN)
     DrawVU(PeaksVuIn  , VUS_IN_L  , channelN) ;
-  for (int channelN = 0 ; channelN < JackIO::N_OUTPUT_CHANNELS ; ++channelN)
+  for (int channelN = 0 ; channelN < N_OUTPUT_CHANNELS ; ++channelN)
     DrawVU(PeaksVuOut , VUS_OUT_L , channelN) ;
 
   DrawBorder  (Screen , VusInRect   , VUS_IN_BORDER_COLOR ) ;

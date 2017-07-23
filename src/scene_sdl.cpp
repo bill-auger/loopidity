@@ -18,7 +18,8 @@
 \*/
 
 
-#include "scene_sdl.h"
+#include "loopidity_sdl.h"
+#include "view_constants.h"
 
 
 /* LoopSdl class side private functions */
@@ -182,13 +183,13 @@ void SceneSdl::cleanup()
 
 void SceneSdl::startRolling() { HistogramsT = HISTOGRAMS_T ; HistogramsB = HISTOGRAMS_B ; }
 
-void SceneSdl::updateState()
+void SceneSdl::updateState(Uint8 currentSceneN , bool isRolling)
 {
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN
 
-  bool isCurrentScene = scene->sceneN == Loopidity::GetCurrentSceneN() ;
+  bool isCurrentScene = scene->sceneN == currentSceneN ;
   sceneFrameColor     = (isCurrentScene)? STATE_PLAYING_COLOR : STATE_IDLE_COLOR ;
-  loopFrameColor      = (!Loopidity::GetIsRolling())?
+  loopFrameColor      = (!isRolling)?
       STATE_IDLE_COLOR : (scene->shouldSaveLoop)?
           STATE_RECORDING_COLOR : STATE_PENDING_COLOR ;
 
@@ -288,13 +289,13 @@ void SceneSdl::drawRecordingLoop(SDL_Surface* aSurface , Uint16 sceneProgress)
 #endif
 }
 
-void SceneSdl::drawSceneStateIndicator(SDL_Surface* aSurface)
+void SceneSdl::drawSceneStateIndicator(SDL_Surface* aSurface , Uint8 nextSceneN)
 {
   // scene frame
   LoopiditySdl::DrawBorder(aSurface , SceneFrameL , sceneFrameT , SceneFrameR , sceneFrameB , sceneFrameColor) ;
 
 //if (scene->sceneN == Loopidity::GetNextSceneN() && sceneFrameColor == STATE_PLAYING_COLOR)
-  if (scene->sceneN != Loopidity::GetNextSceneN()) return ;
+  if (scene->sceneN != nextSceneN) return ;
 
 // TODO: drawing nextScene indicator outside of scene frame
 //          (instead of drawing frame different color if nextScene)

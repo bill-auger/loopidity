@@ -21,14 +21,16 @@
 // #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "feature_switches.h"
+#include "view_constants.h"
 #include "loopidity.h"
 #include "scene.h"
 
 
 /* Loopidity class side public constants */
 
-const Uint32      Loopidity::N_SCENES   = NUM_SCENES ;
-const Uint32      Loopidity::N_LOOPS    = NUM_LOOPS ;
+const Uint8       Loopidity::N_SCENES   = NUM_SCENES ;
+const Uint8       Loopidity::N_LOOPS    = NUM_LOOPS ;
 const std::string Loopidity::ASSETS_DIR = GetAssetsDir() ;
 
 
@@ -45,8 +47,8 @@ Scene*    Loopidity::Scenes[N_SCENES]    = {0} ;
 SceneSdl* Loopidity::SdlScenes[N_SCENES] = {0} ;
 
 // runtime state
-Uint32 Loopidity::CurrentSceneN = 0 ;
-Uint32 Loopidity::NextSceneN    = 0 ;
+Uint8 Loopidity::CurrentSceneN = 0 ;
+Uint8 Loopidity::NextSceneN    = 0 ;
 
 // runtime flags
 #if WAIT_FOR_JACK_INIT
@@ -130,9 +132,9 @@ if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
 
     // draw high priority
     JackIO::ScanPeaks() ;
-    LoopiditySdl::DrawScenes() ;
+    LoopiditySdl::DrawScenes(CurrentSceneN , NextSceneN) ;
 #if SCENE_NFRAMES_EDITABLE
-    if (IsEditMode) LoopiditySdl::DrawEditor() ;
+    if (IsEditMode) LoopiditySdl::DrawEditor(CurrentSceneN) ;
     else            LoopiditySdl::DrawScopes() ;
 #else
     LoopiditySdl::DrawScopes() ;
@@ -200,9 +202,9 @@ this_dir="./" ; // FIXME
          (is_uninstalled     ) ? assets_dir + "/" : "" ;
 }
 
-Uint32 Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
+Uint8 Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
 
-Uint32 Loopidity::GetNextSceneN() { return NextSceneN ; }
+Uint8 Loopidity::GetNextSceneN() { return NextSceneN ; }
 
 //Uint32 Loopidity::GetLoopPos() { return Scenes[CurrentSceneN]->getLoopPos() ; }
 
@@ -217,7 +219,7 @@ bool Loopidity::GetIsRolling() { return IsRolling ; }
 
 // view helpers
 
-void Loopidity::UpdateView(Uint32 sceneN) { SdlScenes[sceneN]->updateState() ; }
+void Loopidity::UpdateView(Uint32 sceneN) { SdlScenes[sceneN]->updateState(CurrentSceneN , IsRolling) ; }
 
 void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OUT_OF_MEMORY_MSG) ; }
 
@@ -300,7 +302,7 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
 
   // initialize LoopiditySdl (view)
 #if INIT_JACK_BEFORE_SCENES
-  IsInitialized = LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , peaksVuIn , peaksVuOut) ;
+  IsInitialized = LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , peaksVuIn , peaksVuOut , ASSETS_DIR) ;
 
   if (!IsInitialized) Cleanup(EXIT_FAILURE) ;
 

@@ -22,7 +22,9 @@
 #define _SCENE_H_
 
 
-#include "loopidity.h"
+#include <list>
+#include "feature_switches.h"
+#include "controller_constants.h"
 
 
 class InvalidMetadataException: public std::exception
@@ -94,18 +96,13 @@ class Scene
   friend class Trace ;
 
 
-  public:
-
-    /* Scene class side public constants */
-
-    static const Uint32 N_FINE_PEAKS ;
-    static const Uint32 N_COURSE_PEAKS ;
-
-
   private:
 
     /* Scene class side private constants */
-
+    static const Uint32                    N_FINE_PEAKS ;
+    static const Uint32                    N_COURSE_PEAKS ;
+    static const Uint8                     N_SCENES ;
+    static const Uint8                     N_LOOPS ;
     static const InvalidMetadataException* INVALID_METADATA_EXCEPTION ;
 
 

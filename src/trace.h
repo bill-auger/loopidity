@@ -99,7 +99,7 @@
 #if DEBUG_TRACE_JACK
 #  define DEBUG_TRACE_JACK_INIT                      printf("JackIO::Init() shouldMonitorInputs=%d recordBufferSize=%d\n" , shouldMonitorInputs , recordBufferSize) ;
 #  define DEBUG_TRACE_JACK_RESET                     printf("JackIO::Reset() sceneN=%d\n" , currentScene->sceneN) ;
-#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN       ; // Uint32 DbgNextFrameN = (CurrentScene->currentFrameN + nFramesPerPeriod) ; if (DbgNextFrameN >= CurrentScene->endFrameN || !(DbgNextFrameN % 32768)) printf("JackIO::ProcessCallback() sceneN=%d currentFrameN=%d nFramesPerPeriod=%d CurrentScene->endFrameN=%d mod=%d\n" , CurrentScene->sceneN , CurrentScene->currentFrameN , nFramesPerPeriod , CurrentScene->endFrameN , ((CurrentScene->currentFrameN + nFramesPerPeriod) % CurrentScene->endFrameN)) ;
+#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN       ; // unsigned int DbgNextFrameN = (CurrentScene->currentFrameN + nFramesPerPeriod) ; if (DbgNextFrameN >= CurrentScene->endFrameN || !(DbgNextFrameN % 32768)) printf("JackIO::ProcessCallback() sceneN=%d currentFrameN=%d nFramesPerPeriod=%d CurrentScene->endFrameN=%d mod=%d\n" , CurrentScene->sceneN , CurrentScene->currentFrameN , nFramesPerPeriod , CurrentScene->endFrameN , ((CurrentScene->currentFrameN + nFramesPerPeriod) % CurrentScene->endFrameN)) ;
 #  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER printf("JackIO::ProcessCallback() buffer rollover nLoops=%d isBaseLoop=%d beginFrameN=%d endFrameN=%d nSeconds=%d - %s\n" , nLoops , isBaseLoop , beginFrameN , endFrameN , (nFrames / SampleRate) , ((!isBaseLoop)? "" : ((endFrameN == EndFrameN)? "endFrameN invalid" : ((nFrames < MinLoopSize)? "nFrames invalid" : "valid")))) ;
 #  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP printf("JackIO::ProcessCallback() NewLoop isBaseLoop=%d\n" , isBaseLoop) ;
 #  define DEBUG_TRACE_JACK_SETMETADATA               printf("JackIO::SetMetadata() SampleRate=%d nFramesPerPeriod=%d BeginFrameN=%d EndFrameN=%d modsane=%d\n" , SampleRate , nFramesPerPeriod , BeginFrameN , EndFrameN , (!(BeginFrameN % nFramesPerPeriod) && !(EndFrameN % nFramesPerPeriod))) ;
@@ -193,6 +193,8 @@
 
 #include <iostream>
 
+class Scene ;
+
 
 class Trace
 {
@@ -201,11 +203,11 @@ class Trace
     /* class side public constants */
 
     // constants
-    static const char   *MODEL , *MODEL_ERR , *VIEW , *VIEW_ERR ;
-    static const Uint32 EVENT_LEN , STATE_LEN , DESC_LEN , TRACE_STATE_LEN ;
-    static const char   *MODEL_STATE_FMT , *VIEW_STATE_FMT ;
-    static const char   *MODEL_DESC_FMT  , *VIEW_DESC_FMT  ;
-    static const char   *MODEL_ERR_FMT   , *VIEW_ERR_FMT   ;
+    static const char         *MODEL , *MODEL_ERR , *VIEW , *VIEW_ERR ;
+    static const unsigned int  EVENT_LEN , STATE_LEN , DESC_LEN , TRACE_STATE_LEN ;
+    static const char         *MODEL_STATE_FMT , *VIEW_STATE_FMT ;
+    static const char         *MODEL_DESC_FMT  , *VIEW_DESC_FMT  ;
+    static const char         *MODEL_ERR_FMT   , *VIEW_ERR_FMT   ;
 
 
   private:
@@ -213,23 +215,23 @@ class Trace
     /* class side private variables */
 
     // buffers
-    static       char    Event[DEBUG_TRACE_EVENT_LEN + 1] ;
-    static       char    State[DEBUG_TRACE_STATE_LEN + 1] ;
-    static       char    Desc [DEBUG_TRACE_DESC_LEN  + 1] ;
-    static const char   *EventType , *SenderClass , *StateFormat , *DescFormat ;
-    static       Uint32  EventLen  ,  SenderLen   ,  StateLen    ,  DescLen ;
+    static       char          Event[DEBUG_TRACE_EVENT_LEN + 1] ;
+    static       char          State[DEBUG_TRACE_STATE_LEN + 1] ;
+    static       char          Desc [DEBUG_TRACE_DESC_LEN  + 1] ;
+    static const char         *EventType , *SenderClass , *StateFormat , *DescFormat ;
+    static       unsigned int  EventLen  ,  SenderLen   ,  StateLen    ,  DescLen ;
 
 
   public:
 
     /* class side public functions */
 
-    static bool SanityCheck(Uint32 sceneN) ;
+    static bool SanityCheck(unsigned int sceneN) ;
     static void Dbg(        std::string msg) ;
     static void Err(        std::string msg) ;
-    static bool TraceEvs(   Uint32 sceneN) ;
-    static bool TraceIn(    Uint32 sceneN) ;
-    static bool TraceOut(   Uint32 sceneN) ;
+    static bool TraceEvs(   unsigned int sceneN) ;
+    static bool TraceIn(    unsigned int sceneN) ;
+    static bool TraceOut(   unsigned int sceneN) ;
     static bool TraceScene( const char* senderTemplate , Scene* scene) ;
     static void TraceState( const char* event       , const char* sender     ,
                             const char* stateFormat , const char* descFormat ,

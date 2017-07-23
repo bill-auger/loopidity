@@ -22,7 +22,13 @@
 #define _JACK_IO_H_
 
 
+#include <jack/jack.h>
+#include <SDL/SDL.h>
+
 #include "loopidity.h"
+
+class Loop ;
+class Scene ;
 
 
 class JackIO
@@ -90,7 +96,7 @@ class JackIO
 #endif // #if FIXED_N_AUDIO_PORTS
 
     // event structs
-    static SDL_Event NewLoopEvent ;
+    static SDL_Event NewLoopEvent ;   
     static Uint32    NewLoopEventSceneN ;
     static Loop*     NewLoopEventLoop ;
     static SDL_Event SceneChangeEvent ;

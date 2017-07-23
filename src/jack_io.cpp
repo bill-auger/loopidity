@@ -17,8 +17,9 @@
 |*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
 \*/
 
-
+#include "feature_switches.h"
 #include "jack_io.h"
+#include "view_constants.h"
 
 
 /* JackIO class side public constants */
@@ -27,8 +28,8 @@
 const Uint8 JackIO::N_INPUT_CHANNELS  = N_IN_CHANNELS ;
 const Uint8 JackIO::N_OUTPUT_CHANNELS = N_OUT_CHANNELS ;
 #else // FIXED_N_AUDIO_PORTS // see loopidity.h
-const Uint8 JackIO::MAX_INPUT_CHANNELS  = MAX_INPUT_CHANNELS ;
-const Uint8 JackIO::MAX_OUTPUT_CHANNELS = MAX_OUTPUT_CHANNELS ;
+const Uint8 JackIO::MAX_INPUT_CHANNELS  = MAX_IN_CHANNELS ;
+const Uint8 JackIO::MAX_OUTPUT_CHANNELS = MAX_OUT_CHANNELS ;
 // also pvt MAX_PORTS below
 #endif // FIXED_N_AUDIO_PORTS
 
