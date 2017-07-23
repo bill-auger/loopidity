@@ -18,7 +18,7 @@
 \*/
 
 
-#include "loopidity.h"
+#include "../loopidity.h"
 
 
 /* Trace class side public constants */
@@ -117,7 +117,6 @@ void Trace::TraceState(const char* event       , const char* sender     ,
                        const char* stateFormat , const char* descFormat ,
                        bool bool0 , bool bool1 , bool bool2 , bool /*isEq*/ )
 {
-
 #if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN
 cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" << bool1 << "bool2=" << bool2 << endl ;
 #endif // #if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN

@@ -66,7 +66,10 @@
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN         if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: EVT_SCENE_CHANGED --> Loopidity::OnSceneChange(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::OnSceneChange(%d)  IN" , Scenes[CurrentSceneN])) return ;
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT        if (TRACE_OUT(NextSceneN))    TRACE_SCENE("Loopidity::OnSceneChange(%d)  OUT" , nextScene) ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                                                 TRACE_SCENE("Loopidity::OOM(%d)   IN" , Scenes[CurrentSceneN]) ;
-#else
+#  define DEBUG_TRACE_LOOPIDITY_CLEANUP                  if (DEBUG_TRACE_EVS && exit_status != 0)                  \
+    { cout << (N_SCENES + 2 < N_SCENES) ? "Loopidity::Cleanup(): N_SCENES out of range - quitting" :               \
+              (ASSETS_DIR.empty()     ) ? "Loopidity::Cleanup(): cannot locate assets - quitting"  : "") << endl ; }
+#else // #if DEBUG_TRACE_LOOPIDITY
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_MID                 ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_OUT                 ;
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN  ;
@@ -90,12 +93,13 @@
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN         ;
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT        ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                   ;
+#  define DEBUG_TRACE_LOOPIDITY_CLEANUP                  ;
 #endif // #if DEBUG_TRACE_LOOPIDITY
 
 #if DEBUG_TRACE_JACK
 #  define DEBUG_TRACE_JACK_INIT                      printf("JackIO::Init() shouldMonitorInputs=%d recordBufferSize=%d\n" , shouldMonitorInputs , recordBufferSize) ;
 #  define DEBUG_TRACE_JACK_RESET                     printf("JackIO::Reset() sceneN=%d\n" , currentScene->sceneN) ;
-#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN       ; // Uint32 DbgNextFrameN = (CurrentScene->currentFrameN + nFramesPerPeriod) ; if (DbgNextFrameN >= CurrentScene->endFrameN || !(DbgNextFrameN % 32768)) printf("JackIO::ProcessCallback() sceneN=%d currentFrameN=%d nFramesPerPeriod=%d CurrentScene->endFrameN=%d mod=%d\n" , CurrentScene->sceneN , CurrentScene->currentFrameN , nFramesPerPeriod , CurrentScene->endFrameN , ((CurrentScene->currentFrameN + nFramesPerPeriod) % CurrentScene->endFrameN)) ;
+#  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN       ; // unsigned int DbgNextFrameN = (CurrentScene->currentFrameN + nFramesPerPeriod) ; if (DbgNextFrameN >= CurrentScene->endFrameN || !(DbgNextFrameN % 32768)) printf("JackIO::ProcessCallback() sceneN=%d currentFrameN=%d nFramesPerPeriod=%d CurrentScene->endFrameN=%d mod=%d\n" , CurrentScene->sceneN , CurrentScene->currentFrameN , nFramesPerPeriod , CurrentScene->endFrameN , ((CurrentScene->currentFrameN + nFramesPerPeriod) % CurrentScene->endFrameN)) ;
 #  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER printf("JackIO::ProcessCallback() buffer rollover nLoops=%d isBaseLoop=%d beginFrameN=%d endFrameN=%d nSeconds=%d - %s\n" , nLoops , isBaseLoop , beginFrameN , endFrameN , (nFrames / SampleRate) , ((!isBaseLoop)? "" : ((endFrameN == EndFrameN)? "endFrameN invalid" : ((nFrames < MinLoopSize)? "nFrames invalid" : "valid")))) ;
 #  define DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP printf("JackIO::ProcessCallback() NewLoop isBaseLoop=%d\n" , isBaseLoop) ;
 #  define DEBUG_TRACE_JACK_SETMETADATA               printf("JackIO::SetMetadata() SampleRate=%d nFramesPerPeriod=%d BeginFrameN=%d EndFrameN=%d modsane=%d\n" , SampleRate , nFramesPerPeriod , BeginFrameN , EndFrameN , (!(BeginFrameN % nFramesPerPeriod) && !(EndFrameN % nFramesPerPeriod))) ;
@@ -189,6 +193,8 @@
 
 #include <iostream>
 
+class Scene ;
+
 
 class Trace
 {
@@ -197,11 +203,11 @@ class Trace
     /* class side public constants */
 
     // constants
-    static const char   *MODEL , *MODEL_ERR , *VIEW , *VIEW_ERR ;
-    static const Uint32 EVENT_LEN , STATE_LEN , DESC_LEN , TRACE_STATE_LEN ;
-    static const char   *MODEL_STATE_FMT , *VIEW_STATE_FMT ;
-    static const char   *MODEL_DESC_FMT  , *VIEW_DESC_FMT  ;
-    static const char   *MODEL_ERR_FMT   , *VIEW_ERR_FMT   ;
+    static const char         *MODEL , *MODEL_ERR , *VIEW , *VIEW_ERR ;
+    static const unsigned int  EVENT_LEN , STATE_LEN , DESC_LEN , TRACE_STATE_LEN ;
+    static const char         *MODEL_STATE_FMT , *VIEW_STATE_FMT ;
+    static const char         *MODEL_DESC_FMT  , *VIEW_DESC_FMT  ;
+    static const char         *MODEL_ERR_FMT   , *VIEW_ERR_FMT   ;
 
 
   private:
@@ -209,23 +215,23 @@ class Trace
     /* class side private variables */
 
     // buffers
-    static       char    Event[DEBUG_TRACE_EVENT_LEN + 1] ;
-    static       char    State[DEBUG_TRACE_STATE_LEN + 1] ;
-    static       char    Desc [DEBUG_TRACE_DESC_LEN  + 1] ;
-    static const char   *EventType , *SenderClass , *StateFormat , *DescFormat ;
-    static       Uint32  EventLen  ,  SenderLen   ,  StateLen    ,  DescLen ;
+    static       char          Event[DEBUG_TRACE_EVENT_LEN + 1] ;
+    static       char          State[DEBUG_TRACE_STATE_LEN + 1] ;
+    static       char          Desc [DEBUG_TRACE_DESC_LEN  + 1] ;
+    static const char         *EventType , *SenderClass , *StateFormat , *DescFormat ;
+    static       unsigned int  EventLen  ,  SenderLen   ,  StateLen    ,  DescLen ;
 
 
   public:
 
     /* class side public functions */
 
-    static bool SanityCheck(Uint32 sceneN) ;
+    static bool SanityCheck(unsigned int sceneN) ;
     static void Dbg(        std::string msg) ;
     static void Err(        std::string msg) ;
-    static bool TraceEvs(   Uint32 sceneN) ;
-    static bool TraceIn(    Uint32 sceneN) ;
-    static bool TraceOut(   Uint32 sceneN) ;
+    static bool TraceEvs(   unsigned int sceneN) ;
+    static bool TraceIn(    unsigned int sceneN) ;
+    static bool TraceOut(   unsigned int sceneN) ;
     static bool TraceScene( const char* senderTemplate , Scene* scene) ;
     static void TraceState( const char* event       , const char* sender     ,
                             const char* stateFormat , const char* descFormat ,
