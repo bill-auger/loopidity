@@ -98,7 +98,7 @@ Scene::Scene(Uint32 sceneNum , Uint32 recordBufferSize)
   sceneN = sceneNum ;
 
   // audio data
-  list<Loop*> loops ;
+  std::list<Loop*> loops ;
 
   // peaks cache
   highestScenePeak = 0.0 ; // scanPeaks()
@@ -180,7 +180,7 @@ DEBUG_TRACE_SCENE_BEGINRECORDING_IN
 
   beginFrameN = currentFrameN - TriggerLatencySize ;
 #if INIT_JACK_BEFORE_SCENES
-  if (beginFrameN - BeginFrameN < 0) beginFrameN = BeginFrameN ;
+  if (beginFrameN < BeginFrameN) beginFrameN = BeginFrameN ;
 #else
   if (beginFrameN - BUFFER_MARGIN_SIZE < 0) beginFrameN = BUFFER_MARGIN_SIZE ;
 #  endif // #if INIT_JACK_BEFORE_SCENES
@@ -243,7 +243,7 @@ DEBUG_TRACE_SCENE_DELETELOOP_IN
 
   if (loopN >= loops.size()) return ;
 
-  list<Loop*>::iterator loopIter = loops.begin() ; while (loopN--) ++loopIter ;
+  std::list<Loop*>::iterator loopIter = loops.begin() ; while (loopN--) ++loopIter ;
   loops.erase(loopIter) ; rescanPeaks() ;
 
 DEBUG_TRACE_SCENE_DELETELOOP_IN
@@ -329,7 +329,7 @@ DEBUG_TRACE_SCENE_RESCANPEAKS_IN
   highestScenePeak   = 0.0 ;
   Uint32 peakN = N_FINE_PEAKS ; while (peakN--) hiScenePeaks[peakN] = 0.0 ;
 //  Uint32 loopN = Loopidity::N_LOOPS ; while (loopN--)
-  list<Loop*>::iterator loopIter ; Uint32 loopN = 0 ;
+  std::list<Loop*>::iterator loopIter ; Uint32 loopN = 0 ;
   for (loopIter = loops.begin() ; loopIter != loops.end() ; ++loopIter)
     { hiLoopPeaks[loopN] = 0.0 ; scanPeaks(*loopIter , loopN) ; ++loopN ; }
 
@@ -343,7 +343,7 @@ Loop* Scene::getLoop(Uint32 loopN)
 {
   if (loopN >= loops.size()) return NULL ;
 
-  list<Loop*>::iterator aLoop = loops.begin() ; while (loopN--) ++aLoop ;
+  std::list<Loop*>::iterator aLoop = loops.begin() ; while (loopN--) ++aLoop ;
   return (*aLoop) ;
 }
 

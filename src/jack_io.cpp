@@ -79,10 +79,10 @@ Sample* JackIO::LeadOutBuffer2 = 0 ; // SetMetadata()
 #endif // FIXED_N_AUDIO_PORTS
 
 // peaks data
-vector<Sample> JackIO::PeaksIn ;                               // Reset()
-vector<Sample> JackIO::PeaksOut ;                              // Reset()
-Sample         JackIO::PeaksVuIn [N_INPUT_CHANNELS ] = {0.0} ;
-Sample         JackIO::PeaksVuOut[N_OUTPUT_CHANNELS] = {0.0} ;
+std::vector<Sample> JackIO::PeaksIn ;                               // Reset()
+std::vector<Sample> JackIO::PeaksOut ;                              // Reset()
+Sample              JackIO::PeaksVuIn [N_INPUT_CHANNELS ] = {0.0} ;
+Sample              JackIO::PeaksVuOut[N_OUTPUT_CHANNELS] = {0.0} ;
 
 // event structs
 SDL_Event    JackIO::NewLoopEvent ;               // Init()
@@ -141,8 +141,8 @@ DEBUG_TRACE_JACK_INIT
   // initialize playback and record buffers
   recordBufferSize /= N_BYTES_PER_FRAME ;
   RecordBufferSize  = !!(recordBufferSize) ? recordBufferSize : DEFAULT_BUFFER_SIZE ;
-  if (!(RecordBuffer1 = new (nothrow) Sample[RecordBufferSize]()) ||
-      !(RecordBuffer2 = new (nothrow) Sample[RecordBufferSize]())  )
+  if (!(RecordBuffer1 = new (std::nothrow) Sample[RecordBufferSize]()) ||
+      !(RecordBuffer2 = new (std::nothrow) Sample[RecordBufferSize]())  )
     return JACK_MEM_FAIL ;
 
   // initialize SDL event structs
@@ -239,9 +239,9 @@ void JackIO::SetCurrentScene(Scene* currentScene) { CurrentScene = currentScene 
 
 void JackIO::SetNextScene(Scene* nextScene) { NextScene = nextScene ; }
 
-vector<Sample>* JackIO::GetPeaksIn() { return &PeaksIn ; }
+std::vector<Sample>* JackIO::GetPeaksIn() { return &PeaksIn ; }
 
-vector<Sample>* JackIO::GetPeaksOut() { return &PeaksOut ; }
+std::vector<Sample>* JackIO::GetPeaksOut() { return &PeaksOut ; }
 
 Sample* JackIO::GetPeaksVuIn() { return PeaksVuIn ; }
 
@@ -344,7 +344,7 @@ void JackIO::ResetTransientPeaks()
 
 // JACK server callbacks
 
-int JackIO::ProcessCallback(jack_nframes_t nFramesPerPeriod , void* unused)
+int JackIO::ProcessCallback(jack_nframes_t nFramesPerPeriod , void* /*unused*/)
 #if SCENE_NFRAMES_EDITABLE
 {
 DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
@@ -364,7 +364,7 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
 #    endif // FIXED_N_AUDIO_PORTS
 
   // index into the record buffers and mix out
-  list<Loop*>::iterator loopIter , loopsBeginIter , loopsEndIter ; Loop* aLoop ; float vol ;
+  std::list<Loop*>::iterator loopIter , loopsBeginIter , loopsEndIter ; Loop* aLoop ; float vol ;
   loopsBeginIter      = CurrentScene->loops.begin() ;
   loopsEndIter        = CurrentScene->loops.end() ;
   Uint32 mixFrameN    = CurrentScene->currentFrameN ;//+ BufferMarginSize ;
@@ -479,11 +479,11 @@ list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
 #endif // #if SCENE_NFRAMES_EDITABLE
 
 #if SCENE_NFRAMES_EDITABLE
-int JackIO::SampleRateCallback(jack_nframes_t sampleRate , void* unused)
+int JackIO::SampleRateCallback(jack_nframes_t sampleRate , void* /*unused*/)
   { SetMetadata(sampleRate , jack_get_buffer_size(Client)) ; return 0 ; }
 #endif // #if SCENE_NFRAMES_EDITABLE
 
-int JackIO::BufferSizeCallback(jack_nframes_t nFramesPerPeriod , void* unused)
+int JackIO::BufferSizeCallback(jack_nframes_t nFramesPerPeriod , void* /*unused*/)
 #if SCENE_NFRAMES_EDITABLE
   { SetMetadata(jack_get_sample_rate(Client) , nFramesPerPeriod) ; return 0 ; }
 #else
@@ -501,7 +501,7 @@ int JackIO::BufferSizeCallback(jack_nframes_t nFramesPerPeriod , void* unused)
 }
 #endif // #if SCENE_NFRAMES_EDITABLE
 
-void JackIO::ShutdownCallback(void* unused)
+void JackIO::ShutdownCallback(void* /*unused*/)
 {
   // close client and free resouces
   if (Client)        { jack_client_close(Client) ; }
@@ -617,7 +617,7 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER
 // TODO: adjustable loop seams (issue #14)
 
     // copy audio samples - (see note on RecordBuffer layout in jack_io.h)
-    if ((NewLoopEventLoop = new (nothrow) Loop(nFrames + BufferMarginsSize)))
+    if ((NewLoopEventLoop = new (std::nothrow) Loop(nFrames + BufferMarginsSize)))
     {
 DEBUG_TRACE_JACK_PROCESS_CALLBACK_NEW_LOOP
 

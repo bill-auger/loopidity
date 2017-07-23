@@ -25,7 +25,7 @@
 #include "loopidity.h"
 
 
-class InvalidMetadataException: public exception
+class InvalidMetadataException: public std::exception
 {
   virtual const char* what() const throw() { return INVALID_METADATA_MSG ; }
 } ;
@@ -164,7 +164,7 @@ class Scene
     Uint32 sceneN ;
 
     // audio data
-    list<Loop*> loops ;
+    std::list<Loop*> loops ;
 
     // peaks cache
     float  hiScenePeaks[N_PEAKS_FINE] ; // the loudest of the currently playing samples in the current scene

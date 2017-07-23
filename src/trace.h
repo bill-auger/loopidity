@@ -225,8 +225,8 @@ class Trace
     /* class side public functions */
 
     static bool SanityCheck(Uint32 sceneN) ;
-    static void Dbg(        string msg) ;
-    static void Err(        string msg) ;
+    static void Dbg(        std::string msg) ;
+    static void Err(        std::string msg) ;
     static bool TraceEvs(   Uint32 sceneN) ;
     static bool TraceIn(    Uint32 sceneN) ;
     static bool TraceOut(   Uint32 sceneN) ;

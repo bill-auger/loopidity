@@ -172,7 +172,7 @@
 #  include <X11/Xlib.h> // LoopiditySdl::Init()
 #endif // _WIN32
 
-#include <jack/jack.h>
+// #include <jack/jack.h>
 #include <SDL/SDL.h>
 #include <SDL/SDL_gfxPrimitives.h>
 #include <SDL/SDL_rotozoom.h>
@@ -184,8 +184,8 @@
 #endif // _WIN32
 
 
-typedef jack_default_audio_sample_t Sample ;
-using namespace std ;
+// typedef jack_default_audio_sample_t Sample ;
+
 
 // local includes
 class JackIO ;

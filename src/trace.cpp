@@ -71,9 +71,9 @@ bool Trace::SanityCheck(Uint32 sceneN)
   return (nLoops == nHistogramImgs && nLoops == nLoopImgs) ;
 }
 
-void Trace::Dbg(string msg) { cout << "DBG: "   << msg << endl ; }
+void Trace::Dbg(std::string msg) { std::cout << "DBG: "   << msg << std::endl ; }
 
-void Trace::Err(string msg) { cout << "ERROR: " << msg << endl ; }
+void Trace::Err(std::string msg) { std::cout << "ERROR: " << msg << std::endl ; }
 
 #if DEBUG_TRACE
 bool Trace::TraceEvs(Uint32 sceneN) { return ((DEBUG_TRACE_EVS) || !SanityCheck(sceneN)) ; }
@@ -108,16 +108,15 @@ bool Trace::TraceScene(const char* senderTemplate , Scene* scene)
   // view state dump
   TraceState(viewEvent , sender , VIEW_STATE_FMT , viewDescFormat ,
       scene->loops.size() , sdlScene->histogramImgs.size() , sdlScene->loopImgs.size() , isEq) ;
-  cout << endl ;
+  std::cout << std::endl ;
 
   return isEq ;
 }
 
-void Trace::TraceState(const char* event , const char* sender ,
+void Trace::TraceState(const char* event       , const char* sender     ,
                        const char* stateFormat , const char* descFormat ,
-                       bool bool0 , bool bool1 , bool bool2 , bool isEq)
+                       bool bool0 , bool bool1 , bool bool2 , bool /*isEq*/)
 {
-
 #if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN
 cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" << bool1 << "bool2=" << bool2 << endl ;
 #endif // #if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN
@@ -142,7 +141,7 @@ cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" <
   memcpy(Desc , desc , DescLen + 1) ;
 
   Event[EVENT_LEN] = State[STATE_LEN] = Desc[DESC_LEN] = '\0' ;
-  cout << Event << " " << State << " " << Desc << endl ;
+  std::cout << Event << " " << State << " " << Desc << std::endl ;
 
 #endif // #if DEBUG_TRACE
 

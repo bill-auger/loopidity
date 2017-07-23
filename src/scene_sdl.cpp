@@ -90,7 +90,7 @@ const Uint8  SceneSdl::SECONDS_PER_MINUTE = N_SECONDS_PER_MINUTE ;
 
 /* SceneSdl class side private functions */
 
-SceneSdl::SceneSdl(Scene* a_scene , vector<Sample>* peaks_in) :
+SceneSdl::SceneSdl(Scene* a_scene , std::vector<Sample>* peaks_in) :
   // constants
   sceneT(      SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,
@@ -207,11 +207,11 @@ DRAW_DEBUG_TEXT_R
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT
 }
 
-LoopSdl* SceneSdl::getLoopView(list<LoopSdl*>* imgs , Uint32 loopN)
+LoopSdl* SceneSdl::getLoopView(std::list<LoopSdl*>* imgs , Uint32 loopN)
 {
   if (loopN >= imgs->size()) return NULL ;
 
-  list<LoopSdl*>::iterator loopIter = imgs->begin() ; while (loopN--) ++loopIter ;
+  std::list<LoopSdl*>::iterator loopIter = imgs->begin() ; while (loopN--) ++loopIter ;
   return (*loopIter) ;
 }
 
@@ -421,8 +421,8 @@ DEBUG_TRACE_SCENESDL_DELETELOOP_IN
 
   if (loopN >= loopImgs.size()) return ;
 
-  list<LoopSdl*>::iterator histogramImgIter = histogramImgs.begin() ;
-  list<LoopSdl*>::iterator loopImgIter      = loopImgs.begin() ;
+  std::list<LoopSdl*>::iterator histogramImgIter = histogramImgs.begin() ;
+  std::list<LoopSdl*>::iterator loopImgIter      = loopImgs.begin() ;
   while (loopN--)             { ++histogramImgIter ; ++loopImgIter ; }
   if (!histogramImgs.empty()) histogramImgs.erase(histogramImgIter) ;
   if (!loopImgs.empty())      loopImgs.erase(loopImgIter) ;
@@ -438,7 +438,7 @@ SDL_Surface* SceneSdl::createHwSurface(Sint16 w , Sint16 h)
 SDL_Surface* SceneSdl::createSwSurface(Sint16 w , Sint16 h)
   { return SDL_CreateRGBSurface(SDL_SWSURFACE , w , h , PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
 
-string SceneSdl::makeDurationStatusText()
+std::string SceneSdl::makeDurationStatusText()
 {
   Uint32 nSeconds = scene->getTotalSeconds() ; char statusText[32] ;
   snprintf(statusText , 32 , "Scene: %d - %d:%02d:%02d" , sceneN ,
@@ -446,5 +446,5 @@ string SceneSdl::makeDurationStatusText()
           ((nSeconds / SECONDS_PER_MINUTE) % MINUTES_PER_HOUR) ,
           ( nSeconds % SECONDS_PER_MINUTE)) ;
 
-  return string(statusText) ;
+  return std::string(statusText) ;
 }

@@ -167,7 +167,7 @@ class SceneSdl
     /* SceneSdl class side private functions */
 
     // setup
-    SceneSdl(Scene* aScene , vector<Sample>* peaksIn) ;
+    SceneSdl(Scene* aScene , std::vector<Sample>* peaksIn) ;
 
     // helpers
     static void PixelRgb2Greyscale(SDL_PixelFormat* fmt , Uint32* pixel) ;
@@ -189,13 +189,13 @@ class SceneSdl
     /* SceneSdl instance side private varables */
 
     // model
-    Scene*          scene ;
-    Uint8           sceneN ;
-    vector<Sample>* peaksIn ;
+    Scene*               scene ;
+    Uint8                sceneN ;
+    std::vector<Sample>* peaksIn ;
 
     // loop image caches
-    list<LoopSdl*> histogramImgs ;
-    list<LoopSdl*> loopImgs ;
+    std::list<LoopSdl*> histogramImgs ;
+    std::list<LoopSdl*> loopImgs ;
 
     // drawScene() instance variables
     Uint32 loopFrameColor ;
@@ -239,7 +239,7 @@ class SceneSdl
     // getters/setters
     void     startRolling(void) ;
     void     updateState( void) ;
-    LoopSdl* getLoopView( list<LoopSdl*>* imgs , Uint32 loopN) ;
+    LoopSdl* getLoopView( std::list<LoopSdl*>* imgs , Uint32 loopN) ;
 
     // drawing
     void     drawScene(              SDL_Surface* screen , Uint32 currentPeakN ,
@@ -250,13 +250,13 @@ class SceneSdl
     LoopSdl* drawLoop(               Loop* aLoop , Uint16 loopN) ;
 
     // images
-    void  addLoop(   Loop* newLoop , Uint16 nLoops) ;
-    void  deleteLoop(Uint8 loopN) ;
+    void addLoop(   Loop* newLoop , Uint16 nLoops) ;
+    void deleteLoop(Uint8 loopN) ;
 
     // helpers
-    SDL_Surface*  createHwSurface(       Sint16 w , Sint16 h) ;
-    SDL_Surface*  createSwSurface(       Sint16 w , Sint16 h) ;
-    string        makeDurationStatusText(void) ;
+    SDL_Surface* createHwSurface(       Sint16 w , Sint16 h) ;
+    SDL_Surface* createSwSurface(       Sint16 w , Sint16 h) ;
+    std::string  makeDurationStatusText(void) ;
 } ;
 
 

@@ -169,7 +169,7 @@ std::string Loopidity::GetAssetsDir()
 #ifdef _WIN32
 this_dir="./" ; // FIXME
 /* TODO:
-  std::vector<wchar_t> path_buffer ;
+  std::std::vector<wchar_t> path_buffer ;
   DWORD n_wchars = 0 ;
   while (n_wchars >= path_buffer.size())
   {
@@ -275,7 +275,7 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
       SdlScenes[sceneN] = new SceneSdl(Scenes[sceneN] , peaksIn) ;
 #endif // INIT_JACK_BEFORE_SCENES
     }
-    catch(exception& ex) { LoopiditySdl::Alert(ex.what()) ; return false ; }
+    catch(std::exception& ex) { LoopiditySdl::Alert(ex.what()) ; return false ; }
 
     UpdateView(sceneN) ;
   }
@@ -384,11 +384,11 @@ DEBUG_TRACE_LOOPIDITYSDL_HANDLEKEYEVENT
 
 void Loopidity::HandleMouseEvent(SDL_Event* event)
 {
-#if HANDLE_MOUSE_EVENTS
   Uint16 x = event->button.x ; Uint16 y = event->button.y ;
   if (x < MOUSE_SCENES_L || x > MOUSE_SCENES_R ||
-      y < MOUSE_SCENES_T || y > MOUSE_SCENES_B) return ;
+      y < MOUSE_SCENES_T || y > MOUSE_SCENES_B  ) return ;
 
+#if HANDLE_MOUSE_EVENTS
   Uint32 sceneN = (y - MOUSE_SCENES_T) / SCENE_H ;
   Uint32 loopN  = (x - MOUSE_SCENES_L) / LOOP_W ;
   switch (event->button.button)

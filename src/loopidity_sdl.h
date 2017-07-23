@@ -123,9 +123,9 @@
 
 // fonts and colors
 #define HEADER_FONT_PATH       PURISA_TTF_PATH
-#define HEADER_TEXT_COLOR      { 255 , 0 , 255 }
+#define HEADER_TEXT_COLOR      { 255 , 0 , 255 , 0 }
 #define STATUS_FONT_PATH       PURISA_TTF_PATH
-#define STATUS_TEXT_COLOR      { 255 , 0 , 255 }
+#define STATUS_TEXT_COLOR      { 255 , 0 , 255 , 0 }
 #define WINDOWBGCOLOR          0xFF111111
 #define VUSINBGCOLOR           0xFF221122
 #define VUSOUTBGCOLOR          0xFF112222 // NOTE: SDL_FillRect()          takes 0xAARRGGBB
@@ -189,9 +189,9 @@ class LoopiditySdl
     static SDL_Rect        StatusRectR ;
     static TTF_Font*       StatusFont ;
     static const SDL_Color StatusColor ;
-    static string          StatusTextL ;
-    static string          StatusTextC ;
-    static string          StatusTextR ;
+    static std::string     StatusTextL ;
+    static std::string     StatusTextC ;
+    static std::string     StatusTextR ;
 
     // scenes
     static SceneSdl**   SdlScenes ;
@@ -201,22 +201,22 @@ class LoopiditySdl
     static SDL_Surface* VuGradient ;
 
     // scopes
-    static const Uint32    SCOPE_IN_BG_COLOR ;
-    static const Uint32    SCOPE_OUT_BG_COLOR ;
-    static const Uint32    SCOPE_IN_BORDER_COLOR ;
-    static const Uint32    SCOPE_OUT_BORDER_COLOR ;
-    static const Uint16    SCOPE_IN_L ;
-    static const Uint16    SCOPE_IN_R ;
-    static const Uint16    SCOPE_OUT_L ;
-    static const Uint16    SCOPE_OUT_R ;
-    static const Sint16    SCOPES_M ;
-    static const float     SCOPE_PEAK_H ;
-    static SDL_Rect        ScopeInRect ;
-    static SDL_Rect        ScopeOutRect ;
-    static SDL_Rect        ScopeMaskRect ;
-    static SDL_Rect        ScopeRect ;
-    static vector<Sample>* PeaksIn ;
-    static vector<Sample>* PeaksOut ;
+    static const Uint32         SCOPE_IN_BG_COLOR ;
+    static const Uint32         SCOPE_OUT_BG_COLOR ;
+    static const Uint32         SCOPE_IN_BORDER_COLOR ;
+    static const Uint32         SCOPE_OUT_BORDER_COLOR ;
+    static const Uint16         SCOPE_IN_L ;
+    static const Uint16         SCOPE_IN_R ;
+    static const Uint16         SCOPE_OUT_L ;
+    static const Uint16         SCOPE_OUT_R ;
+    static const Sint16         SCOPES_M ;
+    static const float          SCOPE_PEAK_H ;
+    static SDL_Rect             ScopeInRect ;
+    static SDL_Rect             ScopeOutRect ;
+    static SDL_Rect             ScopeMaskRect ;
+    static SDL_Rect             ScopeRect ;
+    static std::vector<Sample>* PeaksIn ;
+    static std::vector<Sample>* PeaksOut ;
 
     // edit histogram
     static SDL_Rect EditorRect ;
@@ -254,9 +254,9 @@ class LoopiditySdl
 
     // setup
     static bool IsInitialized(void) ; // TODO: make singleton
-    static bool Init(         SceneSdl**      sdlScenes  , vector<Sample>* peaksIn   ,
-                              vector<Sample>* peaksOut   , Sample*         peaksVuIn ,
-                              Sample*         peaksVuOut                             ) ;
+    static bool Init(         SceneSdl**           sdlScenes  , std::vector<Sample>* peaksIn   ,
+                              std::vector<Sample>* peaksOut   , Sample*              peaksVuIn ,
+                              Sample*              peaksVuOut                                  ) ;
     static void SdlError(     const char* functionName) ;
     static void TtfError(     const char* functionName) ;
     static void Cleanup(      void) ;
@@ -269,23 +269,23 @@ class LoopiditySdl
     static void DrawEditor(         void) ;
 #endif // #if SCENE_NFRAMES_EDITABLE
     static void DrawScopes(         void) ;
-    static void DrawScope (         vector<Sample>* peaks , Uint16 peaks_x , Uint16 peak_n) ;
+    static void DrawScope (         std::vector<Sample>* peaks , Uint16 peaks_x , Uint16 peak_n) ;
     static void DrawVUs(            void) ;
     static void DrawVU(             Sample* peaks , Uint16 vu_x , Uint8 channel_n) ;
-    static void DrawText(           string text , SDL_Surface* surface , TTF_Font* font ,
-                                    SDL_Rect* screenRect , SDL_Rect* cropRect ,
-                                    SDL_Color fgColor) ;
+    static void DrawText(           std::string text     , SDL_Surface* surface ,
+                                    TTF_Font*   font     , SDL_Rect* screenRect ,
+                                    SDL_Rect*   cropRect , SDL_Color fgColor    ) ;
     static void DrawStatusArea(     void) ;
     static void FlipScreen(         void) ;
     static void DrawBorder(         SDL_Surface* a_surface , Uint16 l , Uint16 t    ,
                                     Uint16       r         , Uint16 b , Uint32 color) ;
     static void DrawBorder(         SDL_Surface* a_surface , SDL_Rect a_rect , Uint32 color) ;
-    static void Alert(              string msg) ;
+    static void Alert(              std::string msg) ;
 
     // getters/settters
-    static void SetStatusL(string msg) ;
-    static void SetStatusC(string msg) ;
-    static void SetStatusR(string msg) ;
+    static void SetStatusL(std::string msg) ;
+    static void SetStatusC(std::string msg) ;
+    static void SetStatusR(std::string msg) ;
 //    static Uint32 GetAvailableMemory() ;
 } ;
 
