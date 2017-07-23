@@ -22,7 +22,13 @@
 #define _JACK_IO_H_
 
 
+#include <jack/jack.h>
+#include <SDL/SDL.h>
+
 #include "loopidity.h"
+
+class Loop ;
+class Scene ;
 
 
 class JackIO

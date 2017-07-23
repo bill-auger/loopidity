@@ -18,17 +18,15 @@
 \*/
 
 
-#include "jack_io.h"
-
-
-/* Scene class side public constants */
-
-const Uint32 Scene::N_FINE_PEAKS   = N_PEAKS_FINE ;
-const Uint32 Scene::N_COURSE_PEAKS = N_PEAKS_COURSE ;
+#include "loopidity.h"
 
 
 /* Scene class side private constants */
 
+const Uint32                    Scene::N_FINE_PEAKS               = N_PEAKS_FINE ;
+const Uint32                    Scene::N_COURSE_PEAKS             = N_PEAKS_COURSE ;
+const Uint8                     Scene::N_SCENES                   = NUM_SCENES ;
+const Uint8                     Scene::N_LOOPS                    = NUM_LOOPS ;
 const InvalidMetadataException* Scene::INVALID_METADATA_EXCEPTION = new InvalidMetadataException() ;
 
 
@@ -89,7 +87,7 @@ Scene::Scene(Uint32 sceneNum , Uint32 recordBufferSize)
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #endif // #if INIT_JACK_BEFORE_SCENES
 {
-  if (sceneNum >= Loopidity::N_SCENES ||
+  if (sceneNum >= N_SCENES ||
       !EndFrameN || EndFrameN <= BeginFrameN || !FramesPerPeriod ||
       BeginFrameN % FramesPerPeriod || EndFrameN % FramesPerPeriod)
     throw INVALID_METADATA_EXCEPTION ;
@@ -230,7 +228,7 @@ bool Scene::addLoop(Loop* newLoop)
 {
 DEBUG_TRACE_SCENE_ADDLOOP_IN
 
-  Uint32 nLoops = loops.size() ; if (nLoops >= Loopidity::N_LOOPS) return false ;
+  Uint32 nLoops = loops.size() ; if (nLoops >= N_LOOPS) return false ;
 
   scanPeaks(newLoop , nLoops) ; loops.push_back(newLoop) ; return true ;
 
@@ -278,7 +276,7 @@ void Scene::scanPeaks(Loop* loop , Uint32 loopN)
 DEBUG_TRACE_SCENE_SCANPEAKS_IN
 
 #if SCAN_LOOP_PEAKS
-  if (!loop || loopN >= Loopidity::N_LOOPS) return ;
+  if (!loop || loopN >= N_LOOPS) return ;
 
   // fill fine peaks arrays
   Sample* peaks = loop->peaksFine ; Uint32 peakN , frameN ; Sample peak1 , peak2 ;

@@ -18,8 +18,9 @@ CC  = gcc
 CXX = g++
 AR  = ar
 LD  = g++
-
-CFLAGS = -std=gnu++0x -Wall -MMD
+CFLAGS = -std=gnu++0x -Wall -MMD                               \
+         -DLOOPIDITY_BINDIR=\"$(INSTALLDIR)/bin\"              \
+         -DLOOPIDITY_DATADIR=\"$(INSTALLDIR)/share/loopidity\"
 ifeq ($(CONFIG),debug)
   CFLAGS  += -g -DDEBUG=1
   LDFLAGS  =

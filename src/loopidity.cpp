@@ -18,14 +18,20 @@
 \*/
 
 
+// #include <sys/types.h>
+#include <sys/stat.h>
+
+#include "constants/feature_constants.h"
+#include "constants/view_constants.h"
 #include "loopidity.h"
 #include "scene.h"
 
 
 /* Loopidity class side public constants */
 
-const Uint32 Loopidity::N_SCENES = NUM_SCENES ;
-const Uint32 Loopidity::N_LOOPS  = NUM_LOOPS ;
+const Uint8       Loopidity::N_SCENES   = NUM_SCENES ;
+const Uint8       Loopidity::N_LOOPS    = NUM_LOOPS ;
+const std::string Loopidity::ASSETS_DIR = GetAssetsPath() ;
 
 
 /* Loopidity class side private varables */
@@ -41,8 +47,8 @@ Scene*    Loopidity::Scenes[N_SCENES]    = {0} ;
 SceneSdl* Loopidity::SdlScenes[N_SCENES] = {0} ;
 
 // runtime state
-Uint32 Loopidity::CurrentSceneN = 0 ;
-Uint32 Loopidity::NextSceneN    = 0 ;
+Uint8 Loopidity::CurrentSceneN = 0 ;
+Uint8 Loopidity::NextSceneN    = 0 ;
 
 // runtime flags
 #if WAIT_FOR_JACK_INIT
@@ -69,9 +75,10 @@ int Loopidity::Main(int argc , char** argv)
   if (IsInitialized()        ) return false ;
 #endif // INIT_JACK_BEFORE_SCENES
   if (N_SCENES + 2 < N_SCENES) return false ;
+  if (ASSETS_DIR.empty()     ) return false ;
 
   // parse command line arguments
-  bool   shouldMonitorInputs  = true ;
+  bool   shouldMonitorInputs   = true ;
   bool   shouldAutoSceneChange = true ;
   Uint32 recordBufferSize ;
   for (int argN = 0 ; argN < argc ; ++argN)
@@ -125,9 +132,9 @@ if (guiLongCount == GUI_UPDATE_LOW_PRIORITY_NICE)
 
     // draw high priority
     JackIO::ScanPeaks() ;
-    LoopiditySdl::DrawScenes() ;
+    LoopiditySdl::DrawScenes(CurrentSceneN , NextSceneN) ;
 #if SCENE_NFRAMES_EDITABLE
-    if (IsEditMode) LoopiditySdl::DrawEditor() ;
+    if (IsEditMode) LoopiditySdl::DrawEditor(CurrentSceneN) ;
     else            LoopiditySdl::DrawScopes() ;
 #else
     LoopiditySdl::DrawScopes() ;
@@ -160,6 +167,7 @@ std::string Loopidity::GetAssetsPath(std::string filename)
   // determine proper path to assets on the current system
   std::string this_path ;
   std::string assets_path ;
+
 #ifdef _WIN32
 this_path="./" ; // FIXME
 /* TODO:
@@ -179,7 +187,7 @@ this_path="./" ; // FIXME
   char path_buffer[SCRATCH_BUFFER_SIZE] ;
   if (::readlink("/proc/self/exe" , path_buffer , SCRATCH_BUFFER_SIZE) > 0)
     this_path = std::string(path_buffer) ;
-#endif // _WIN32
+ #endif // _WIN32
   this_path   = this_path.substr(0 , this_path.find_last_of("/\\")) ;
   assets_path = this_path + "/../share/loopidity/" + filename ;
 
@@ -188,9 +196,9 @@ printf("Loopidity::GetAssetsPath() loading asset=%s\n\n" , assets_path.c_str());
   return assets_path ;
 }
 
-Uint32 Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
+Uint8 Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
 
-Uint32 Loopidity::GetNextSceneN() { return NextSceneN ; }
+Uint8 Loopidity::GetNextSceneN() { return NextSceneN ; }
 
 //Uint32 Loopidity::GetLoopPos() { return Scenes[CurrentSceneN]->getLoopPos() ; }
 
@@ -205,7 +213,7 @@ bool Loopidity::GetIsRolling() { return IsRolling ; }
 
 // view helpers
 
-void Loopidity::UpdateView(Uint32 sceneN) { SdlScenes[sceneN]->updateState() ; }
+void Loopidity::UpdateView(Uint32 sceneN) { SdlScenes[sceneN]->updateState(CurrentSceneN , IsRolling) ; }
 
 void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OUT_OF_MEMORY_MSG) ; }
 
@@ -288,7 +296,7 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
 
   // initialize LoopiditySdl (view)
 #if INIT_JACK_BEFORE_SCENES
-  IsInitialized = LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , peaksVuIn , peaksVuOut) ;
+  IsInitialized = LoopiditySdl::Init(SdlScenes , peaksIn , peaksOut , peaksVuIn , peaksVuOut , ASSETS_DIR) ;
 
   if (!IsInitialized) Cleanup(EXIT_FAILURE) ;
 
@@ -336,9 +344,7 @@ void Loopidity::SetMetadata(Uint32 sampleRate , Uint32 nFramesPerPeriod)
 
 int Loopidity::Cleanup(int exit_status)
 {
-#if DEBUG_TRACE
-if (exit_status) std::cout << INIT_FAIL_MSG << std::endl ;
-#endif
+DEBUG_TRACE_LOOPIDITY_CLEANUP
 
   for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
     if (!!SdlScenes[sceneN]) SdlScenes[sceneN]->cleanup() ;
