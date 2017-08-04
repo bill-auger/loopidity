@@ -99,10 +99,9 @@ class Loopidity
     static int Main(int argc , char** argv) ;
 
     // getters/setters
-    static std::string GetAssetsPath(std::string filename) ;
 //    static void         SetNFramesPerPeriod(   Uint32 nFrames) ;
-    static Uint8       GetCurrentSceneN(void) ;
-    static Uint8       GetNextSceneN(   void) ;
+    static Uint8 GetCurrentSceneN(void) ;
+    static Uint8 GetNextSceneN(   void) ;
 //     static Uint32 GetLoopPos(    void) ;
     static bool   GetIsRolling(    void) ;
 //    static bool         GetShouldSaveLoop(     void) ;
@@ -119,6 +118,7 @@ private:
     /* Loopidity class side private functions */
 
     // setup
+    static std::string GetAssetsDir() ;
 #if ! INIT_JACK_BEFORE_SCENES
     static bool        IsInitialized() ;
 #endif // INIT_JACK_BEFORE_SCENES

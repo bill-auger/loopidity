@@ -31,7 +31,7 @@
 
 const Uint8       Loopidity::N_SCENES   = NUM_SCENES ;
 const Uint8       Loopidity::N_LOOPS    = NUM_LOOPS ;
-const std::string Loopidity::ASSETS_DIR = GetAssetsPath() ;
+const std::string Loopidity::ASSETS_DIR = GetAssetsDir() ;
 
 
 /* Loopidity class side private varables */
@@ -162,14 +162,14 @@ DEBUG_TRACE_LOOPIDITY_MAIN_OUT
 
 // getters/setters
 
-std::string Loopidity::GetAssetsPath(std::string filename)
+std::string Loopidity::GetAssetsDir()
 {
   // determine proper path to assets on the current system
-  std::string this_path ;
-  std::string assets_path ;
+  std::string this_bin ;
+  std::string this_dir ;
 
 #ifdef _WIN32
-this_path="./" ; // FIXME
+this_dir="./" ; // FIXME
 /* TODO:
   std::vector<wchar_t> path_buffer ;
   DWORD n_wchars = 0 ;
@@ -180,20 +180,26 @@ this_path="./" ; // FIXME
   }
   pathBuf.resize(n_wchars) ;
   wstring path(path_buffer.begin() , path_buffer.end()) ;
-  this_path = std::wstring_convert<std::codecvt_utf8<wchar_t> , wchar_t> converterX.to_bytes(path) ;
+  this_dir = std::wstring_convert<std::codecvt_utf8<wchar_t> , wchar_t> converterX.to_bytes(path) ;
 */
 #else // _WIN32
 #define SCRATCH_BUFFER_SIZE 2048
   char path_buffer[SCRATCH_BUFFER_SIZE] ;
   if (::readlink("/proc/self/exe" , path_buffer , SCRATCH_BUFFER_SIZE) > 0)
-    this_path = std::string(path_buffer) ;
- #endif // _WIN32
-  this_path   = this_path.substr(0 , this_path.find_last_of("/\\")) ;
-  assets_path = this_path + "/../share/loopidity/" + filename ;
+    this_bin = std::string(path_buffer) ;
+  this_dir = this_bin.substr(0 , this_bin.find_last_of("/\\")) ;
+#endif // _WIN32
 
-printf("Loopidity::GetAssetsPath() loading asset=%s\n\n" , assets_path.c_str());
+  std::string assets_dir = this_dir + "/assets" ;
+  std::string data_dir   = LOOPIDITY_DATADIR ;
+  struct stat stats ;
 
-  return assets_path ;
+  bool does_assets_dir_exist = stat(assets_dir.c_str() , &stats) == 0 && stats.st_mode & S_IFDIR ;
+  bool does_data_dir_exist   = stat(data_dir.c_str()   , &stats) == 0 && stats.st_mode & S_IFDIR ;
+  bool is_uninstalled        = does_assets_dir_exist && this_dir.compare(LOOPIDITY_BINDIR) != 0 ;
+
+  return (does_data_dir_exist) ? data_dir   + "/" :
+         (is_uninstalled     ) ? assets_dir + "/" : "" ;
 }
 
 Uint8 Loopidity::GetCurrentSceneN() { return CurrentSceneN ; }
