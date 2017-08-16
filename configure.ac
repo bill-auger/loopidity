@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([loopidity], [0.14.005], [https://github.com/bill-auger/loopidity/issues])
+AC_INIT([loopidity], [0.14.006], [https://github.com/bill-auger/loopidity/issues])
 AC_CONFIG_SRCDIR([src/loopidity.cpp])
 AM_INIT_AUTOMAKE([subdir-objects foreign -Wall -Werror])
 AC_CONFIG_FILES([Makefile])
@@ -12,7 +12,6 @@ AC_LANG([C++])
 AC_MSG_NOTICE(["Checking for programs."])
 AC_PROG_CXX
 AC_PROG_CC
-AX_CXX_COMPILE_STDCXX_11
 
 AC_MSG_NOTICE(["Checking for libraries."])
 AC_CHECK_LIB([jack],    [jack_activate                ], [ ], [AC_MSG_ERROR("jack library does not provide 'jack_activate'"                )])

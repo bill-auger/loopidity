@@ -27,7 +27,7 @@ EXTRA_DIST        = $(man_MANS)
 
 CUSTOM_CXXFLAGS  = -DLOOPIDITY_BINDIR=\"$(bindir)\"
 CUSTOM_CXXFLAGS += -DLOOPIDITY_DATADIR=\"$(loopiditydir)\"
-CUSTOM_CXXFLAGS += -std=c++11 -Wall -Wextra -Wformat -Werror
+CUSTOM_CXXFLAGS += -Wall -Wextra -Wformat -Werror
 AM_CXXFLAGS      = $(CXXFLAGS) $(JACK_CFLAGS) $(SDL_CFLAGS) $(X11_CFLAGS) $(CUSTOM_CXXFLAGS)
 AM_LDFLAGS       = $(LIBS) $(JACK_LIBS) $(SDL_LIBS) $(X11_LIBS)
 

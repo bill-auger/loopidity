@@ -253,7 +253,6 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 GREP = @GREP@
-HAVE_CXX11 = @HAVE_CXX11@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -360,8 +359,8 @@ doc_DATA = COPYING                \
 man1_MANS = doc/loopidity.1
 EXTRA_DIST = $(man_MANS)
 CUSTOM_CXXFLAGS = -DLOOPIDITY_BINDIR=\"$(bindir)\" \
-	-DLOOPIDITY_DATADIR=\"$(loopiditydir)\" -std=c++11 -Wall \
-	-Wextra -Wformat -Werror
+	-DLOOPIDITY_DATADIR=\"$(loopiditydir)\" -Wall -Wextra -Wformat \
+	-Werror
 AM_CXXFLAGS = $(CXXFLAGS) $(JACK_CFLAGS) $(SDL_CFLAGS) $(X11_CFLAGS) $(CUSTOM_CXXFLAGS)
 AM_LDFLAGS = $(LIBS) $(JACK_LIBS) $(SDL_LIBS) $(X11_LIBS)
 all: all-am
