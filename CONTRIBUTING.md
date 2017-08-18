@@ -1,21 +1,19 @@
 ### Loopidity Contribution Guidelines
 
-Loopidity source code, binary assets, and documentation are distributed as [Free Software](https://www.gnu.org/philosophy/free-sw.html) and [Free Culture](http://freedomdefined.org/Definition) under the terms of the [version 3 of the GNU General Public License](COPYING) (GPLv3). To this end, it is necessary for all contributors to be in agreement about licensing. This agreement is not a copyright assignment. It's function is merely to ensure that Loopidity remains free (as in freedom).
+Loopidity source code, binary assets, and documentation are distributed as [Free Software][free-sw] and [Free Culture][free-culture] under the terms of the [version 3 of the GNU General Public License][gpl] (GPLv3). To this end, it is necessary for all contributors to be in agreement about licensing. This agreement is not a copyright assignment. It's function is merely to ensure that Loopidity remains free (as in freedom).
 
-In short, this means that as a contributor, you allow others to copy, distribute, and modify their copies or your work; provided that they extend this priviledge to others and credit you as the original author. This implies that all source materials are made available in their respective preferred forms for modification; so for multimedia, this is all individual source files and/or editor project files in addition to the "mixed-down" binary artifacts. Refer to the 'Multimedia' section below for details.
+In short, this means that as a contributor, you allow others to copy, distribute, and modify their copies or your work; provided that they extend this priviledge to others and credit you as the original author. This implies that all source materials are made available in their respective preferred forms for modification. For source code, this simply the source code itself. For multimedia and documentation, this is all individual source files and/or editor project files in addition to any "mixed-down" binary artifacts. Refer to the [assets README][assets-readme] for details.
 
 
 ### Contribution Licensing Terms
 
 As a contributor, you agree that all contributions to the source tree, wiki, and issue tracker that are unlicensed and not in the public domain will automatically fall under the same licence as Loopidity.
 
-If you are not the sole author of your contribution (i.e. it is a combined or derivative work incorporating or based on someone else's work), then all source works must be freely distributable under the terms of some [GPL-compatible license](https://www.gnu.org/licenses/license-list.html#GPLCompatibleLicenses) such as the Creative Commonns CC-BY or in the public domain; and you must clearly give attribution to the copyright holders with hyperlinks to the original sources and licenses.
+If you are not the sole author of your contribution (i.e. it is a combined or derivative work incorporating or based on someone else's work), then all source works must be freely distributable under the terms of some [GPL-compatible license][license-list] such as the Creative Commonns CC-BY or in the public domain; and you must clearly give attribution to the copyright holders with hyperlinks to the original sources and licenses.
 
-This is the common "inbound<->outbound" tacet norm and is even made explicit by some public services such as [item 'D6' of the Github Terms of Service](https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license).
+To be clear, this is not at all a special case of this project. It is the commonly accepted "inbound<->outbound" tacet norm for free and open-source software projects; and is even made explicit by some public services such as [item 'D6' of the Github Terms of Service][github-tos].
 
-#### Multimedia and other Binary Contributions
-
-For multimedia and other binaries, the licensing terms are explicitly defined in the [assets README](assets/README.md). Please read and understand this before submitting artwork and other prepared media. Contributions that do not meet the licensing criteria will not be accepted.
+For multimedia and other binaries, the GPL licensing terms are explicitly defined in the [assets README][assets-readme]. Please read and understand this before submitting artwork and other prepared media. Contributions that do not meet the licensing criteria will not be accepted.
 
 
 ### Pull Requests
@@ -30,9 +28,9 @@ Note that branches other than 'master' tend to be rebased often so you may need 
 
 Pull requests and issues are accepted at any of the following mirrors:
 
-* https://github.com/bill-auger/loopidity/
-* https://notabug.org/bill-auger/loopidity/
-* https://pagure.io/loopidity/
+* [https://github.com/bill-auger/loopidity/][github]
+* [https://notabug.org/bill-auger/loopidity/][notabug]
+* [https://pagure.io/loopidity/][pagure]
 
 
 ### Commit Messages
@@ -60,3 +58,14 @@ add bar powers to the mighty foo (issue #42)
 ### Issue Tracker
 
 Please do not hesitate to use the issue tracker for bug reports, feature requests, constructive notes on existing issues, and significant progress updates that are not yet in a pull request; but use the gitter chat or other channels for lengthy discussions and other issues such as general help.
+
+
+[free-sw]:       https://www.gnu.org/philosophy/free-sw.html
+[free-culture]:  http://freedomdefined.org/Definition
+[gpl]:           COPYING
+[license-list]:  https://www.gnu.org/licenses/license-list.html#GPLCompatibleLicenses
+[github-tos]:    https://web.archive.org/web/20170814143643/https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license
+[assets-readme]: assets/README.md
+[github]:        https://github.com/bill-auger/loopidity/
+[notabug]:       https://notabug.org/bill-auger/loopidity/
+[pagure]:        https://pagure.io/loopidity/
