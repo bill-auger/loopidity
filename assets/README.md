@@ -25,9 +25,7 @@ provided that the relevant source materials are well-defined.
 
 The original audio, video, image and font files in the Loopidity assets/ directory
 are licensed under [version 3 of the GNU General Public License](../COPYING) (GPLv3).
-See [assets/LICENSES](LICENSES) for details.
-
-The terminology in section 1 of the GPLv3 (namely: "source code", "preferred form", and "object code")
+See [assets/LICENSES](LICENSES) for details. The terminology in section 1 of the GPLv3 (namely: "source code", "preferred form", and "object code")
 as it relates to the binary assets of this project is explicitly defined below.
 
 The "object code" is explicitly defined here to be the binary audio, video, image and font files
