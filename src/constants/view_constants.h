@@ -125,10 +125,11 @@
 #define SDL_INIT_ERROR_TEXT         "SDL_Init"
 #define SDL_SETVIDEOMODE_ERROR_TEXT "SDL_SetVideoMode"
 #define SDL_KEYREPEAT_ERROR_TEXT    "SDL_EnableKeyRepeat"
-#define SDL_LOADBMP_ERROR_TEXT      "SDL_LoadBMP"
+#define SDL_LOADIMAGE_ERROR_TEXT    "SDL_CreateRGBSurfaceFrom"
+#define SDL_LOADMEM_ERROR_MSG       "SDL_RWFromConstMem"
 #define TTF_ERROR_FMT               "ERROR: %s(): %s\n"
 #define TTF_INIT_ERROR_MSG          "TTF_Init"
-#define TTF_OPENFONT_ERROR_MSG      "TTF_OpenFont"
+#define TTF_LOADFONT_ERROR_MSG      "TTF_OpenFontRW"
 
 // flags
 #define SDL_SCREEN_FLAGS SDL_HWSURFACE | SDL_DOUBLEBUF

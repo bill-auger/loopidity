@@ -1,22 +1,25 @@
 loopiditydir      = $(pkgdatadir)
 bin_PROGRAMS      = loopidity
-loopidity_SOURCES = src/jack_io.cpp       \
-                    src/jack_io.h         \
-                    src/loopidity.cpp     \
-                    src/loopidity.h       \
-                    src/loopidity_sdl.cpp \
-                    src/loopidity_sdl.h   \
-                    src/main.cpp          \
-                    src/scene.cpp         \
-                    src/scene.h           \
-                    src/scene_sdl.cpp     \
-                    src/scene_sdl.h       \
-                    src/trace/trace.cpp   \
+loopidity_SOURCES = src/jack_io.cpp                 \
+                    src/jack_io.h                   \
+                    src/loopidity.cpp               \
+                    src/loopidity.h                 \
+                    src/loopidity_sdl.cpp           \
+                    src/loopidity_sdl.h             \
+                    src/main.cpp                    \
+                    src/scene.cpp                   \
+                    src/scene.h                     \
+                    src/scene_sdl.cpp               \
+                    src/scene_sdl.h                 \
+                    src/assets/fonts.cpp            \
+                    src/assets/fonts.h              \
+                    src/assets/images.cpp           \
+                    src/assets/images.h             \
+                    src/assets/histogram_gradient.h \
+                    src/assets/loop_gradient.h      \
+                    src/assets/scope_gradient.h     \
+                    src/trace/trace.cpp             \
                     src/trace/trace.h
-loopidity_DATA    = assets/histogram_gradient.bmp \
-                    assets/loop_gradient.argb.bmp \
-                    assets/Purisa.ttf             \
-                    assets/scope_gradient.bmp
 doc_DATA          = COPYING                \
                     LICENSES               \
                     assets/COPYING.fonts   \
@@ -36,10 +39,6 @@ installcheck-local:
 	echo "installcheck-local"
 	stat --printf='' $(bindir)/loopidity
 	stat --printf='' $(loopiditydir)/
-	stat --printf='' $(loopiditydir)/histogram_gradient.bmp
-	stat --printf='' $(loopiditydir)/loop_gradient.argb.bmp
-	stat --printf='' $(loopiditydir)/scope_gradient.bmp
-	stat --printf='' $(loopiditydir)/Purisa.ttf
 	stat --printf='' $(docdir)/COPYING
 	stat --printf='' $(docdir)/LICENSES
 	stat --printf='' $(docdir)/COPYING.fonts

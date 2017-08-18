@@ -350,12 +350,9 @@ LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
 LoopSdl* SceneSdl::drawLoop(Loop* aLoop , Uint16 loopN)
 {
 #if DRAW_LOOPS
-  SDL_Surface* loopBgGradient = LoopiditySdl::LoopGradient ;
-  SDL_Surface* playingSurface = SDL_DisplayFormat(loopBgGradient) ;
-  SDL_Surface* mutedSurface   = SDL_DisplayFormat(loopBgGradient) ;
-  SDL_SetColorKey(loopBgGradient , SDL_SRCCOLORKEY , LOOP_IMG_MASK_COLOR) ;
-  SDL_SetAlpha(playingSurface    , SDL_SRCALPHA    , 255) ;
-  SDL_SetAlpha(mutedSurface      , SDL_SRCALPHA    , 255) ;
+  SDL_Surface* loopGradient   = SDL_DisplayFormat(LoopiditySdl::LoopGradient) ;
+  SDL_Surface* playingSurface = createSwSurface(loopGradient->w , loopGradient->h) ;
+  SDL_Surface* mutedSurface   = createSwSurface(loopGradient->w , loopGradient->h) ;
 
   // draw loop mask
   SDL_Surface* maskSurface = createSwSurface(LoopD , LoopD) ;
@@ -368,21 +365,24 @@ LoopSdl* SceneSdl::drawLoop(Loop* aLoop , Uint16 loopN)
   }
 
   // mask loop gradient image
-  SDL_LockSurface(loopBgGradient) ; SDL_LockSurface(maskSurface) ;
+  SDL_LockSurface(loopGradient) ;   SDL_LockSurface(maskSurface) ;
   SDL_LockSurface(playingSurface) ; SDL_LockSurface(mutedSurface) ;
-  Uint16 nBytes ; Uint32 srcPixel , maskPixel ; Uint8 *playingDestPixel , *mutedDestPixel ;
+  Uint32 srcPixel , maskPixel ; Uint8 *playingDestPixel , *mutedDestPixel ;
   for (Uint16 y = 0 ; y < LoopD ; ++y) for (Uint16 x = 0 ; x < LoopD ; ++x)
   {
-    nBytes = x * BytesPerPixel ;
-    playingDestPixel = (Uint8*)playingSurface->pixels + (y * playingSurface->pitch) + nBytes ;
-    mutedDestPixel = (Uint8*)mutedSurface->pixels + (y * mutedSurface->pitch) + nBytes ;
+    playingDestPixel = (Uint8*)playingSurface->pixels + (y * playingSurface->pitch) + (x * playingSurface->format->BytesPerPixel) ;
+    mutedDestPixel = (Uint8*)mutedSurface->pixels + (y * mutedSurface->pitch) + (x * mutedSurface->format->BytesPerPixel) ;
     if (x == PEAK_RADIUS && y < PEAK_RADIUS) { srcPixel = PEAK_CURRENT_COLOR ; maskPixel = true ; }
     else
     {
-      maskPixel = *(Uint32*)((Uint8*)maskSurface->pixels + (y * maskSurface->pitch) + nBytes) ;
-      srcPixel = (maskPixel)?
-          *(Uint32*)((Uint8*)loopBgGradient->pixels + (y * loopBgGradient->pitch) + nBytes) :
-          playingSurface->format->colorkey ;
+      Uint16 nMaskRowBytes     = y * maskSurface->pitch ;
+      Uint16 nMaskColBytes     = x * maskSurface->format->BytesPerPixel ;
+      Uint16 nGradientRowBytes = y * loopGradient->pitch ;
+      Uint16 nGradientColBytes = x * loopGradient->format->BytesPerPixel ;
+
+      maskPixel = *(Uint32*)((Uint8*)maskSurface ->pixels + nMaskRowBytes     + nMaskColBytes    ) ;
+      srcPixel  = *(Uint32*)((Uint8*)loopGradient->pixels + nGradientRowBytes + nGradientColBytes) ;
+      if (!maskPixel) srcPixel = playingSurface->format->colorkey                                                 ;
     }
     *(Uint32*)playingDestPixel = srcPixel ;
     if (maskPixel) PixelRgb2Greyscale(playingSurface->format , &srcPixel) ;
@@ -390,7 +390,7 @@ LoopSdl* SceneSdl::drawLoop(Loop* aLoop , Uint16 loopN)
   }
   SDL_UnlockSurface(maskSurface)    ; SDL_FreeSurface(maskSurface) ;
   SDL_UnlockSurface(playingSurface) ; SDL_UnlockSurface(mutedSurface) ;
-  SDL_UnlockSurface(loopBgGradient) ;
+  SDL_UnlockSurface(loopGradient) ;
 
   return new LoopSdl(playingSurface , mutedSurface , GetLoopL(loopN) , LoopsT) ;
 #endif // #if DRAW_LOOPS
