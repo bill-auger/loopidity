@@ -141,7 +141,7 @@ bool LoopiditySdl::IsInitialized() { return !!Screen ; }
 
 bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* peaksIn   ,
                         std::vector<Sample>* peaksOut   , Sample*              peaksVuIn ,
-                        Sample*              peaksVuOut , std::string          assetsDir )
+                        Sample*              peaksVuOut                                  )
 {
   // sanity checks
   if (IsInitialized()                                                 ) return false ;
@@ -172,6 +172,23 @@ bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* p
   Screen = SDL_SetVideoMode(WinRect.w , WinRect.h , PIXEL_DEPTH , SDL_SCREEN_FLAGS) ;
   if (!Screen) { SdlError(SDL_SETVIDEOMODE_ERROR_TEXT) ; return false ; }
 
+  // load images
+  if (!(ScopeGradient     = LoadGimpImage(GimpImage::ScopeGradient    )) ||
+      !(HistogramGradient = LoadGimpImage(GimpImage::HistogramGradient)) ||
+      !(LoopGradient      = LoadGimpImage(GimpImage::LoopGradient     )) ||
+      !(VuGradient        = zoomSurface(ScopeGradient , 1.0 , 2.0 , 0)  )  )
+    { SdlError(SDL_LOADIMAGE_ERROR_TEXT) ; return false ; }
+
+  // load fonts
+  const TtfFont* purisa_ttf = &TtfFont::Purisa ;
+  SDL_RWops*     purisa_rw  = SDL_RWFromConstMem((void*)purisa_ttf->data , purisa_ttf->nBbytes) ;
+  if (!purisa_rw) { SdlError(SDL_LOADMEM_ERROR_MSG) ; return false ; }
+  if (TTF_Init()) { TtfError(TTF_INIT_ERROR_MSG   ) ; return false ; }
+  atexit(TTF_Quit) ;
+  if (!(HeaderFont = TTF_OpenFontRW(purisa_rw , 0 , HEADER_FONT_SIZE)) ||
+      !(StatusFont = TTF_OpenFontRW(purisa_rw , 0 , STATUS_FONT_SIZE))  )
+    { TtfError(TTF_LOADFONT_ERROR_MSG) ; return false ; }
+
   // set input params
   if (SDL_EnableKeyRepeat(0 , 0)) { SdlError(SDL_KEYREPEAT_ERROR_TEXT) ; return false ; }
   SDL_EventState(SDL_MOUSEMOTION , SDL_IGNORE) ;
@@ -184,25 +201,25 @@ bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* p
   SDL_WM_SetIcon(icon , NULL) ;
 */
 
-  // load images
-  std::string scope_img_path     = assetsDir + SCOPE_IMG_PATH     ;
-  std::string histogram_img_path = assetsDir + HISTOGRAM_IMG_PATH ;
-  std::string loop_img_path      = assetsDir + LOOP_IMG_PATH      ;
-  if (!(ScopeGradient     = SDL_LoadBMP(scope_img_path    .c_str())   ) ||
-      !(HistogramGradient = SDL_LoadBMP(histogram_img_path.c_str())   ) ||
-      !(LoopGradient      = SDL_LoadBMP(loop_img_path     .c_str())   ) ||
-      !(VuGradient        = zoomSurface(ScopeGradient , 1.0 , 2.0 , 0))  )
-    { SdlError(SDL_LOADBMP_ERROR_TEXT) ; return false ; }
-
-  // load fonts
-  std::string header_font_path = assetsDir + HEADER_FONT_PATH ;
-  std::string status_font_path = assetsDir + STATUS_FONT_PATH ;
-  if (TTF_Init()) { TtfError(TTF_INIT_ERROR_MSG) ; return false ; }
-  if (!(HeaderFont = TTF_OpenFont(header_font_path.c_str() , HEADER_FONT_SIZE)) ||
-      !(StatusFont = TTF_OpenFont(status_font_path.c_str() , STATUS_FONT_SIZE))  )
-    { TtfError(TTF_OPENFONT_ERROR_MSG) ; return false ; }
-
   return true ;
+}
+
+SDL_Surface* LoopiditySdl::LoadGimpImage(GimpImage gimp_image)
+{
+  int                  width           = gimp_image.width ;
+  int                  height          = gimp_image.height ;
+  int                  bytes_per_pixel = gimp_image.bytesPerPixel ;
+  const unsigned char* pixel_data      = gimp_image.pixelData ;
+
+  int depth      = 8     * bytes_per_pixel ;
+  int pitch      = width * bytes_per_pixel ;
+  int red_mask   = 0x000000FF ;
+  int green_mask = 0x0000FF00 ;
+  int blue_mask  = 0x00FF0000 ;
+  int alpha_mask = 0xFF000000 << ((bytes_per_pixel == 3) ? 8 : 0) ;
+
+  return SDL_CreateRGBSurfaceFrom((void*)pixel_data , width      , height    , depth      , pitch ,
+                                  red_mask          , green_mask , blue_mask , alpha_mask         ) ;
 }
 
 void LoopiditySdl::SdlError(const char* functionName) { printf(SDL_ERROR_FMT , functionName , SDL_GetError()) ; }

@@ -101,7 +101,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" \
-	"$(DESTDIR)$(docdir)" "$(DESTDIR)$(loopiditydir)"
+	"$(DESTDIR)$(docdir)"
 PROGRAMS = $(bin_PROGRAMS)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_loopidity_OBJECTS = src/loopidity-jack_io.$(OBJEXT) \
@@ -109,6 +109,8 @@ am_loopidity_OBJECTS = src/loopidity-jack_io.$(OBJEXT) \
 	src/loopidity-loopidity_sdl.$(OBJEXT) \
 	src/loopidity-main.$(OBJEXT) src/loopidity-scene.$(OBJEXT) \
 	src/loopidity-scene_sdl.$(OBJEXT) \
+	src/assets/loopidity-fonts.$(OBJEXT) \
+	src/assets/loopidity-images.$(OBJEXT) \
 	src/trace/loopidity-trace.$(OBJEXT)
 loopidity_OBJECTS = $(am_loopidity_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -198,7 +200,7 @@ am__uninstall_files_from_dir = { \
 man1dir = $(mandir)/man1
 NROFF = nroff
 MANS = $(man1_MANS)
-DATA = $(doc_DATA) $(loopidity_DATA)
+DATA = $(doc_DATA)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -352,24 +354,26 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 loopiditydir = $(pkgdatadir)
-loopidity_SOURCES = src/jack_io.cpp       \
-                    src/jack_io.h         \
-                    src/loopidity.cpp     \
-                    src/loopidity.h       \
-                    src/loopidity_sdl.cpp \
-                    src/loopidity_sdl.h   \
-                    src/main.cpp          \
-                    src/scene.cpp         \
-                    src/scene.h           \
-                    src/scene_sdl.cpp     \
-                    src/scene_sdl.h       \
-                    src/trace/trace.cpp   \
+loopidity_SOURCES = src/jack_io.cpp                 \
+                    src/jack_io.h                   \
+                    src/loopidity.cpp               \
+                    src/loopidity.h                 \
+                    src/loopidity_sdl.cpp           \
+                    src/loopidity_sdl.h             \
+                    src/main.cpp                    \
+                    src/scene.cpp                   \
+                    src/scene.h                     \
+                    src/scene_sdl.cpp               \
+                    src/scene_sdl.h                 \
+                    src/assets/fonts.cpp            \
+                    src/assets/fonts.h              \
+                    src/assets/images.cpp           \
+                    src/assets/images.h             \
+                    src/assets/histogram_gradient.h \
+                    src/assets/loop_gradient.h      \
+                    src/assets/scope_gradient.h     \
+                    src/trace/trace.cpp             \
                     src/trace/trace.h
-
-loopidity_DATA = assets/histogram_gradient.bmp \
-                    assets/loop_gradient.argb.bmp \
-                    assets/Purisa.ttf             \
-                    assets/scope_gradient.bmp
 
 doc_DATA = COPYING                \
                     LICENSES               \
@@ -480,6 +484,16 @@ src/loopidity-scene.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/loopidity-scene_sdl.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
+src/assets/$(am__dirstamp):
+	@$(MKDIR_P) src/assets
+	@: > src/assets/$(am__dirstamp)
+src/assets/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) src/assets/$(DEPDIR)
+	@: > src/assets/$(DEPDIR)/$(am__dirstamp)
+src/assets/loopidity-fonts.$(OBJEXT): src/assets/$(am__dirstamp) \
+	src/assets/$(DEPDIR)/$(am__dirstamp)
+src/assets/loopidity-images.$(OBJEXT): src/assets/$(am__dirstamp) \
+	src/assets/$(DEPDIR)/$(am__dirstamp)
 src/trace/$(am__dirstamp):
 	@$(MKDIR_P) src/trace
 	@: > src/trace/$(am__dirstamp)
@@ -496,6 +510,7 @@ loopidity$(EXEEXT): $(loopidity_OBJECTS) $(loopidity_DEPENDENCIES) $(EXTRA_loopi
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f src/*.$(OBJEXT)
+	-rm -f src/assets/*.$(OBJEXT)
 	-rm -f src/trace/*.$(OBJEXT)
 
 distclean-compile:
@@ -507,6 +522,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/loopidity-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/loopidity-scene.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/loopidity-scene_sdl.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/assets/$(DEPDIR)/loopidity-fonts.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@src/assets/$(DEPDIR)/loopidity-images.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@src/trace/$(DEPDIR)/loopidity-trace.Po@am__quote@
 
 .cpp.o:
@@ -609,6 +626,34 @@ src/loopidity-scene_sdl.obj: src/scene_sdl.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -c -o src/loopidity-scene_sdl.obj `if test -f 'src/scene_sdl.cpp'; then $(CYGPATH_W) 'src/scene_sdl.cpp'; else $(CYGPATH_W) '$(srcdir)/src/scene_sdl.cpp'; fi`
 
+src/assets/loopidity-fonts.o: src/assets/fonts.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -MT src/assets/loopidity-fonts.o -MD -MP -MF src/assets/$(DEPDIR)/loopidity-fonts.Tpo -c -o src/assets/loopidity-fonts.o `test -f 'src/assets/fonts.cpp' || echo '$(srcdir)/'`src/assets/fonts.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/assets/$(DEPDIR)/loopidity-fonts.Tpo src/assets/$(DEPDIR)/loopidity-fonts.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/assets/fonts.cpp' object='src/assets/loopidity-fonts.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -c -o src/assets/loopidity-fonts.o `test -f 'src/assets/fonts.cpp' || echo '$(srcdir)/'`src/assets/fonts.cpp
+
+src/assets/loopidity-fonts.obj: src/assets/fonts.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -MT src/assets/loopidity-fonts.obj -MD -MP -MF src/assets/$(DEPDIR)/loopidity-fonts.Tpo -c -o src/assets/loopidity-fonts.obj `if test -f 'src/assets/fonts.cpp'; then $(CYGPATH_W) 'src/assets/fonts.cpp'; else $(CYGPATH_W) '$(srcdir)/src/assets/fonts.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/assets/$(DEPDIR)/loopidity-fonts.Tpo src/assets/$(DEPDIR)/loopidity-fonts.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/assets/fonts.cpp' object='src/assets/loopidity-fonts.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -c -o src/assets/loopidity-fonts.obj `if test -f 'src/assets/fonts.cpp'; then $(CYGPATH_W) 'src/assets/fonts.cpp'; else $(CYGPATH_W) '$(srcdir)/src/assets/fonts.cpp'; fi`
+
+src/assets/loopidity-images.o: src/assets/images.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -MT src/assets/loopidity-images.o -MD -MP -MF src/assets/$(DEPDIR)/loopidity-images.Tpo -c -o src/assets/loopidity-images.o `test -f 'src/assets/images.cpp' || echo '$(srcdir)/'`src/assets/images.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/assets/$(DEPDIR)/loopidity-images.Tpo src/assets/$(DEPDIR)/loopidity-images.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/assets/images.cpp' object='src/assets/loopidity-images.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -c -o src/assets/loopidity-images.o `test -f 'src/assets/images.cpp' || echo '$(srcdir)/'`src/assets/images.cpp
+
+src/assets/loopidity-images.obj: src/assets/images.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -MT src/assets/loopidity-images.obj -MD -MP -MF src/assets/$(DEPDIR)/loopidity-images.Tpo -c -o src/assets/loopidity-images.obj `if test -f 'src/assets/images.cpp'; then $(CYGPATH_W) 'src/assets/images.cpp'; else $(CYGPATH_W) '$(srcdir)/src/assets/images.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/assets/$(DEPDIR)/loopidity-images.Tpo src/assets/$(DEPDIR)/loopidity-images.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='src/assets/images.cpp' object='src/assets/loopidity-images.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -c -o src/assets/loopidity-images.obj `if test -f 'src/assets/images.cpp'; then $(CYGPATH_W) 'src/assets/images.cpp'; else $(CYGPATH_W) '$(srcdir)/src/assets/images.cpp'; fi`
+
 src/trace/loopidity-trace.o: src/trace/trace.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(loopidity_CXXFLAGS) $(CXXFLAGS) -MT src/trace/loopidity-trace.o -MD -MP -MF src/trace/$(DEPDIR)/loopidity-trace.Tpo -c -o src/trace/loopidity-trace.o `test -f 'src/trace/trace.cpp' || echo '$(srcdir)/'`src/trace/trace.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) src/trace/$(DEPDIR)/loopidity-trace.Tpo src/trace/$(DEPDIR)/loopidity-trace.Po
@@ -684,27 +729,6 @@ uninstall-docDATA:
 	@list='$(doc_DATA)'; test -n "$(docdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(docdir)'; $(am__uninstall_files_from_dir)
-install-loopidityDATA: $(loopidity_DATA)
-	@$(NORMAL_INSTALL)
-	@list='$(loopidity_DATA)'; test -n "$(loopiditydir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(loopiditydir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(loopiditydir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(loopiditydir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(loopiditydir)" || exit $$?; \
-	done
-
-uninstall-loopidityDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(loopidity_DATA)'; test -n "$(loopiditydir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(loopiditydir)'; $(am__uninstall_files_from_dir)
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -932,7 +956,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(MANS) $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(loopiditydir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(docdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -963,6 +987,8 @@ distclean-generic:
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
 	-rm -f src/$(DEPDIR)/$(am__dirstamp)
 	-rm -f src/$(am__dirstamp)
+	-rm -f src/assets/$(DEPDIR)/$(am__dirstamp)
+	-rm -f src/assets/$(am__dirstamp)
 	-rm -f src/trace/$(DEPDIR)/$(am__dirstamp)
 	-rm -f src/trace/$(am__dirstamp)
 
@@ -975,7 +1001,7 @@ clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf src/$(DEPDIR) src/trace/$(DEPDIR)
+	-rm -rf src/$(DEPDIR) src/assets/$(DEPDIR) src/trace/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-local distclean-tags
@@ -992,7 +1018,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-docDATA install-loopidityDATA install-man
+install-data-am: install-docDATA install-man
 
 install-dvi: install-dvi-am
 
@@ -1023,7 +1049,7 @@ installcheck-am: installcheck-local
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf src/$(DEPDIR) src/trace/$(DEPDIR)
+	-rm -rf src/$(DEPDIR) src/assets/$(DEPDIR) src/trace/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
@@ -1039,8 +1065,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-docDATA \
-	uninstall-loopidityDATA uninstall-man
+uninstall-am: uninstall-binPROGRAMS uninstall-docDATA uninstall-man
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 uninstall-man: uninstall-man1
@@ -1057,15 +1082,14 @@ uninstall-man: uninstall-man1
 	install install-am install-binPROGRAMS install-data \
 	install-data-am install-docDATA install-dvi install-dvi-am \
 	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-loopidityDATA install-man \
-	install-man1 install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installcheck-local installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-binPROGRAMS uninstall-docDATA \
-	uninstall-hook uninstall-loopidityDATA uninstall-man \
-	uninstall-man1
+	install-info install-info-am install-man install-man1 \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installcheck-local \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
+	ps ps-am tags tags-am uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-docDATA uninstall-hook \
+	uninstall-man uninstall-man1
 
 .PRECIOUS: Makefile
 
@@ -1074,10 +1098,6 @@ installcheck-local:
 	echo "installcheck-local"
 	stat --printf='' $(bindir)/loopidity
 	stat --printf='' $(loopiditydir)/
-	stat --printf='' $(loopiditydir)/histogram_gradient.bmp
-	stat --printf='' $(loopiditydir)/loop_gradient.argb.bmp
-	stat --printf='' $(loopiditydir)/scope_gradient.bmp
-	stat --printf='' $(loopiditydir)/Purisa.ttf
 	stat --printf='' $(docdir)/COPYING
 	stat --printf='' $(docdir)/LICENSES
 	stat --printf='' $(docdir)/COPYING.fonts

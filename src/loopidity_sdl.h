@@ -32,6 +32,8 @@
 #  include <X11/Xlib.h>
 #endif // _WIN32
 
+#include "assets/fonts.h"
+#include "assets/images.h"
 #include "scene_sdl.h"
 
 
@@ -142,13 +144,14 @@ class LoopiditySdl
     /* LoopiditySdl class side private functions */
 
     // setup
-    static bool IsInitialized(void) ; // TODO: make singleton
-    static bool Init(         SceneSdl**           sdlScenes  , std::vector<Sample>* peaksIn   ,
-                              std::vector<Sample>* peaksOut   , Sample*              peaksVuIn ,
-                              Sample*              peaksVuOut , std::string          assetsDir ) ;
-    static void SdlError(     const char* functionName) ;
-    static void TtfError(     const char* functionName) ;
-    static void Cleanup(      void) ;
+    static bool         Init         (SceneSdl**           sdlScenes  , std::vector<Sample>* peaksIn   ,
+                                      std::vector<Sample>* peaksOut   , Sample*              peaksVuIn ,
+                                      Sample*              peaksVuOut                                  ) ;
+    static bool         IsInitialized(void) ; // TODO: make singleton
+    static SDL_Surface* LoadGimpImage(GimpImage gimp_image) ;
+    static void         SdlError     (const char* functionName) ;
+    static void         TtfError     (const char* functionName) ;
+    static void         Cleanup      (void) ;
 
     // drawing
     static void DrawHeader(         void) ;
@@ -169,7 +172,7 @@ class LoopiditySdl
     static void DrawBorder(         SDL_Surface* a_surface , Uint16 l , Uint16 t    ,
                                     Uint16       r         , Uint16 b , Uint32 color) ;
     static void DrawBorder(         SDL_Surface* a_surface , SDL_Rect a_rect , Uint32 color) ;
-    static void Alert(              std::string msg) ;
+    static void Alert(              std::string message) ;
 
     // getters/settters
     static void SetStatusL(std::string msg) ;

@@ -55,12 +55,11 @@ class Loopidity
   private:
     /* Loopidity class side private constants */
 
-    static const Uint8       N_SCENES ;
-    static const Uint8       N_LOOPS ;
-    static const std::string ASSETS_DIR ;
+    static const Uint8 N_SCENES ;
+    static const Uint8 N_LOOPS ;
 #if ! FIXED_N_AUDIO_PORTS
-    static const Uint8       N_INPUT_CHANNELS ;
-    static const Uint8       N_OUTPUT_CHANNELS ;
+    static const Uint8 N_INPUT_CHANNELS ;
+    static const Uint8 N_OUTPUT_CHANNELS ;
 #endif // FIXED_N_AUDIO_PORTS
 
 
@@ -117,23 +116,22 @@ private:
     /* Loopidity class side private functions */
 
     // setup
-    static std::string GetAssetsDir() ;
 #if ! INIT_JACK_BEFORE_SCENES
-    static bool        IsInitialized() ;
+    static bool IsInitialized() ;
 #endif // INIT_JACK_BEFORE_SCENES
-    static bool        Init(         bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
-                                     Uint32 recordBufferSize                                 ) ;
+    static bool Init(         bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
+                              Uint32 recordBufferSize                                 ) ;
 #if INIT_JACK_BEFORE_SCENES
 #  if SCENE_NFRAMES_EDITABLE
-    static void        SetMetadata(  SceneMetadata* sceneMetadata) ;
+    static void SetMetadata(  SceneMetadata* sceneMetadata) ;
 #  else
-    static void        SetMetadata(  Uint32 sampleRate       , Uint32 nFramesPerPeriod ,
-                                     Uint32 recordBufferSize                           ) ;
+    static void SetMetadata(  Uint32 sampleRate       , Uint32 nFramesPerPeriod ,
+                              Uint32 recordBufferSize                           ) ;
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #else
-    static void        SetMetadata(  Uint32 sampleRate , Uint32 nFramesPerPeriod) ;
+    static void SetMetadata(  Uint32 sampleRate , Uint32 nFramesPerPeriod) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
-    static int         Cleanup(      int retval) ;
+    static int  Cleanup(      int retval) ;
 
     // event handlers
     static void HandleKeyEvent(  SDL_Event* event) ;

@@ -79,6 +79,16 @@ obs/*
 # sources
 !src/
 src/*
+!src/assets/
+src/assets/*
+!src/assets/fonts.cpp
+!src/assets/fonts.h
+!src/assets/histogram_gradient.h
+!src/assets/images.cpp
+!src/assets/images.h
+!src/assets/loop_gradient.h
+!src/assets/purisa.h
+!src/assets/scope_gradient.h
 !src/constants/
 src/constants/*
 !src/constants/controller_constants.h
