@@ -20,6 +20,7 @@
 
 #include "constants/feature_constants.h"
 #include "constants/view_constants.h"
+#include "trace/trace.h"
 #include "loopidity_sdl.h"
 
 
@@ -31,6 +32,9 @@ const Uint8 LoopiditySdl::GUI_PAD  = GUIPAD ;
 const Uint8 LoopiditySdl::GUI_PAD2 = GUI_PAD * 2 ;
 
 // window
+const Uint8  LoopiditySdl::PIXEL_DEPTH     = BITS_PER_PIXEL ;
+const Uint16 LoopiditySdl::SCREEN_MIN_W    = SCREEN_W_MIN ;
+const Uint16 LoopiditySdl::SCREEN_MIN_H    = SCREEN_H_MIN ;
 const Uint32 LoopiditySdl::WINDOW_BG_COLOR = WINDOWBGCOLOR ;
 const Uint16 LoopiditySdl::WinCenter       = WIN_CENTER ;
 
@@ -137,15 +141,14 @@ SDL_Rect*    LoopiditySdl::SceneRect     = 0 ;
 
 // setup
 
-bool LoopiditySdl::IsInitialized() { return !!Screen ; }
-
 bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* peaksIn   ,
                         std::vector<Sample>* peaksOut   , Sample*              peaksVuIn ,
                         Sample*              peaksVuOut                                  )
 {
   // sanity checks
-  if (IsInitialized()                                                 ) return false ;
-  if (!sdlScenes || !peaksIn || !peaksOut || !peaksVuIn || !peaksVuOut) return false ;
+  bool is_valid_model = !!sdlScenes && !!peaksIn && !!peaksOut && !!peaksVuIn && !!peaksVuOut ;
+  if (IsInitialized()) { Alert(LOOPIDITYSDL_REINIT_MSG   ) ; return false ; }
+  if (!is_valid_model) { Alert(LOOPIDITYSDL_INIT_FAIL_MSG) ; return false ; }
 
   // set handles to view instances and VU scopes/peaks caches
   SdlScenes  = sdlScenes ;
@@ -161,9 +164,9 @@ bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* p
   Display* display = XOpenDisplay(NULL) ; XWindowAttributes winAttr ;
   Uint16   screenN = DefaultScreen(display) ;
   if (!XGetWindowAttributes(display, RootWindow(display , screenN) , &winAttr))
-    { printf(X11_ERROR_MSG) ; return false ; }
-  if (winAttr.width < SCREEN_W || winAttr.height < SCREEN_H)
-    { printf(RESOLUTION_ERROR_MSG , SCREEN_W , SCREEN_H) ; return false ; }
+    { Alert(X11_ERROR_MSG) ; return false ; }
+  if (winAttr.width < SCREEN_MIN_W || winAttr.height < SCREEN_MIN_H)
+    { Alert(RESOLUTION_ERROR_MSG) ; return false ; }
 #endif // _WIN32
 
   // initialize SDL
@@ -200,6 +203,7 @@ bool LoopiditySdl::Init(SceneSdl**           sdlScenes  , std::vector<Sample>* p
   SDL_SetColorKey(icon , SDL_SRCCOLORKEY , SDL_MapRGB(icon->format , 255 , 0 , 255)) ;
   SDL_WM_SetIcon(icon , NULL) ;
 */
+  SDL_WM_SetIcon(LoopGradient , NULL) ;
 
   return true ;
 }
@@ -221,6 +225,8 @@ SDL_Surface* LoopiditySdl::LoadGimpImage(GimpImage gimp_image)
   return SDL_CreateRGBSurfaceFrom((void*)pixel_data , width      , height    , depth      , pitch ,
                                   red_mask          , green_mask , blue_mask , alpha_mask         ) ;
 }
+
+bool LoopiditySdl::IsInitialized() { return !!Screen ; }
 
 void LoopiditySdl::SdlError(const char* functionName) { printf(SDL_ERROR_FMT , functionName , SDL_GetError()) ; }
 
@@ -411,7 +417,7 @@ void LoopiditySdl::DrawBorder(SDL_Surface* a_surface , SDL_Rect a_rect , Uint32 
 
 void LoopiditySdl::FlipScreen() { SDL_Flip(Screen) ; }
 
-void LoopiditySdl::Alert(std::string msg) { std::cout << msg << std::endl ; }
+void LoopiditySdl::Alert(std::string message) { std::cout << message << std::endl ; }
 
 
 // getters/settters

@@ -131,7 +131,7 @@ private:
 #else
     static void SetMetadata(  Uint32 sampleRate , Uint32 nFramesPerPeriod) ;
 #endif // #if INIT_JACK_BEFORE_SCENES
-    static int  Cleanup(      int retval) ;
+    static void Cleanup(      std::string status_msg = std::string()) ;
 
     // event handlers
     static void HandleKeyEvent(  SDL_Event* event) ;

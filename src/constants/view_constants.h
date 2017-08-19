@@ -8,16 +8,16 @@
 #define GUI_UPDATE_LOW_PRIORITY_NICE 8   // n high priority updates to pass
 
 // window magnitudes
-#define SCREEN_W     1024 // minimum screen resolution
-#define SCREEN_H     768  // minimum screen resolution
-#define WIN_TITLE_H  20   // approximate window decoration size
-#define WIN_BORDER_W 2    // approximate window decoration size
-#define WIN_BORDER_H 2    // approximate window decoration size
-#define PIXEL_DEPTH  32
-#define WIN_W        (SCREEN_W - (WIN_BORDER_W * 2))
-#define WIN_H        (SCREEN_H - WIN_TITLE_H - WIN_BORDER_H)
-#define WIN_RECT     { 0 , 0 , WIN_W , WIN_H }
-#define WIN_CENTER   (WinRect.w / 2)
+#define SCREEN_W_MIN   1024 // minimum screen resolution
+#define SCREEN_H_MIN   768  // minimum screen resolution
+#define WIN_TITLE_H    20   // approximate window decoration size
+#define WIN_BORDER_W   2    // approximate window decoration size
+#define WIN_BORDER_H   2    // approximate window decoration size
+#define BITS_PER_PIXEL 32
+#define WIN_W          (SCREEN_W_MIN - (WIN_BORDER_W * 2))
+#define WIN_H          (SCREEN_H_MIN - WIN_TITLE_H - WIN_BORDER_H)
+#define WIN_RECT       { 0 , 0 , WIN_W , WIN_H }
+#define WIN_CENTER     (WinRect.w / 2)
 
 // header magnitudes
 #define HEADER_FONT_SIZE 36
@@ -94,18 +94,13 @@
 #  define EDIT_HISTOGRAM_GRADUATION_H            12
 #endif // #if SCENE_NFRAMES_EDITABLE
 
-// external assets
-#define SCOPE_IMG_PATH     "scope_gradient.bmp"
-#define HISTOGRAM_IMG_PATH "histogram_gradient.bmp"
-#define LOOP_IMG_PATH      "loop_gradient.argb.bmp"
-#define PURISA_TTF_PATH    "Purisa.ttf"
-
 // fonts and colors
-#define HEADER_FONT_PATH  PURISA_TTF_PATH
+#define PURISA_TTF        "Purisa.ttf"
+#define HEADER_FONT       PURISA_TTF
 #define HEADER_TEXT_COLOR { 255 , 0 , 255 , 0 }
-#define STATUS_FONT_PATH  PURISA_TTF_PATH
+#define STATUS_FONT       PURISA_TTF
 #define STATUS_TEXT_COLOR { 255 , 0 , 255 , 0 }
-#define WINDOWBGCOLOR     0xFF111111
+#define WINDOWBGCOLOR     0xFF333333
 #define VUSINBGCOLOR      0xFF221122
 #define VUSOUTBGCOLOR     0xFF112222 // NOTE: SDL_FillRect()          takes 0xAARRGGBB
 #define VUSINBORDERCOLOR  0x882288FF // NOTE: roundedRectangleColor() takes 0xRRGGBBAA
@@ -119,8 +114,11 @@
 
 // string constants
 #define HEADER_TEXT                 "This is Loopidity"
-#define X11_ERROR_MSG               "ERROR: LoopiditySdl::Init(): XGetWindowAttributes(): can't get root window geometry - quitting\n"
-#define RESOLUTION_ERROR_MSG        "ERROR: screen resolution must be at least %dx%d - quitting\n"
+#define LOOPIDITYSDL_REINIT_MSG     "ERROR: LoopiditySdl::Init() should be called only once"
+#define LOOPIDITYSDL_INIT_FAIL_MSG  "ERROR: Data model not prepared before initializing GUI"
+#define X11_ERROR_MSG               "ERROR: Could not get root window geometry - quitting"
+#define RESOLUTION_ERROR_MSG        "ERROR: Screen resolution must be at least " + \
+                                     std::to_string(SCREEN_MIN_W) + "x" + std::to_string(SCREEN_MIN_H) + " - quitting"
 #define SDL_ERROR_FMT               "ERROR: %s(): %s\n"
 #define SDL_INIT_ERROR_TEXT         "SDL_Init"
 #define SDL_SETVIDEOMODE_ERROR_TEXT "SDL_SetVideoMode"

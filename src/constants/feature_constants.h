@@ -45,23 +45,15 @@
 #  define DRAW_CURRENT_SCENE_INDICATOR 1
 #endif // #if DRAW_SCENES
 
-#if DRAW_DEBUG_TEXT
-#  include "../trace/trace.h"
-#  define DRAW_DEBUG_TEXT_L Trace::SetDbgTextC() ;
-#  define DRAW_DEBUG_TEXT_R Trace::SetDbgTextR() ;
-#else
-#  define DRAW_DEBUG_TEXT_L ;
-#  define DRAW_DEBUG_TEXT_R ;
-#endif // #if DRAW_DEBUG_TEXT
-
 // Trace class features
 #define DEBUG_TRACE              1
-#define DEBUG_TRACE_JACK         DEBUG_TRACE && 0
-#define DEBUG_TRACE_LOOPIDITY    DEBUG_TRACE && 0
-#define DEBUG_TRACE_LOOPIDITYSDL DEBUG_TRACE && 0
-#define DEBUG_TRACE_SCENE        DEBUG_TRACE && 0
-#define DEBUG_TRACE_SCENESDL     DEBUG_TRACE && 0
-#define DEBUG_TRACE_CLASS        DEBUG_TRACE && 0
-#define DEBUG_TRACE_EVS          DEBUG_TRACE && 1
-#define DEBUG_TRACE_IN           DEBUG_TRACE && 1
-#define DEBUG_TRACE_OUT          DEBUG_TRACE && 1
+#define DEBUG_TRACE_ALL          1
+#define DEBUG_TRACE_JACK         DEBUG_TRACE && (DEBUG_TRACE_ALL || 0)
+#define DEBUG_TRACE_LOOPIDITY    DEBUG_TRACE && (DEBUG_TRACE_ALL || 0)
+#define DEBUG_TRACE_LOOPIDITYSDL DEBUG_TRACE && (DEBUG_TRACE_ALL || 0)
+#define DEBUG_TRACE_SCENE        DEBUG_TRACE && (DEBUG_TRACE_ALL || 0)
+#define DEBUG_TRACE_SCENESDL     DEBUG_TRACE && (DEBUG_TRACE_ALL || 0)
+#define DEBUG_TRACE_CLASS        DEBUG_TRACE && (DEBUG_TRACE_ALL || 0)
+#define DEBUG_TRACE_EVS          DEBUG_TRACE && (DEBUG_TRACE_ALL || 1)
+#define DEBUG_TRACE_IN           DEBUG_TRACE && (DEBUG_TRACE_ALL || 1)
+#define DEBUG_TRACE_OUT          DEBUG_TRACE && (DEBUG_TRACE_ALL || 1)

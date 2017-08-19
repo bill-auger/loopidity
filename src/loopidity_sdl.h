@@ -55,6 +55,9 @@ class LoopiditySdl
     // window
     static SDL_Surface* Screen ;
     static SDL_Rect     WinRect ;
+    static const Uint8  PIXEL_DEPTH ;
+    static const Uint16 SCREEN_MIN_W ;
+    static const Uint16 SCREEN_MIN_H ;
     static const Uint32 WINDOW_BG_COLOR ;
     static const Uint16 WinCenter ;
 

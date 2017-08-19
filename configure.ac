@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([loopidity], [0.14.007], [https://github.com/bill-auger/loopidity/issues])
+AC_INIT([loopidity], [0.14.008], [https://github.com/bill-auger/loopidity/issues])
 AC_CONFIG_SRCDIR([src/loopidity.cpp])
 AM_INIT_AUTOMAKE([subdir-objects foreign -Wall -Werror])
 AC_CONFIG_FILES([Makefile])

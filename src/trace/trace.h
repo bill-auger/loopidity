@@ -42,6 +42,14 @@
 #  define DEBUG_TRACE_MAIN_OUT ;
 #endif
 
+#if DRAW_DEBUG_TEXT
+#  define DRAW_DEBUG_TEXT_L Trace::SetDbgTextC() ;
+#  define DRAW_DEBUG_TEXT_R Trace::SetDbgTextR() ;
+#else
+#  define DRAW_DEBUG_TEXT_L ;
+#  define DRAW_DEBUG_TEXT_R ;
+#endif // #if DRAW_DEBUG_TEXT
+
 #if DEBUG_TRACE_LOOPIDITY
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_MID                 if (DEBUG_TRACE_EVS) printf("%s\n" , INIT_SUCCESS_MSG) ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_OUT                 if (DEBUG_TRACE_EVS) printf("%s\n" , EXIT_SUCCESS_MSG) ;
@@ -66,9 +74,7 @@
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN         if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: EVT_SCENE_CHANGED --> Loopidity::OnSceneChange(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::OnSceneChange(%d)  IN" , Scenes[CurrentSceneN])) return ;
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT        if (TRACE_OUT(NextSceneN))    TRACE_SCENE("Loopidity::OnSceneChange(%d)  OUT" , nextScene) ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                                                 TRACE_SCENE("Loopidity::OOM(%d)   IN" , Scenes[CurrentSceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_CLEANUP                  if (DEBUG_TRACE_EVS && exit_status != 0)                  \
-    { cout << (N_SCENES + 2 < N_SCENES) ? "Loopidity::Cleanup(): N_SCENES out of range - quitting" :               \
-              (ASSETS_DIR.empty()     ) ? "Loopidity::Cleanup(): cannot locate assets - quitting"  : "") << endl ; }
+#  define DEBUG_TRACE_LOOPIDITY_CLEANUP                  if (DEBUG_TRACE_EVS)          std::cout << "Loopidity::Cleanup()" << std::endl ;
 #else // #if DEBUG_TRACE_LOOPIDITY
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_MID                 ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_OUT                 ;
@@ -168,6 +174,7 @@
 #define INIT_MSG          "main(): init"
 #define INIT_SUCCESS_MSG  "Loopidity::Main(): init success - entering sdl loop"
 #define INIT_FAIL_MSG     "Loopidity::Main(): init failed - quitting"
+#define EXIT_SUCCESS_MSG  "Loopidity::Main(): done - exited sdl loop"
 #define GETPEAK_ERROR_MSG "Loopidity::GetPeak(): subscript out of range"
 
 #define DEBUG_TRACE_MODEL            "MODEL: "
