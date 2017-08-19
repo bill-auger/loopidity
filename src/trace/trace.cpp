@@ -117,9 +117,9 @@ void Trace::TraceState(const char* event       , const char* sender     ,
                        const char* stateFormat , const char* descFormat ,
                        bool bool0 , bool bool1 , bool bool2 , bool /*isEq*/ )
 {
-#if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN
-cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" << bool1 << "bool2=" << bool2 << endl ;
-#endif // #if DEBUG_TRACE_CLASS && DEBUG_TRACE_IN
+#if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN
+std::cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" << bool1 << "bool2=" << bool2 << std::endl ;
+#endif // #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN
 
 #if DEBUG_TRACE
 
@@ -145,11 +145,11 @@ cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" <
 
 #endif // #if DEBUG_TRACE
 
-#if DEBUG_TRACE_CLASS && DEBUG_TRACE_OUT
-cout << "Trace::TraceState(): Event(" << strlen(Event) << ")='" << Event << "'" << endl ; // for (int i=0 ; i < strlen(Event) ; ++i) printf("Event[%d]=%c\n" , i , Event[i]) ;
-cout << "Trace::TraceState(): State(" << strlen(State) << ")='" << State << "'" << endl ; // for (int i=0 ; i < strlen(State) ; ++i) printf("State[%d]=%c\n" , i , State[i]) ;
-cout << "Trace::TraceState(): Desc("  << strlen(Desc)  << ")='" << Desc  << "'" << endl ; // for (int i=0 ; i < strlen(Desc) ; ++i) printf("Desc[%d]=%c\n" , i , Desc[i]) ;
-#endif // #if DEBUG_TRACE_CLASS && DEBUG_TRACE_OUT
+#if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_OUT
+std::cout << "Trace::TraceState(): Event(" << strlen(Event) << ")='" << Event << "'" << std::endl ; // for (int i=0 ; i < strlen(Event) ; ++i) printf("Event[%d]=%c\n" , i , Event[i]) ;
+std::cout << "Trace::TraceState(): State(" << strlen(State) << ")='" << State << "'" << std::endl ; // for (int i=0 ; i < strlen(State) ; ++i) printf("State[%d]=%c\n" , i , State[i]) ;
+std::cout << "Trace::TraceState(): Desc("  << strlen(Desc)  << ")='" << Desc  << "'" << std::endl ; // for (int i=0 ; i < strlen(Desc) ; ++i) printf("Desc[%d]=%c\n" , i , Desc[i]) ;
+#endif // #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_OUT
 }
 
 #if DRAW_DEBUG_TEXT

@@ -49,11 +49,15 @@
 #define JACK_INPUT4_PORT_NAME   "in4"
 #define JACK_OUTPUT1_PORT_NAME  "outL"
 #define JACK_OUTPUT2_PORT_NAME  "outR"
+#define LOOPIDITY_REINIT_MSG    "ERROR: Loopidity::Main() and Loopidity::Init() should be called only once"
+#define N_SCENES_ERR_MSG        "ERROR: N_SCENES out of range - quitting"
 #define INVALID_METADATA_MSG    "ERROR: Scene metadata state insane"
+#define LOOPIDITY_INIT_FAIL_MSG "ERROR: Could not initialize Loopidity"
+#define JACK_INIT_FAIL_MSG      "ERROR: Could not initialize JACK"
 //#define FREEMEM_FAIL_MSG        "ERROR: Could not determine available memory - quitting"
-#define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory initializng buffers"
-#define JACK_SW_FAIL_MSG        "ERROR: Could not register JACK client"
-#define JACK_HW_FAIL_MSG        "ERROR: Could not open ports for JACK"
+#define INSUFFICIENT_MEMORY_MSG "ERROR: Insufficient memory initializng buffers - quitting"
+#define JACK_SW_FAIL_MSG        "ERROR: Could not register JACK client - quitting"
+#define JACK_HW_FAIL_MSG        "ERROR: Could not open ports for JACK - quitting"
 #define OUT_OF_MEMORY_MSG       "ERROR: Out of Memory"
 
 // sdl user events

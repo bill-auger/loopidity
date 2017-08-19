@@ -18,8 +18,10 @@
 \*/
 
 
-#include "loopidity_sdl.h"
+#include "assets/images.h"
 #include "constants/view_constants.h"
+#include "trace/trace.h"
+#include "loopidity_sdl.h"
 
 
 /* LoopSdl class side private functions */
@@ -83,7 +85,6 @@ const Uint16 SceneSdl::SceneR             = SCENE_R ;
 const Uint16 SceneSdl::SceneFrameL        = SCENE_FRAME_L ;
 const Uint16 SceneSdl::SceneFrameR        = SCENE_FRAME_R ;
 const float  SceneSdl::PieSliceDegrees    = PIE_SLICE_DEGREES ;
-const Uint8  SceneSdl::BytesPerPixel      = PIXEL_DEPTH / 8 ;
 const Uint16 SceneSdl::SECONDS_PER_HOUR   = N_SECONDS_PER_HOUR ;
 const Uint8  SceneSdl::MINUTES_PER_HOUR   = N_MINUTES_PER_HOUR ;
 const Uint8  SceneSdl::SECONDS_PER_MINUTE = N_SECONDS_PER_MINUTE ;
@@ -331,12 +332,16 @@ LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
 
 #if DRAW_MUTED_HISTOGRAMS
   SDL_LockSurface(playingSurface) ; SDL_LockSurface(mutedSurface) ;
-  Uint16 nBytes ; Uint8* destPixel ; Uint32 srcPixel ;
+  Uint8* destPixel ; Uint32 srcPixel ;
   for (Uint16 y = 0 ; y < HistSurfaceH ; ++y) for (Uint16 x = 0 ; x < HistSurfaceW ; ++x)
   {
-    nBytes    = x * BytesPerPixel ;
-    destPixel =            (Uint8*)mutedSurface->pixels   + (y * mutedSurface->pitch)   + nBytes ;
-    srcPixel  = *(Uint32*)((Uint8*)playingSurface->pixels + (y * playingSurface->pitch) + nBytes) ;
+    Uint16 nMutedRowBytes   = y * mutedSurface  ->pitch ;
+    Uint16 nMutedColBytes   = x * mutedSurface  ->format->BytesPerPixel ;
+    Uint16 nPlayingRowBytes = y * playingSurface->pitch ;
+    Uint16 nPlayingColBytes = x * playingSurface->format->BytesPerPixel ;
+
+    destPixel =            (Uint8*)mutedSurface->pixels   + nMutedRowBytes   + nMutedColBytes ;
+    srcPixel  = *(Uint32*)((Uint8*)playingSurface->pixels + nPlayingRowBytes + nPlayingColBytes) ;
     PixelRgb2Greyscale(playingSurface->format , &srcPixel) ;
     *(Uint32*)destPixel = srcPixel ;
   }
@@ -434,10 +439,10 @@ DEBUG_TRACE_SCENESDL_DELETELOOP_OUT
 // helpers
 
 SDL_Surface* SceneSdl::createHwSurface(Sint16 w , Sint16 h)
-  { return SDL_CreateRGBSurface(SDL_HWSURFACE , w , h , PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
+  { return SDL_CreateRGBSurface(SDL_HWSURFACE , w , h , LoopiditySdl::PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
 
 SDL_Surface* SceneSdl::createSwSurface(Sint16 w , Sint16 h)
-  { return SDL_CreateRGBSurface(SDL_SWSURFACE , w , h , PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
+  { return SDL_CreateRGBSurface(SDL_SWSURFACE , w , h , LoopiditySdl::PIXEL_DEPTH , 0 , 0 , 0 , 0) ; }
 
 std::string SceneSdl::makeDurationStatusText()
 {

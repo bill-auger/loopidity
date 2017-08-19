@@ -98,7 +98,6 @@ class SceneSdl
     static const Uint16 SceneFrameL ;
     static const Uint16 SceneFrameR ;
     static const float  PieSliceDegrees ;
-    static const Uint8  BytesPerPixel ;
     static const Uint16 SECONDS_PER_HOUR ;
     static const Uint8  MINUTES_PER_HOUR ;
     static const Uint8  SECONDS_PER_MINUTE ;
