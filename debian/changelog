@@ -1,3 +1,9 @@
+loopidity (0.14.008-1) UNRELEASED; urgency=medium
+
+  * updated to new upstream version
+
+ -- bill-auger <bill-auger@programmer.net>  Sat, 19 Aug 2017 18:48:05 -0400
+
 loopidity (0.13.000-1) unstable; urgency=medium
 
   * initial debian package
