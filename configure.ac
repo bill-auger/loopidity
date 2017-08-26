@@ -10,6 +10,14 @@ AM_INIT_AUTOMAKE([subdir-objects foreign -Wall -Werror])
 AM_SILENT_RULES([yes])
 AC_LANG([C++])
 
+AC_CANONICAL_HOST
+case $host_os in
+  mingw32.static|mingw32.shared)
+    AC_MSG_NOTICE(["Detected mingw cross-compile ($build_os => $host_os)"])
+    IS_MINGW=1
+    ;;
+esac
+
 AC_MSG_NOTICE(["Checking for programs ..."])
 AC_PROG_CXX
 AC_PROG_CC
@@ -20,15 +28,8 @@ AC_MSG_NOTICE(["Checking for typedefs, structures, and compiler characteristics 
 AC_TYPE_SIZE_T
 
 AC_MSG_NOTICE(["Checking for header files  ..."])
-AC_PATH_X
-AC_CHECK_HEADER([jack/jack.h],             [ ], [AC_MSG_ERROR("missing jack headers"     )])
-AC_CHECK_HEADER([SDL/SDL.h],               [ ], [AC_MSG_ERROR("missing SDL headers"      )])
-AC_CHECK_HEADER([SDL/SDL_gfxPrimitives.h], [ ], [AC_MSG_ERROR("missing SDL_gfx headers"  )])
-AC_CHECK_HEADER([SDL/SDL_rotozoom.h],      [ ], [AC_MSG_ERROR("missing SDL_gfx headers"  )])
-AC_CHECK_HEADER([SDL/SDL_ttf.h],           [ ], [AC_MSG_ERROR("missing SDL_ttf headers"  )])
 AC_CHECK_HEADER([sys/stat.h],              [ ], [AC_MSG_ERROR("missing stat header"      )])
 AC_CHECK_HEADER([unistd.h],                [ ], [AC_MSG_ERROR("missing unistd header"    )])
-AC_CHECK_HEADER([X11/Xlib.h],              [ ], [AC_MSG_ERROR("missing x11 headers"      )])
 AC_CHECK_HEADER([cstdlib],                 [ ], [AC_MSG_ERROR("missing cstdlib headers"  )])
 AC_CHECK_HEADER([exception],               [ ], [AC_MSG_ERROR("missing exception headers")])
 AC_CHECK_HEADER([iostream],                [ ], [AC_MSG_ERROR("missing iostream headers" )])
@@ -36,8 +37,20 @@ AC_CHECK_HEADER([list],                    [ ], [AC_MSG_ERROR("missing list head
 AC_CHECK_HEADER([sstream],                 [ ], [AC_MSG_ERROR("missing sstream headers"  )])
 AC_CHECK_HEADER([string],                  [ ], [AC_MSG_ERROR("missing string headers"   )])
 AC_CHECK_HEADER([vector],                  [ ], [AC_MSG_ERROR("missing vector headers"   )])
+AC_CHECK_HEADER([jack/jack.h],             [ ], [AC_MSG_ERROR("missing jack headers"     )])
+AC_CHECK_HEADER([SDL/SDL.h],               [ ], [AC_MSG_ERROR("missing SDL headers"      )])
+AC_CHECK_HEADER([SDL/SDL_gfxPrimitives.h], [ ], [AC_MSG_ERROR("missing SDL_gfx headers"  )])
+AC_CHECK_HEADER([SDL/SDL_rotozoom.h],      [ ], [AC_MSG_ERROR("missing SDL_gfx headers"  )])
+AC_CHECK_HEADER([SDL2/SDL_ttf.h],           [ ], [AC_MSG_ERROR("missing SDL_ttf headers"  )])
+if test "$IS_MINGW" == "0" ; then
+  AC_CHECK_HEADER([X11/Xlib.h],            [ ], [AC_MSG_ERROR("missing x11 headers"      )])
+  AC_PATH_X
+fi
 
 AC_MSG_NOTICE(["Checking for libraries ..."])
+AC_CHECK_FUNC([atexit], [ ], [AC_MSG_ERROR("C library does not provide 'atexit'")])
+AC_CHECK_FUNC([memset], [ ], [AC_MSG_ERROR("C library does not provide 'memset'")])
+if test "$IS_MINGW" == "0" ; then
 AC_CHECK_LIB([jack],    [jack_activate                ], [ ], [AC_MSG_ERROR("jack library does not provide 'jack_activate'"                )])
 AC_CHECK_LIB([jack],    [jack_client_close            ], [ ], [AC_MSG_ERROR("jack library does not provide 'jack_client_close'"            )])
 AC_CHECK_LIB([jack],    [jack_client_open             ], [ ], [AC_MSG_ERROR("jack library does not provide 'jack_client_open'"             )])
@@ -87,18 +100,17 @@ AC_CHECK_LIB([SDL_ttf], [TTF_OpenFont                 ], [ ], [AC_MSG_ERROR("SDL
 AC_CHECK_LIB([SDL_ttf], [TTF_RenderText_Solid         ], [ ], [AC_MSG_ERROR("SDL_ttf library does not provide 'TTF_RenderText_Solid'"      )])
 AC_CHECK_LIB([X11],     [XGetWindowAttributes         ], [ ], [AC_MSG_ERROR("x11 library does not provide 'XGetWindowAttributes'"          )])
 AC_CHECK_LIB([X11],     [XOpenDisplay                 ], [ ], [AC_MSG_ERROR("x11 library does not provide 'XOpenDisplay'"                  )])
-
-AC_MSG_NOTICE(["Checking for standard libraries ..."])
-AC_CHECK_FUNC([atexit], [ ], [AC_MSG_ERROR("C library does not provide 'atexit'")])
-AC_CHECK_FUNC([memset], [ ], [AC_MSG_ERROR("C library does not provide 'memset'")])
+fi
 
 AC_MSG_NOTICE(["Checking for pkg-config flags ..."])
 PKG_PROG_PKG_CONFIG([])
 PKG_CHECK_MODULES([JACK],    [jack   ])
 PKG_CHECK_MODULES([SDL],     [sdl    ])
 PKG_CHECK_MODULES([SDL_gfx], [SDL_gfx])
-PKG_CHECK_MODULES([SDL_ttf], [SDL_ttf])
+PKG_CHECK_MODULES([SDL2_ttf], [SDL2_ttf])
+if test "$IS_MINGW" == "0" ; then
 PKG_CHECK_MODULES([X11],     [x11    ])
+fi
 
 AC_MSG_NOTICE(["Generating output files ..."])
 AC_OUTPUT

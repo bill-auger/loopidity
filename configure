@@ -628,8 +628,8 @@ LTLIBOBJS
 LIBOBJS
 X11_LIBS
 X11_CFLAGS
-SDL_ttf_LIBS
-SDL_ttf_CFLAGS
+SDL2_ttf_LIBS
+SDL2_ttf_CFLAGS
 SDL_gfx_LIBS
 SDL_gfx_CFLAGS
 SDL_LIBS
@@ -667,6 +667,14 @@ CPPFLAGS
 LDFLAGS
 CXXFLAGS
 CXX
+host_os
+host_vendor
+host_cpu
+host
+build_os
+build_vendor
+build_cpu
+build
 AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
 AM_DEFAULT_V
@@ -762,8 +770,8 @@ SDL_CFLAGS
 SDL_LIBS
 SDL_gfx_CFLAGS
 SDL_gfx_LIBS
-SDL_ttf_CFLAGS
-SDL_ttf_LIBS
+SDL2_ttf_CFLAGS
+SDL2_ttf_LIBS
 X11_CFLAGS
 X11_LIBS'
 
@@ -1382,6 +1390,10 @@ Program names:
 X features:
   --x-includes=DIR    X include files are in DIR
   --x-libraries=DIR   X library files are in DIR
+
+System types:
+  --build=BUILD     configure for building on BUILD [guessed]
+  --host=HOST       cross-compile to build programs to run on HOST [BUILD]
 _ACEOF
 fi
 
@@ -1432,10 +1444,10 @@ Some influential environment variables:
               C compiler flags for SDL_gfx, overriding pkg-config
   SDL_gfx_LIBS
               linker flags for SDL_gfx, overriding pkg-config
-  SDL_ttf_CFLAGS
-              C compiler flags for SDL_ttf, overriding pkg-config
-  SDL_ttf_LIBS
-              linker flags for SDL_ttf, overriding pkg-config
+  SDL2_ttf_CFLAGS
+              C compiler flags for SDL2_ttf, overriding pkg-config
+  SDL2_ttf_LIBS
+              linker flags for SDL2_ttf, overriding pkg-config
   X11_CFLAGS  C compiler flags for X11, overriding pkg-config
   X11_LIBS    linker flags for X11, overriding pkg-config
 
@@ -1759,52 +1771,6 @@ $as_echo "$ac_res" >&6; }
 
 } # ac_fn_cxx_check_header_compile
 
-# ac_fn_cxx_try_link LINENO
-# -------------------------
-# Try to link conftest.$ac_ext, and return whether this succeeded.
-ac_fn_cxx_try_link ()
-{
-  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
-  rm -f conftest.$ac_objext conftest$ac_exeext
-  if { { ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
-$as_echo "$ac_try_echo"; } >&5
-  (eval "$ac_link") 2>conftest.err
-  ac_status=$?
-  if test -s conftest.err; then
-    grep -v '^ *+' conftest.err >conftest.er1
-    cat conftest.er1 >&5
-    mv -f conftest.er1 conftest.err
-  fi
-  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
-  test $ac_status = 0; } && {
-	 test -z "$ac_cxx_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext && {
-	 test "$cross_compiling" = yes ||
-	 test -x conftest$ac_exeext
-       }; then :
-  ac_retval=0
-else
-  $as_echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-	ac_retval=1
-fi
-  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
-  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
-  # interfere with the next link command; also delete a directory that is
-  # left behind by Apple's compiler.  We do this before executing the actions.
-  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
-  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
-  as_fn_set_status $ac_retval
-
-} # ac_fn_cxx_try_link
-
 # ac_fn_cxx_check_header_mongrel LINENO HEADER VAR INCLUDES
 # ---------------------------------------------------------
 # Tests whether HEADER exists, giving a warning if it cannot be compiled using
@@ -1895,6 +1861,52 @@ fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
 } # ac_fn_cxx_check_header_mongrel
+
+# ac_fn_cxx_try_link LINENO
+# -------------------------
+# Try to link conftest.$ac_ext, and return whether this succeeded.
+ac_fn_cxx_try_link ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  rm -f conftest.$ac_objext conftest$ac_exeext
+  if { { ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+$as_echo "$ac_try_echo"; } >&5
+  (eval "$ac_link") 2>conftest.err
+  ac_status=$?
+  if test -s conftest.err; then
+    grep -v '^ *+' conftest.err >conftest.er1
+    cat conftest.er1 >&5
+    mv -f conftest.er1 conftest.err
+  fi
+  $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 test -x conftest$ac_exeext
+       }; then :
+  ac_retval=0
+else
+  $as_echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_retval=1
+fi
+  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
+  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
+  # interfere with the next link command; also delete a directory that is
+  # left behind by Apple's compiler.  We do this before executing the actions.
+  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+  as_fn_set_status $ac_retval
+
+} # ac_fn_cxx_try_link
 
 # ac_fn_cxx_check_func LINENO FUNC VAR
 # ------------------------------------
@@ -2970,6 +2982,85 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
+
+# Make sure we can run config.sub.
+$SHELL "$ac_aux_dir/config.sub" sun4 >/dev/null 2>&1 ||
+  as_fn_error $? "cannot run $SHELL $ac_aux_dir/config.sub" "$LINENO" 5
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking build system type" >&5
+$as_echo_n "checking build system type... " >&6; }
+if ${ac_cv_build+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_build_alias=$build_alias
+test "x$ac_build_alias" = x &&
+  ac_build_alias=`$SHELL "$ac_aux_dir/config.guess"`
+test "x$ac_build_alias" = x &&
+  as_fn_error $? "cannot guess build type; you must specify one" "$LINENO" 5
+ac_cv_build=`$SHELL "$ac_aux_dir/config.sub" $ac_build_alias` ||
+  as_fn_error $? "$SHELL $ac_aux_dir/config.sub $ac_build_alias failed" "$LINENO" 5
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_build" >&5
+$as_echo "$ac_cv_build" >&6; }
+case $ac_cv_build in
+*-*-*) ;;
+*) as_fn_error $? "invalid value of canonical build" "$LINENO" 5;;
+esac
+build=$ac_cv_build
+ac_save_IFS=$IFS; IFS='-'
+set x $ac_cv_build
+shift
+build_cpu=$1
+build_vendor=$2
+shift; shift
+# Remember, the first character of IFS is used to create $*,
+# except with old shells:
+build_os=$*
+IFS=$ac_save_IFS
+case $build_os in *\ *) build_os=`echo "$build_os" | sed 's/ /-/g'`;; esac
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking host system type" >&5
+$as_echo_n "checking host system type... " >&6; }
+if ${ac_cv_host+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test "x$host_alias" = x; then
+  ac_cv_host=$ac_cv_build
+else
+  ac_cv_host=`$SHELL "$ac_aux_dir/config.sub" $host_alias` ||
+    as_fn_error $? "$SHELL $ac_aux_dir/config.sub $host_alias failed" "$LINENO" 5
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_host" >&5
+$as_echo "$ac_cv_host" >&6; }
+case $ac_cv_host in
+*-*-*) ;;
+*) as_fn_error $? "invalid value of canonical host" "$LINENO" 5;;
+esac
+host=$ac_cv_host
+ac_save_IFS=$IFS; IFS='-'
+set x $ac_cv_host
+shift
+host_cpu=$1
+host_vendor=$2
+shift; shift
+# Remember, the first character of IFS is used to create $*,
+# except with old shells:
+host_os=$*
+IFS=$ac_save_IFS
+case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
+
+
+case $host_os in
+  mingw32.static|mingw32.shared)
+    { $as_echo "$as_me:${as_lineno-$LINENO}: \"Detected mingw cross-compile ($build_os => $host_os)\"" >&5
+$as_echo "$as_me: \"Detected mingw cross-compile ($build_os => $host_os)\"" >&6;}
+    IS_MINGW=1
+    ;;
+esac
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: \"Checking for programs ...\"" >&5
 $as_echo "$as_me: \"Checking for programs ...\"" >&6;}
@@ -5787,7 +5878,128 @@ fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: \"Checking for header files  ...\"" >&5
 $as_echo "$as_me: \"Checking for header files  ...\"" >&6;}
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for X" >&5
+ac_fn_cxx_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_stat_h" = xyes; then :
+
+else
+  as_fn_error $? "\"missing stat header\"      " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "unistd.h" "ac_cv_header_unistd_h" "$ac_includes_default"
+if test "x$ac_cv_header_unistd_h" = xyes; then :
+
+else
+  as_fn_error $? "\"missing unistd header\"    " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "cstdlib" "ac_cv_header_cstdlib" "$ac_includes_default"
+if test "x$ac_cv_header_cstdlib" = xyes; then :
+
+else
+  as_fn_error $? "\"missing cstdlib headers\"  " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "exception" "ac_cv_header_exception" "$ac_includes_default"
+if test "x$ac_cv_header_exception" = xyes; then :
+
+else
+  as_fn_error $? "\"missing exception headers\"" "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "iostream" "ac_cv_header_iostream" "$ac_includes_default"
+if test "x$ac_cv_header_iostream" = xyes; then :
+
+else
+  as_fn_error $? "\"missing iostream headers\" " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "list" "ac_cv_header_list" "$ac_includes_default"
+if test "x$ac_cv_header_list" = xyes; then :
+
+else
+  as_fn_error $? "\"missing list headers\"     " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "sstream" "ac_cv_header_sstream" "$ac_includes_default"
+if test "x$ac_cv_header_sstream" = xyes; then :
+
+else
+  as_fn_error $? "\"missing sstream headers\"  " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "string" "ac_cv_header_string" "$ac_includes_default"
+if test "x$ac_cv_header_string" = xyes; then :
+
+else
+  as_fn_error $? "\"missing string headers\"   " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "vector" "ac_cv_header_vector" "$ac_includes_default"
+if test "x$ac_cv_header_vector" = xyes; then :
+
+else
+  as_fn_error $? "\"missing vector headers\"   " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "jack/jack.h" "ac_cv_header_jack_jack_h" "$ac_includes_default"
+if test "x$ac_cv_header_jack_jack_h" = xyes; then :
+
+else
+  as_fn_error $? "\"missing jack headers\"     " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "SDL/SDL.h" "ac_cv_header_SDL_SDL_h" "$ac_includes_default"
+if test "x$ac_cv_header_SDL_SDL_h" = xyes; then :
+
+else
+  as_fn_error $? "\"missing SDL headers\"      " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "SDL/SDL_gfxPrimitives.h" "ac_cv_header_SDL_SDL_gfxPrimitives_h" "$ac_includes_default"
+if test "x$ac_cv_header_SDL_SDL_gfxPrimitives_h" = xyes; then :
+
+else
+  as_fn_error $? "\"missing SDL_gfx headers\"  " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "SDL/SDL_rotozoom.h" "ac_cv_header_SDL_SDL_rotozoom_h" "$ac_includes_default"
+if test "x$ac_cv_header_SDL_SDL_rotozoom_h" = xyes; then :
+
+else
+  as_fn_error $? "\"missing SDL_gfx headers\"  " "$LINENO" 5
+fi
+
+
+ac_fn_cxx_check_header_mongrel "$LINENO" "SDL2/SDL_ttf.h" "ac_cv_header_SDL2_SDL_ttf_h" "$ac_includes_default"
+if test "x$ac_cv_header_SDL2_SDL_ttf_h" = xyes; then :
+
+else
+  as_fn_error $? "\"missing SDL_ttf headers\"  " "$LINENO" 5
+fi
+
+
+if test "$IS_MINGW" == "0" ; then
+  ac_fn_cxx_check_header_mongrel "$LINENO" "X11/Xlib.h" "ac_cv_header_X11_Xlib_h" "$ac_includes_default"
+if test "x$ac_cv_header_X11_Xlib_h" = xyes; then :
+
+else
+  as_fn_error $? "\"missing x11 headers\"      " "$LINENO" 5
+fi
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for X" >&5
 $as_echo_n "checking for X... " >&6; }
 
 
@@ -5980,129 +6192,25 @@ else
 $as_echo "libraries $x_libraries, headers $x_includes" >&6; }
 fi
 
-ac_fn_cxx_check_header_mongrel "$LINENO" "jack/jack.h" "ac_cv_header_jack_jack_h" "$ac_includes_default"
-if test "x$ac_cv_header_jack_jack_h" = xyes; then :
-
-else
-  as_fn_error $? "\"missing jack headers\"     " "$LINENO" 5
 fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "SDL/SDL.h" "ac_cv_header_SDL_SDL_h" "$ac_includes_default"
-if test "x$ac_cv_header_SDL_SDL_h" = xyes; then :
-
-else
-  as_fn_error $? "\"missing SDL headers\"      " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "SDL/SDL_gfxPrimitives.h" "ac_cv_header_SDL_SDL_gfxPrimitives_h" "$ac_includes_default"
-if test "x$ac_cv_header_SDL_SDL_gfxPrimitives_h" = xyes; then :
-
-else
-  as_fn_error $? "\"missing SDL_gfx headers\"  " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "SDL/SDL_rotozoom.h" "ac_cv_header_SDL_SDL_rotozoom_h" "$ac_includes_default"
-if test "x$ac_cv_header_SDL_SDL_rotozoom_h" = xyes; then :
-
-else
-  as_fn_error $? "\"missing SDL_gfx headers\"  " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "SDL/SDL_ttf.h" "ac_cv_header_SDL_SDL_ttf_h" "$ac_includes_default"
-if test "x$ac_cv_header_SDL_SDL_ttf_h" = xyes; then :
-
-else
-  as_fn_error $? "\"missing SDL_ttf headers\"  " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
-if test "x$ac_cv_header_sys_stat_h" = xyes; then :
-
-else
-  as_fn_error $? "\"missing stat header\"      " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "unistd.h" "ac_cv_header_unistd_h" "$ac_includes_default"
-if test "x$ac_cv_header_unistd_h" = xyes; then :
-
-else
-  as_fn_error $? "\"missing unistd header\"    " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "X11/Xlib.h" "ac_cv_header_X11_Xlib_h" "$ac_includes_default"
-if test "x$ac_cv_header_X11_Xlib_h" = xyes; then :
-
-else
-  as_fn_error $? "\"missing x11 headers\"      " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "cstdlib" "ac_cv_header_cstdlib" "$ac_includes_default"
-if test "x$ac_cv_header_cstdlib" = xyes; then :
-
-else
-  as_fn_error $? "\"missing cstdlib headers\"  " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "exception" "ac_cv_header_exception" "$ac_includes_default"
-if test "x$ac_cv_header_exception" = xyes; then :
-
-else
-  as_fn_error $? "\"missing exception headers\"" "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "iostream" "ac_cv_header_iostream" "$ac_includes_default"
-if test "x$ac_cv_header_iostream" = xyes; then :
-
-else
-  as_fn_error $? "\"missing iostream headers\" " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "list" "ac_cv_header_list" "$ac_includes_default"
-if test "x$ac_cv_header_list" = xyes; then :
-
-else
-  as_fn_error $? "\"missing list headers\"     " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "sstream" "ac_cv_header_sstream" "$ac_includes_default"
-if test "x$ac_cv_header_sstream" = xyes; then :
-
-else
-  as_fn_error $? "\"missing sstream headers\"  " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "string" "ac_cv_header_string" "$ac_includes_default"
-if test "x$ac_cv_header_string" = xyes; then :
-
-else
-  as_fn_error $? "\"missing string headers\"   " "$LINENO" 5
-fi
-
-
-ac_fn_cxx_check_header_mongrel "$LINENO" "vector" "ac_cv_header_vector" "$ac_includes_default"
-if test "x$ac_cv_header_vector" = xyes; then :
-
-else
-  as_fn_error $? "\"missing vector headers\"   " "$LINENO" 5
-fi
-
-
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: \"Checking for libraries ...\"" >&5
 $as_echo "$as_me: \"Checking for libraries ...\"" >&6;}
+ac_fn_cxx_check_func "$LINENO" "atexit" "ac_cv_func_atexit"
+if test "x$ac_cv_func_atexit" = xyes; then :
+
+else
+  as_fn_error $? "\"C library does not provide 'atexit'\"" "$LINENO" 5
+fi
+
+ac_fn_cxx_check_func "$LINENO" "memset" "ac_cv_func_memset"
+if test "x$ac_cv_func_memset" = xyes; then :
+
+else
+  as_fn_error $? "\"C library does not provide 'memset'\"" "$LINENO" 5
+fi
+
+if test "$IS_MINGW" == "0" ; then
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for jack_activate                 in -ljack" >&5
 $as_echo_n "checking for jack_activate                 in -ljack... " >&6; }
 if ${ac_cv_lib_jack_jack_activate________________+:} false; then :
@@ -8161,23 +8269,7 @@ else
   as_fn_error $? "\"x11 library does not provide 'XOpenDisplay'\"                  " "$LINENO" 5
 fi
 
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: \"Checking for standard libraries ...\"" >&5
-$as_echo "$as_me: \"Checking for standard libraries ...\"" >&6;}
-ac_fn_cxx_check_func "$LINENO" "atexit" "ac_cv_func_atexit"
-if test "x$ac_cv_func_atexit" = xyes; then :
-
-else
-  as_fn_error $? "\"C library does not provide 'atexit'\"" "$LINENO" 5
 fi
-
-ac_fn_cxx_check_func "$LINENO" "memset" "ac_cv_func_memset"
-if test "x$ac_cv_func_memset" = xyes; then :
-
-else
-  as_fn_error $? "\"C library does not provide 'memset'\"" "$LINENO" 5
-fi
-
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: \"Checking for pkg-config flags ...\"" >&5
 $as_echo "$as_me: \"Checking for pkg-config flags ...\"" >&6;}
@@ -8576,19 +8668,19 @@ $as_echo "yes" >&6; }
 fi
 
 pkg_failed=no
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL_ttf" >&5
-$as_echo_n "checking for SDL_ttf... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for SDL2_ttf" >&5
+$as_echo_n "checking for SDL2_ttf... " >&6; }
 
-if test -n "$SDL_ttf_CFLAGS"; then
-    pkg_cv_SDL_ttf_CFLAGS="$SDL_ttf_CFLAGS"
+if test -n "$SDL2_ttf_CFLAGS"; then
+    pkg_cv_SDL2_ttf_CFLAGS="$SDL2_ttf_CFLAGS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"SDL_ttf\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "SDL_ttf") 2>&5
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"SDL2_ttf\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "SDL2_ttf") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_SDL_ttf_CFLAGS=`$PKG_CONFIG --cflags "SDL_ttf" 2>/dev/null`
+  pkg_cv_SDL2_ttf_CFLAGS=`$PKG_CONFIG --cflags "SDL2_ttf" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -8596,16 +8688,16 @@ fi
  else
     pkg_failed=untried
 fi
-if test -n "$SDL_ttf_LIBS"; then
-    pkg_cv_SDL_ttf_LIBS="$SDL_ttf_LIBS"
+if test -n "$SDL2_ttf_LIBS"; then
+    pkg_cv_SDL2_ttf_LIBS="$SDL2_ttf_LIBS"
  elif test -n "$PKG_CONFIG"; then
     if test -n "$PKG_CONFIG" && \
-    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"SDL_ttf\""; } >&5
-  ($PKG_CONFIG --exists --print-errors "SDL_ttf") 2>&5
+    { { $as_echo "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"SDL2_ttf\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "SDL2_ttf") 2>&5
   ac_status=$?
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; }; then
-  pkg_cv_SDL_ttf_LIBS=`$PKG_CONFIG --libs "SDL_ttf" 2>/dev/null`
+  pkg_cv_SDL2_ttf_LIBS=`$PKG_CONFIG --libs "SDL2_ttf" 2>/dev/null`
 		      test "x$?" != "x0" && pkg_failed=yes
 else
   pkg_failed=yes
@@ -8626,22 +8718,22 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        SDL_ttf_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "SDL_ttf" 2>&1`
+	        SDL2_ttf_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "SDL2_ttf" 2>&1`
         else
-	        SDL_ttf_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "SDL_ttf" 2>&1`
+	        SDL2_ttf_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "SDL2_ttf" 2>&1`
         fi
 	# Put the nasty error message in config.log where it belongs
-	echo "$SDL_ttf_PKG_ERRORS" >&5
+	echo "$SDL2_ttf_PKG_ERRORS" >&5
 
-	as_fn_error $? "Package requirements (SDL_ttf) were not met:
+	as_fn_error $? "Package requirements (SDL2_ttf) were not met:
 
-$SDL_ttf_PKG_ERRORS
+$SDL2_ttf_PKG_ERRORS
 
 Consider adjusting the PKG_CONFIG_PATH environment variable if you
 installed software in a non-standard prefix.
 
-Alternatively, you may set the environment variables SDL_ttf_CFLAGS
-and SDL_ttf_LIBS to avoid the need to call pkg-config.
+Alternatively, you may set the environment variables SDL2_ttf_CFLAGS
+and SDL2_ttf_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details." "$LINENO" 5
 elif test $pkg_failed = untried; then
      	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
@@ -8652,19 +8744,20 @@ as_fn_error $? "The pkg-config script could not be found or is too old.  Make su
 is in your PATH or set the PKG_CONFIG environment variable to the full
 path to pkg-config.
 
-Alternatively, you may set the environment variables SDL_ttf_CFLAGS
-and SDL_ttf_LIBS to avoid the need to call pkg-config.
+Alternatively, you may set the environment variables SDL2_ttf_CFLAGS
+and SDL2_ttf_LIBS to avoid the need to call pkg-config.
 See the pkg-config man page for more details.
 
 To get pkg-config, see <http://pkg-config.freedesktop.org/>.
 See \`config.log' for more details" "$LINENO" 5; }
 else
-	SDL_ttf_CFLAGS=$pkg_cv_SDL_ttf_CFLAGS
-	SDL_ttf_LIBS=$pkg_cv_SDL_ttf_LIBS
+	SDL2_ttf_CFLAGS=$pkg_cv_SDL2_ttf_CFLAGS
+	SDL2_ttf_LIBS=$pkg_cv_SDL2_ttf_LIBS
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 
 fi
+if test "$IS_MINGW" == "0" ; then
 
 pkg_failed=no
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for X11" >&5
@@ -8755,6 +8848,7 @@ else
         { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 
+fi
 fi
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: \"Generating output files ...\"" >&5

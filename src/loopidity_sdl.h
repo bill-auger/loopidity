@@ -27,7 +27,7 @@
 
 #include <SDL/SDL_gfxPrimitives.h>
 #include <SDL/SDL_rotozoom.h>
-#include <SDL/SDL_ttf.h>
+#include <SDL2/SDL_ttf.h>
 #ifndef _WIN32
 #  include <X11/Xlib.h>
 #endif // _WIN32
