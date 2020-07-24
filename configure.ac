@@ -17,7 +17,7 @@ case $host_os in
     IS_MINGW=1
     ;;
 esac
-
+IS_MINGW=0
 AC_MSG_NOTICE(["Checking for programs ..."])
 AC_PROG_CXX
 AC_PROG_CC
@@ -41,7 +41,7 @@ AC_CHECK_HEADER([jack/jack.h],             [ ], [AC_MSG_ERROR("missing jack head
 AC_CHECK_HEADER([SDL/SDL.h],               [ ], [AC_MSG_ERROR("missing SDL headers"      )])
 AC_CHECK_HEADER([SDL/SDL_gfxPrimitives.h], [ ], [AC_MSG_ERROR("missing SDL_gfx headers"  )])
 AC_CHECK_HEADER([SDL/SDL_rotozoom.h],      [ ], [AC_MSG_ERROR("missing SDL_gfx headers"  )])
-AC_CHECK_HEADER([SDL2/SDL_ttf.h],           [ ], [AC_MSG_ERROR("missing SDL_ttf headers"  )])
+AC_CHECK_HEADER([SDL/SDL_ttf.h],           [ ], [AC_MSG_ERROR("missing SDL_ttf headers"  )])
 if test "$IS_MINGW" == "0" ; then
   AC_CHECK_HEADER([X11/Xlib.h],            [ ], [AC_MSG_ERROR("missing x11 headers"      )])
   AC_PATH_X
@@ -107,7 +107,7 @@ PKG_PROG_PKG_CONFIG([])
 PKG_CHECK_MODULES([JACK],    [jack   ])
 PKG_CHECK_MODULES([SDL],     [sdl    ])
 PKG_CHECK_MODULES([SDL_gfx], [SDL_gfx])
-PKG_CHECK_MODULES([SDL2_ttf], [SDL2_ttf])
+PKG_CHECK_MODULES([SDL_ttf], [SDL_ttf])
 if test "$IS_MINGW" == "0" ; then
 PKG_CHECK_MODULES([X11],     [x11    ])
 fi

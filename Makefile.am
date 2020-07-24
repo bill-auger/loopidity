@@ -28,11 +28,11 @@ man1_MANS         = doc/loopidity.1
 EXTRA_DIST        = $(man_MANS)
 
 
-loopidity_CXXFLAGS  = $(JACK_CFLAGS) $(SDL_CFLAGS) $(SDL_gfx_CFLAGS) $(SDL2_ttf_CFLAGS) $(X11_CFLAGS)
+loopidity_CXXFLAGS  = $(JACK_CFLAGS) $(SDL_CFLAGS) $(SDL_gfx_CFLAGS) $(SDL_ttf_CFLAGS) $(X11_CFLAGS)
 loopidity_CXXFLAGS += -DLOOPIDITY_BINDIR=\"$(bindir)\"
 loopidity_CXXFLAGS += -DLOOPIDITY_DATADIR=\"$(loopiditydir)\"
 loopidity_CXXFLAGS += -Wall -Wextra -Wformat -Werror
-loopidity_LDADD     = $(JACK_LIBS) $(SDL_LIBS) $(SDL_gfx_LIBS) $(SDL2_ttf_LIBS) $(X11_LIBS)
+loopidity_LDADD     = $(JACK_LIBS) $(SDL_LIBS) $(SDL_gfx_LIBS) $(SDL_ttf_LIBS) $(X11_LIBS)
 
 
 installcheck-local:
