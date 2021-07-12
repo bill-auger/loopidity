@@ -1,4 +1,7 @@
 ### This is Loopidity *- A multi-track, multi-channel, looping audio recorder for GNU/Linux and Windows - designed for live handsfree use*
+
+[![Join the chat at https://gitter.im/bill-auger/loopidity](https://badges.gitter.im/bill-auger/loopidity.svg)](https://gitter.im/bill-auger/loopidity?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 | build status: | linux [![linux build status][linux-img]][travis] | windows [![windows build status][windows-img]][travis] | latest-dev [![latest build status][latest-img]][travis] |
 | ------------- | ------------------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------- |
 
