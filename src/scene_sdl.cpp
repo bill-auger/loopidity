@@ -239,6 +239,8 @@ void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sce
   hlineColor(surface , SceneL , SceneR , LoopsT , SCOPE_PEAK_MAX_COLOR) ;
   hlineColor(surface , SceneL , SceneR , Loops0 , SCOPE_PEAK_ZERO_COLOR) ;
   hlineColor(surface , SceneL , SceneR , LoopsB , SCOPE_PEAK_MAX_COLOR) ;
+#else
+  (void)currentPeakN ; // #if DRAW_SCENE_SCOPE
 #endif // #if DRAW_SCENE_SCOPE
 
   // draw loops
@@ -249,6 +251,8 @@ void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sce
     histogramRect.x = histogramImg->loopL - 1 ;
     SDL_BlitSurface(histogramImg->currentSurface , 0 , surface , &histogramRect) ;
     vlineColor(surface , histogramImg->loopL + sceneProgress , HistogramsT , HistogramsB , PEAK_CURRENT_COLOR) ;
+#else // #if DRAW_HISTOGRAMS
+    (void)sceneProgress ; // unused
 #endif // #if DRAW_HISTOGRAMS
 
 #if DRAW_LOOPS
@@ -257,6 +261,8 @@ void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sce
     rotImg  = rotozoomSurface(loopImg->currentSurface , currentPeakN * PieSliceDegrees , 1.0 , 0) ;
     rotRect = {(Sint16)(loopImg->loopC - (rotImg->w / 2)) , (Sint16)(Loops0 - (rotImg->h / 2)) , 0 , 0} ;
     SDL_BlitSurface(rotImg , 0 , surface , &rotRect) ; SDL_FreeSurface(rotImg) ;
+#else
+    (void)currentPeakN ; // #if DRAW_LOOPS
 #endif // #if DRAW_LOOPS
 
 #if DRAW_PEAK_RINGS
@@ -267,6 +273,8 @@ void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sce
     circleColor(surface , loopImg->loopC , Loops0 , ringR , LOOP_PEAK_MAX_COLOR) ;
     ringR = (Sint16)(scene->getLoop(loopN)->getPeakFine(currentPeakN) * (float)PEAK_RADIUS) ;
     circleColor(surface , loopImg->loopC , Loops0 , ringR , PEAK_CURRENT_COLOR) ;
+#else
+    (void)currentPeakN ; // #if DRAW_PEAK_RINGS
 #endif // #if DRAW_PEAK_RINGS
   } // for (loopN)
 }
@@ -312,11 +320,11 @@ const Uint16 ToggleFrameR     = SceneFrameR + 4 ;
 
 LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
 {
-#if DRAW_HISTOGRAMS
   SDL_Surface* histogramGradient = LoopiditySdl::HistogramGradient ;
   SDL_Surface* playingSurface    = createSwSurface(HistSurfaceW , HistSurfaceH) ;
   SDL_Surface* mutedSurface      = createSwSurface(HistSurfaceW , HistSurfaceH) ;
 
+#if DRAW_HISTOGRAMS
   // draw histogram border
   LoopiditySdl::DrawBorder(playingSurface , 0 , 0 , HistFrameR , HistFrameB , STATE_PLAYING_COLOR) ;
 
@@ -346,18 +354,20 @@ LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
   }
   SDL_UnlockSurface(playingSurface) ; SDL_UnlockSurface(mutedSurface) ;
 #  endif // #if DRAW_MUTED_HISTOGRAMS
+#else // #if DRAW_HISTOGRAMS
+  (void)aLoop ; (void)histogramGradient ; // unused
+#endif // #if DRAW_HISTOGRAMS
 
   return new LoopSdl(playingSurface , mutedSurface , GetLoopL(loopN) , LoopsT) ;
-#endif // #if DRAW_HISTOGRAMS
 }
 
 LoopSdl* SceneSdl::drawLoop(Loop* aLoop , Uint16 loopN)
 {
-#if DRAW_LOOPS
   SDL_Surface* loopGradient   = SDL_DisplayFormat(LoopiditySdl::LoopGradient) ;
   SDL_Surface* playingSurface = createSwSurface(loopGradient->w , loopGradient->h) ;
   SDL_Surface* mutedSurface   = createSwSurface(loopGradient->w , loopGradient->h) ;
 
+#if DRAW_LOOPS
   // draw loop mask
   SDL_Surface* maskSurface = createSwSurface(LoopD , LoopD) ;
   for (Uint16 peakN = 0 ; peakN < N_PEAKS_FINE ; ++peakN)
@@ -395,9 +405,11 @@ LoopSdl* SceneSdl::drawLoop(Loop* aLoop , Uint16 loopN)
   SDL_UnlockSurface(maskSurface)    ; SDL_FreeSurface(maskSurface) ;
   SDL_UnlockSurface(playingSurface) ; SDL_UnlockSurface(mutedSurface) ;
   SDL_UnlockSurface(loopGradient) ;
+#else // #if DRAW_LOOPS
+  (void)aLoop ; // unused
+#endif // #if DRAW_LOOPS
 
   return new LoopSdl(playingSurface , mutedSurface , GetLoopL(loopN) , LoopsT) ;
-#endif // #if DRAW_LOOPS
 }
 
 
@@ -409,13 +421,8 @@ DEBUG_TRACE_SCENESDL_ADDLOOP_IN
 
   if (loopImgs.size() != scene->loops.size() - 1) return ;
 
-#if DRAW_HISTOGRAMS
   histogramImgs.push_back(drawHistogram(newLoop)) ;
-#endif // #if DRAW_HISTOGRAMS
-
-#if DRAW_LOOPS
-  loopImgs.push_back(drawLoop(newLoop , loopN)) ;
-#endif // #if DRAW_LOOPS
+  loopImgs     .push_back(drawLoop(newLoop , loopN)) ;
 
 DEBUG_TRACE_SCENESDL_ADDLOOP_OUT
 }
