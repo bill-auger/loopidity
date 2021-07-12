@@ -59,8 +59,8 @@ jack_port_t*   JackIO::OutputPort2 = 0 ; // Init()
 // app state
 Scene*       JackIO::CurrentScene  = 0 ; // Reset()
 Scene*       JackIO::NextScene     = 0 ; // Reset()
-//Uint32 JackIO::CurrentSceneN = 0 ;
-//Uint32 JackIO::NextSceneN    = 0 ;
+//Uint8 JackIO::CurrentSceneN = 0 ;
+//Uint8 JackIO::NextSceneN    = 0 ;
 
 // audio data
 Uint32       JackIO::RecordBufferSize = 0 ; // Init()
@@ -361,15 +361,23 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
   Sample* in4  = (Sample*)jack_port_get_buffer(InputPort4  , nFramesPerPeriod) ;
   Sample* out1 = (Sample*)jack_port_get_buffer(OutputPort1 , nFramesPerPeriod) ;
   Sample* out2 = (Sample*)jack_port_get_buffer(OutputPort2 , nFramesPerPeriod) ;
-#    else // FIXED_N_AUDIO_PORTS // TODO:
+#    else // FIXED_N_AUDIO_PORTS
+ERROR: NYI // TODO:
 #    endif // FIXED_N_AUDIO_PORTS
 
-  // index into the record buffers and mix out
-  std::list<Loop*>::iterator loopIter , loopsBeginIter , loopsEndIter ; Loop* aLoop ; float vol ;
-  loopsBeginIter      = CurrentScene->loops.begin() ;
-  loopsEndIter        = CurrentScene->loops.end() ;
-  Uint32 mixFrameN    = CurrentScene->currentFrameN ;//+ BufferMarginSize ;
-  Uint32 sceneFrameN  = CurrentScene->currentFrameN , frameN ;
+  // index into the record buffers
+//   std::list<Loop*>::iterator loopIter , loopsBeginIter , loopsEndIter ; Loop* aLoop ; float vol ;
+  Uint32 mixFrameN   = CurrentScene->currentFrameN ; // + BufferMarginSize ;
+  Uint32 sceneFrameN = CurrentScene->currentFrameN ;
+  Uint32 frameN ;
+
+  std::list<Loop*>::iterator loopsBeginIter = CurrentScene->loops.begin() ;
+  std::list<Loop*>::iterator loopsEndIter   = CurrentScene->loops.end() ;
+  std::list<Loop*>::iterator loopIter ;
+  Loop* aLoop ;
+  float vol ;
+
+  // mix out
   for (frameN = 0 ; frameN < nFramesPerPeriod ; ++frameN && ++mixFrameN && ++sceneFrameN)
   {
     // write inputs to record buffers
@@ -392,7 +400,7 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
   }
 #  endif // #if JACK_IO_READ_WRITE
 
-#    if FIXED_N_AUDIO_PORTS
+#  if FIXED_N_AUDIO_PORTS
   // load VU peaks cache (per channel)
   Sample peak ;
   if ((peak = GetPeak(in1  , nFramesPerPeriod)) > PeaksVuIn [0]) PeaksVuIn [0] = peak ;
@@ -401,8 +409,9 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_IN
   if ((peak = GetPeak(in4  , nFramesPerPeriod)) > PeaksVuIn [3]) PeaksVuIn [3] = peak ;
   if ((peak = GetPeak(out1 , nFramesPerPeriod)) > PeaksVuOut[0]) PeaksVuOut[0] = peak ;
   if ((peak = GetPeak(out2 , nFramesPerPeriod)) > PeaksVuOut[1]) PeaksVuOut[1] = peak ;
-#    else // FIXED_N_AUDIO_PORTS // TODO:
-#    endif // FIXED_N_AUDIO_PORTS
+#  else // FIXED_N_AUDIO_PORTS
+ERROR: NYI // TODO:
+#  endif // FIXED_N_AUDIO_PORTS
 
   // increment ring buffer index or rollover
   if (!((CurrentScene->currentFrameN += nFramesPerPeriod) % CurrentScene->endFrameN))
@@ -460,6 +469,7 @@ list<Loop*>::iterator loopIter ; Loop* aLoop ; float vol ;
     {
       if ((NewLoopEventLoop = new (std::nothrow) Loop(CurrentScene->nFrames)))
       {
+                                                                                                                                                                                                                                                                                                                                                                                                                                                   X
         memcpy(EventLoopCreationLoop->buffer1 , RecordBuffer1 , CurrentScene->nBytes) ;
         memcpy(EventLoopCreationLoop->buffer2 , RecordBuffer2 , CurrentScene->nBytes) ;
         NewLoopEventSceneN = CurrentScene->sceneN ; SDL_PushEvent(&NewLoopEvent) ;
@@ -615,7 +625,11 @@ DEBUG_TRACE_JACK_PROCESS_CALLBACK_ROLLOVER
   // create new Loop instance
   if (CurrentScene->shouldSaveLoop && nLoops < Loopidity::N_LOOPS)
   {
-// TODO: adjustable loop seams (issue #14)
+    // TODO: adjustable loop seams (issue #14)
+
+    // TODO: move new Loop allocation/mem-copy into SDL handler
+    //       signal here and toggle recording banks -
+    //       use previous bank as playback source for each Loop initial iter?
 
     // copy audio samples - (see note on RecordBuffer layout in jack_io.h)
     if ((NewLoopEventLoop = new (std::nothrow) Loop(nFrames + BufferMarginsSize)))

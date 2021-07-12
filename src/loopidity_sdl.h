@@ -32,8 +32,8 @@
 #  include <X11/Xlib.h>
 #endif // _WIN32
 
-#include "assets/fonts.h"
-#include "assets/images.h"
+#include "blobs/fonts.h"
+#include "blobs/images.h"
 #include "scene_sdl.h"
 
 

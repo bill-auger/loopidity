@@ -25,6 +25,8 @@
 #include <jack/jack.h>
 #include <SDL/SDL.h>
 
+typedef jack_default_audio_sample_t Sample ; // (aka: float)
+
 #include "loopidity.h"
 
 
@@ -41,6 +43,7 @@ class JackIO
   private:
 
     /* JackIO class side private constants */
+
     static const Uint16 N_SCOPE_PEAKS ;
     static const Uint32 DEFAULT_BUFFER_SIZE ;
     static const Uint32 N_BYTES_PER_FRAME ;

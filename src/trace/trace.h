@@ -21,6 +21,7 @@
 #ifndef _TRACE_H_
 #define _TRACE_H_
 
+#include "../constants/feature_constants.h"
 
 #define DBG(d)      Trace::Dbg(d)
 #define ERR(d)      Trace::Err(d)
@@ -35,8 +36,8 @@
 #  else // _WIN32
 #    define REDIRECT_WINDOWS_OUTPUT ;
 #  endif // _WIN32
-#  define DEBUG_TRACE_MAIN_IN   REDIRECT_WINDOWS_OUTPUT if (DEBUG_TRACE_EVS) DBG(INIT_MSG) ;
-#  define DEBUG_TRACE_MAIN_OUT  if (!!exitStatus) ERR(INIT_FAIL_MSG) ;
+#  define DEBUG_TRACE_MAIN_IN  REDIRECT_WINDOWS_OUTPUT if (DEBUG_TRACE_EVS) DBG(INIT_MSG) ;
+#  define DEBUG_TRACE_MAIN_OUT if (!!exitStatus) ERR(INIT_FAIL_MSG) ;
 #else
 #  define DEBUG_TRACE_MAIN_IN  ;
 #  define DEBUG_TRACE_MAIN_OUT ;
@@ -250,4 +251,4 @@ class Trace
 } ;
 
 
-#endif // #if _TRACE_H_
+#endif // #ifndef _TRACE_H_

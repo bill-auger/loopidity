@@ -25,16 +25,16 @@ build-aux/*
 !build-aux/install-sh
 !build-aux/missing
 
-# binary assets
-!assets/
-assets/*
-!assets/COPYING.fonts
-!assets/histogram_gradient.bmp
-!assets/LICENSES.assets
-!assets/loop_gradient.argb.bmp
-!assets/Purisa.ttf
-!assets/README.md
-!assets/scope_gradient.bmp
+# blobs
+!blobs/
+blobs/*
+!blobs/COPYING.fonts
+!blobs/histogram_gradient.bmp
+!blobs/LICENSES.blobs
+!blobs/loop_gradient.argb.bmp
+!blobs/Purisa.ttf
+!blobs/README.md
+!blobs/scope_gradient.bmp
 
 # debian packaging
 !debian/
@@ -79,16 +79,16 @@ obs/*
 # sources
 !src/
 src/*
-!src/assets/
-src/assets/*
-!src/assets/fonts.cpp
-!src/assets/fonts.h
-!src/assets/histogram_gradient.h
-!src/assets/images.cpp
-!src/assets/images.h
-!src/assets/loop_gradient.h
-!src/assets/purisa.h
-!src/assets/scope_gradient.h
+!src/blobs/
+src/blobs/*
+!src/blobs/fonts.cpp
+!src/blobs/fonts.h
+!src/blobs/histogram_gradient.h
+!src/blobs/images.cpp
+!src/blobs/images.h
+!src/blobs/loop_gradient.h
+!src/blobs/purisa.h
+!src/blobs/scope_gradient.h
 !src/constants/
 src/constants/*
 !src/constants/controller_constants.h

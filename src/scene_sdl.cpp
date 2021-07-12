@@ -18,7 +18,7 @@
 \*/
 
 
-#include "assets/images.h"
+#include "blobs/images.h"
 #include "constants/view_constants.h"
 #include "trace/trace.h"
 #include "loopidity_sdl.h"
@@ -97,7 +97,7 @@ SceneSdl::SceneSdl(Scene* a_scene , std::vector<Sample>* peaks_in) :
   sceneT(      SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,
   sceneFrameB( SCENE_FRAME_B) ,
-  sceneRect(   { 0 , sceneT , LoopiditySdl::WinRect.w , SceneH })
+  sceneRect(   { 0 , SCENE_T , LoopiditySdl::WinRect.w , SceneH })
 {
   // model
   scene   = a_scene ;
@@ -189,18 +189,16 @@ void SceneSdl::updateState(Uint8 currentSceneN , bool isRolling)
 DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN
 
   bool isCurrentScene = scene->sceneN == currentSceneN ;
-  sceneFrameColor     = (isCurrentScene)? STATE_PLAYING_COLOR : STATE_IDLE_COLOR ;
-  loopFrameColor      = (!isRolling)?
-      STATE_IDLE_COLOR : (scene->shouldSaveLoop)?
-          STATE_RECORDING_COLOR : STATE_PENDING_COLOR ;
+  sceneFrameColor     = (isCurrentScene) ? STATE_PLAYING_COLOR : STATE_IDLE_COLOR ;
+  loopFrameColor      = (!isRolling           ) ? STATE_IDLE_COLOR      :
+                        (scene->shouldSaveLoop) ? STATE_RECORDING_COLOR : STATE_PENDING_COLOR ;
 
   for (Uint16 loopN = 0 ; loopN < loopImgs.size() ; ++loopN)
   {
-    Uint16 loopState = (!scene->getLoop(loopN)->isMuted)?
-        STATE_LOOP_PLAYING : ((!scene->isMuted)?
-            STATE_LOOP_PENDING : STATE_LOOP_MUTED) ;
+    Uint16 loopState = (!scene->getLoop(loopN)->isMuted) ? STATE_LOOP_PLAYING :
+                       (!scene->isMuted                ) ? STATE_LOOP_PENDING : STATE_LOOP_MUTED ;
     getLoopView(&histogramImgs , loopN)->setStatus(loopState) ;
-    getLoopView(&loopImgs , loopN)->setStatus(loopState) ;
+    getLoopView(&loopImgs      , loopN)->setStatus(loopState) ;
   }
 
   if (isCurrentScene) LoopiditySdl::SetStatusL(makeDurationStatusText()) ;
@@ -223,10 +221,10 @@ LoopSdl* SceneSdl::getLoopView(std::list<LoopSdl*>* imgs , Uint32 loopN)
 void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sceneProgress)
 {
 // TODO: perhaps scene scope could/should be output mix (is hiScenePeak now)
-//		(e.g) hiScenePeaks[] is static so scenescope does not reflect loop->vol or loop->isMuted
+//       eg: hiScenePeaks[] is static so scenescope does not reflect loop->vol or loop->isMuted
 // TODO: perhaps draw full width histogram/progress mixing all loops in this sceneN
 // TODO: for better scene scope responsiveness we could add another peaks cache with N_PEAKS_FINE/guiInterval samples granularity (e.g. peaksMed)
-// TODO: we could cache the rotImgs if need be but as of now she's pretty slick
+// TODO: we could cache the rotImgs if need be; but as of now she's pretty slick
 
   SDL_FillRect(surface , 0 , LoopiditySdl::WINDOW_BG_COLOR) ;
 
@@ -263,6 +261,7 @@ void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sce
 
 #if DRAW_PEAK_RINGS
 // TODO: for efficiency these ringR could be computed and stored upon aLoopSdl creation
+
     // draw the current and loudest peaks in this loop as rings
     ringR = (Sint16)(scene->hiLoopPeaks[loopN] * (float)PEAK_RADIUS) ;
     circleColor(surface , loopImg->loopC , Loops0 , ringR , LOOP_PEAK_MAX_COLOR) ;
@@ -314,7 +313,7 @@ const Uint16 ToggleFrameR     = SceneFrameR + 4 ;
 LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
 {
 #if DRAW_HISTOGRAMS
-  SDL_Surface* HistogramGradient = LoopiditySdl::HistogramGradient ;
+  SDL_Surface* histogramGradient = LoopiditySdl::HistogramGradient ;
   SDL_Surface* playingSurface    = createSwSurface(HistSurfaceW , HistSurfaceH) ;
   SDL_Surface* mutedSurface      = createSwSurface(HistSurfaceW , HistSurfaceH) ;
 
@@ -327,10 +326,10 @@ LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
     peakH          = aLoop->getPeakCourse(histPeakN) * HistPeakH ;
     histMaskRect.y = Histogram0 - peakH ;             histMaskRect.h = (peakH * 2) + 1 ;
     histMaskRect.x = histGradRect.x = 1 + histPeakN ; histGradRect.y = histMaskRect.y ;
-    SDL_BlitSurface(HistogramGradient , &histMaskRect , playingSurface , &histGradRect) ;
+    SDL_BlitSurface(histogramGradient , &histMaskRect , playingSurface , &histGradRect) ;
   }
 
-#if DRAW_MUTED_HISTOGRAMS
+#  if DRAW_MUTED_HISTOGRAMS
   SDL_LockSurface(playingSurface) ; SDL_LockSurface(mutedSurface) ;
   Uint8* destPixel ; Uint32 srcPixel ;
   for (Uint16 y = 0 ; y < HistSurfaceH ; ++y) for (Uint16 x = 0 ; x < HistSurfaceW ; ++x)
@@ -346,7 +345,7 @@ LoopSdl* SceneSdl::drawHistogram(Loop* aLoop)
     *(Uint32*)destPixel = srcPixel ;
   }
   SDL_UnlockSurface(playingSurface) ; SDL_UnlockSurface(mutedSurface) ;
-#endif // #if DRAW_MUTED_HISTOGRAMS
+#  endif // #if DRAW_MUTED_HISTOGRAMS
 
   return new LoopSdl(playingSurface , mutedSurface , GetLoopL(loopN) , LoopsT) ;
 #endif // #if DRAW_HISTOGRAMS
@@ -429,12 +428,14 @@ DEBUG_TRACE_SCENESDL_DELETELOOP_IN
 
   std::list<LoopSdl*>::iterator histogramImgIter = histogramImgs.begin() ;
   std::list<LoopSdl*>::iterator loopImgIter      = loopImgs.begin() ;
-  while (loopN--)             { ++histogramImgIter ; ++loopImgIter ; }
+
+  while (loopN--) { ++histogramImgIter ; ++loopImgIter ; }
   if (!histogramImgs.empty()) histogramImgs.erase(histogramImgIter) ;
-  if (!loopImgs.empty())      loopImgs.erase(loopImgIter) ;
+  if (!loopImgs.empty()     ) loopImgs     .erase(loopImgIter     ) ;
 
 DEBUG_TRACE_SCENESDL_DELETELOOP_OUT
 }
+
 
 // helpers
 

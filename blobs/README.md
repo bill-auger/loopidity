@@ -1,7 +1,8 @@
 ### About Free Culture Licenses
 
-Loopidity source code, binary assets, and documentation are distributed as
-[Free Software](https://www.gnu.org/philosophy/free-sw.html) and [Free Culture](http://freedomdefined.org/Definition).
+All files in the Loopidity code-base are distributed as
+[Free Software](https://www.gnu.org/philosophy/free-sw.html) and
+[Free Culture](http://freedomdefined.org/Definition).
 
 "Free Culture" licenses such as
 the [Crerative Commons licenses](https://creativecommons.org/share-your-work/licensing-types-examples/)
@@ -10,23 +11,24 @@ allow re-use and sharing of specific binary artifacts as long as attribution is 
 but they neglect ensuring of the freedom to study, experiment, and customize.
 Experimentation implies de-composition; and as any artist or software developer knows:
 non-trivial modifications require access to the original sources used by the author.
-Without these sources, even the project maintainers are prevented from customizing the assets
+Without these sources, even the project maintainers are prevented from customizing blobs
 beyond the most trivial operations such as trimming and scaling;
 which is very much mis-aligned with the spirit of "Free Software".
-Because they do not require the availability of the underlying sources that compose the artifacts,
+
+Because they do not require the availability of the underlying sources which compose the artifacts,
 these licenses are the analog of lax-permissive ("free as in beer") software licenses
 and are not at all the natural companion to GPL-licensed software that they are often touted as.
 The GPLv3 grants this maximal freedom of expression to a project's artists, developers, and end-users alike;
-and is, itself, the natural companion license for the artistic binary assets of a GPL-licensed software program
+and is, itself, the natural companion license for the artwork files of a GPL-licensed software program
 provided that the relevant source materials are well-defined.
 
 
-### Loopidity Assets License
+### Loopidity Blobs License
 
-The original audio, video, image and font files in the Loopidity assets/ directory
+The original audio, video, image and font files in the Loopidity blobs/ directory
 are licensed under [version 3 of the GNU General Public License](../COPYING) (GPLv3).
-See [assets/LICENSES](LICENSES) for details. The terminology in section 1 of the GPLv3 (namely: "source code", "preferred form", and "object code")
-as it relates to the binary assets of this project is explicitly defined below.
+See [blobs/LICENSES](LICENSES) for details. The terminology in section 1 of the GPLv3 (namely: "source code", "preferred form", and "object code")
+as it relates to the artwork files of this project is explicitly defined below.
 
 The "object code" is explicitly defined here to be the binary audio, video, image and font files
 accessed directly by the Loopidity program.

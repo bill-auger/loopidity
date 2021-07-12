@@ -1,8 +1,8 @@
 ### Loopidity Contribution Guidelines
 
-Loopidity source code, binary assets, and documentation are distributed as [Free Software][free-sw] and [Free Culture][free-culture] under the terms of the [version 3 of the GNU General Public License][gpl] (GPLv3). To this end, it is necessary for all contributors to be in agreement about licensing. This agreement is not a copyright assignment. It's function is merely to ensure that Loopidity remains free (as in freedom).
+All files in the Loopidity code-base are distributed as [Free Software][free-sw] and [Free Culture][free-culture] under the terms of the [version 3 of the GNU General Public License][gpl] (GPLv3). To this end, it is necessary for all contributions to be offered under a GPL-compatible license. If no license is specified, the contribution will be considered to be under the same license as Loopidity.
 
-In short, this means that as a contributor, you allow others to copy, distribute, and modify their copies or your work; provided that they extend this priviledge to others and credit you as the original author. This implies that all source materials are made available in their respective preferred forms for modification. For source code, this simply the source code itself. For multimedia and documentation, this is all individual source files and/or editor project files in addition to any "mixed-down" binary artifacts. Refer to the [assets README][assets-readme] for details.
+In short, this means that as a contributor, you allow others to copy, distribute, and modify their copies or your work; provided that they extend this privilege to others, and credit you as the original author. This implies that all source files are made available in their respective preferred forms for modification. For source code, that is simply the source code itself. For multimedia and documentation, this is all individual source files and/or editor project files in addition to any "mixed-down" binary artifacts. Refer to the [blobs README][blobs-readme] for details.
 
 
 ### Contribution Licensing Terms
@@ -13,7 +13,7 @@ If you are not the sole author of your contribution (i.e. it is a combined or de
 
 To be clear, this is not at all a special case of this project. It is the commonly accepted "inbound<->outbound" tacet norm for free and open-source software projects; and is even made explicit by some public services such as [item 'D6' of the Github Terms of Service][github-tos].
 
-For multimedia and other binaries, the GPL licensing terms are explicitly defined in the [assets README][assets-readme]. Please read and understand this before submitting artwork and other prepared media. Contributions that do not meet the licensing criteria will not be accepted.
+For multimedia and other binaries, the GPL licensing terms are explicitly defined in the [blobs README][blobs-readme]. Please read and understand this before submitting artwork and other prepared media. Contributions that do not meet the licensing criteria will not be accepted.
 
 
 ### Pull Requests
@@ -21,7 +21,7 @@ For multimedia and other binaries, the GPL licensing terms are explicitly define
 * Developers: please issue pull requests against the upstream 'development' branch.
 * Designers: please issue pull requests against the upstream 'design' branch.
 
-Note that branches other than 'master' tend to be rebased often so you may need to force pull those. Please rebase all pull requests onto the latest 'development' or 'design' HEAD and squash trivial commits but try to retain significant notable commits (see example below). Ideally in this way, all upstream branches should be a fast-foreward from 'master' and so re-sync should be simple.
+Note that branches other than 'master' tend to be rebased often; so you may need to force pull those. Please rebase all pull requests onto the latest 'development' or 'design' HEAD, and squash trivial commits; but try to retain commits representing significant or related changes (see example below). Ideally in this way, all upstream branches should be a fast-forward from 'master' and so re-sync should be simple.
 
 
 ### Repo Mirrors
@@ -31,6 +31,7 @@ Pull requests and issues are accepted at any of the following mirrors:
 * [https://github.com/bill-auger/loopidity/][github]
 * [https://notabug.org/bill-auger/loopidity/][notabug]
 * [https://pagure.io/loopidity/][pagure]
+* [https://sourceforge.net/projects/loopidity/][sourceforge]
 
 
 ### Commit Messages
@@ -57,7 +58,7 @@ add bar powers to the mighty foo (issue #42)
 
 ### Issue Tracker
 
-Please do not hesitate to use the issue tracker for bug reports, feature requests, constructive notes on existing issues, and significant progress updates that are not yet in a pull request; but use the gitter chat or other channels for lengthy discussions and other issues such as general help.
+Please do not hesitate to use the issue tracker for bug reports, feature requests, constructive notes on existing issues, and significant progress updates that are not yet in a pull request; but use the [gitter chat][gitter] or other channels for lengthy discussions and other issues such as general help.
 
 
 [free-sw]:       https://www.gnu.org/philosophy/free-sw.html
@@ -65,7 +66,9 @@ Please do not hesitate to use the issue tracker for bug reports, feature request
 [gpl]:           COPYING
 [license-list]:  https://www.gnu.org/licenses/license-list.html#GPLCompatibleLicenses
 [github-tos]:    https://web.archive.org/web/20170814143643/https://help.github.com/articles/github-terms-of-service/#6-contributions-under-repository-license
-[assets-readme]: assets/README.md
+[blobs-readme]:  blobs/README.md
 [github]:        https://github.com/bill-auger/loopidity/
 [notabug]:       https://notabug.org/bill-auger/loopidity/
 [pagure]:        https://pagure.io/loopidity/
+[sourceforge]:   https://sourceforge.net/projects/loopidity/
+[gitter]:        https://gitter.im/bill-auger/loopidity

@@ -1,29 +1,29 @@
 loopiditydir      = $(pkgdatadir)
 bin_PROGRAMS      = loopidity
-loopidity_SOURCES = src/jack_io.cpp                 \
-                    src/jack_io.h                   \
-                    src/loopidity.cpp               \
-                    src/loopidity.h                 \
-                    src/loopidity_sdl.cpp           \
-                    src/loopidity_sdl.h             \
-                    src/main.cpp                    \
-                    src/scene.cpp                   \
-                    src/scene.h                     \
-                    src/scene_sdl.cpp               \
-                    src/scene_sdl.h                 \
-                    src/assets/fonts.cpp            \
-                    src/assets/fonts.h              \
-                    src/assets/images.cpp           \
-                    src/assets/images.h             \
-                    src/assets/histogram_gradient.h \
-                    src/assets/loop_gradient.h      \
-                    src/assets/scope_gradient.h     \
-                    src/trace/trace.cpp             \
+loopidity_SOURCES = src/jack_io.cpp                \
+                    src/jack_io.h                  \
+                    src/loopidity.cpp              \
+                    src/loopidity.h                \
+                    src/loopidity_sdl.cpp          \
+                    src/loopidity_sdl.h            \
+                    src/main.cpp                   \
+                    src/scene.cpp                  \
+                    src/scene.h                    \
+                    src/scene_sdl.cpp              \
+                    src/scene_sdl.h                \
+                    src/blobs/fonts.cpp            \
+                    src/blobs/fonts.h              \
+                    src/blobs/images.cpp           \
+                    src/blobs/images.h             \
+                    src/blobs/histogram_gradient.h \
+                    src/blobs/loop_gradient.h      \
+                    src/blobs/scope_gradient.h     \
+                    src/trace/trace.cpp            \
                     src/trace/trace.h
-doc_DATA          = COPYING                \
-                    LICENSES               \
-                    assets/COPYING.fonts   \
-                    assets/LICENSES.assets
+doc_DATA          = COPYING              \
+                    LICENSES             \
+                    blobs/COPYING.fonts  \
+                    blobs/LICENSES.blobs
 man1_MANS         = doc/loopidity.1
 EXTRA_DIST        = $(man_MANS)
 
@@ -42,7 +42,7 @@ installcheck-local:
 	stat --printf='' $(docdir)/COPYING
 	stat --printf='' $(docdir)/LICENSES
 	stat --printf='' $(docdir)/COPYING.fonts
-	stat --printf='' $(docdir)/LICENSES.assets
+	stat --printf='' $(docdir)/LICENSES.blobs
 	stat --printf='' $(man1dir)/loopidity.1
 
 

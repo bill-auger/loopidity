@@ -1,3 +1,6 @@
+#ifndef _FEATURE_CONSTANTS_H_
+#define _FEATURE_CONSTANTS_H_
+
 
 // static features
 //#define INIT_LOOPIDITY          1
@@ -58,3 +61,6 @@
 #define DEBUG_TRACE_EVS          (DEBUG_TRACE && (DEBUG_TRACE_ALL || 1))
 #define DEBUG_TRACE_IN           (DEBUG_TRACE && (DEBUG_TRACE_ALL || 1))
 #define DEBUG_TRACE_OUT          (DEBUG_TRACE && (DEBUG_TRACE_ALL || 1))
+
+
+#endif // #ifndef _FEATURE_CONSTANTS_H_
