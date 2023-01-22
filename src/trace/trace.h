@@ -18,6 +18,10 @@
 \*/
 
 
+// NOTE: this header references some SDL types (eg: Uint8)
+//       ensure to #include "trace/trace.h" last
+
+
 #ifndef _TRACE_H_
 #define _TRACE_H_
 

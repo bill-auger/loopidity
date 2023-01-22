@@ -20,8 +20,8 @@
 
 #include "constants/feature_constants.h"
 #include "constants/view_constants.h"
-#include "trace/trace.h"
 #include "loopidity_sdl.h"
+#include "trace/trace.h"
 
 
 /* LoopiditySdl class side private constants */

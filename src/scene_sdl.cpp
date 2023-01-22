@@ -20,8 +20,8 @@
 
 #include "blobs/images.h"
 #include "constants/view_constants.h"
-#include "trace/trace.h"
 #include "loopidity_sdl.h"
+#include "trace/trace.h"
 
 
 /* LoopSdl class side private functions */
