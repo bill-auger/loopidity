@@ -5,7 +5,7 @@ AC_PREREQ([2.69])
 AC_INIT([loopidity], [0.14.008], [https://github.com/bill-auger/loopidity/issues])
 AC_CONFIG_SRCDIR([src/loopidity.cpp])
 AC_CONFIG_AUX_DIR([build-aux])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
 AM_INIT_AUTOMAKE([subdir-objects foreign -Wall -Werror])
 AM_SILENT_RULES([yes])
 AC_LANG([C++])
@@ -22,7 +22,7 @@ AC_MSG_NOTICE(["Checking for programs ..."])
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_INSTALL
-AX_CXX_COMPILE_STDCXX_11
+# AX_CXX_COMPILE_STDCXX_11
 
 AC_MSG_NOTICE(["Checking for typedefs, structures, and compiler characteristics ..."])
 AC_TYPE_SIZE_T
@@ -37,15 +37,6 @@ AC_CHECK_HEADER([list],                    [ ], [AC_MSG_ERROR("missing list head
 AC_CHECK_HEADER([sstream],                 [ ], [AC_MSG_ERROR("missing sstream headers"  )])
 AC_CHECK_HEADER([string],                  [ ], [AC_MSG_ERROR("missing string headers"   )])
 AC_CHECK_HEADER([vector],                  [ ], [AC_MSG_ERROR("missing vector headers"   )])
-AC_CHECK_HEADER([jack/jack.h],             [ ], [AC_MSG_ERROR("missing jack headers"     )])
-AC_CHECK_HEADER([SDL/SDL.h],               [ ], [AC_MSG_ERROR("missing SDL headers"      )])
-AC_CHECK_HEADER([SDL/SDL_gfxPrimitives.h], [ ], [AC_MSG_ERROR("missing SDL_gfx headers"  )])
-AC_CHECK_HEADER([SDL/SDL_rotozoom.h],      [ ], [AC_MSG_ERROR("missing SDL_gfx headers"  )])
-AC_CHECK_HEADER([SDL/SDL_ttf.h],           [ ], [AC_MSG_ERROR("missing SDL_ttf headers"  )])
-if test "$IS_MINGW" == "0" ; then
-  AC_CHECK_HEADER([X11/Xlib.h],            [ ], [AC_MSG_ERROR("missing x11 headers"      )])
-  AC_PATH_X
-fi
 
 AC_MSG_NOTICE(["Checking for libraries ..."])
 AC_CHECK_FUNC([atexit], [ ], [AC_MSG_ERROR("C library does not provide 'atexit'")])

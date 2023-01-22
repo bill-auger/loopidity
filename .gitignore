@@ -24,6 +24,7 @@ build-aux/*
 !build-aux/depcomp
 !build-aux/install-sh
 !build-aux/missing
+!src/Makefile.am
 
 # blobs
 !blobs/
