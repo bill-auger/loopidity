@@ -127,11 +127,11 @@ Sample*  LoopiditySdl::PeaksVuIn  = nullptr ;       // Init()
 Sample*  LoopiditySdl::PeaksVuOut = nullptr ;       // Init()
 
 // DrawScenes() 'local' variables
-Uint16       LoopiditySdl::CurrentSceneN = 0 ;
-Uint16       LoopiditySdl::NextSceneN    = 0 ;
+Uint8        LoopiditySdl::CurrentSceneN = 0 ;
+Uint8        LoopiditySdl::NextSceneN    = 0 ;
 Uint32       LoopiditySdl::CurrentPeakN  = 0 ;
 Uint16       LoopiditySdl::SceneProgress = 0 ;
-Uint16       LoopiditySdl::SceneN        = 0 ;
+Uint8        LoopiditySdl::SceneN        = 0 ;
 SceneSdl*    LoopiditySdl::SdlScene      = 0 ;
 SDL_Surface* LoopiditySdl::SceneSurface  = 0 ;
 SDL_Rect*    LoopiditySdl::SceneRect     = 0 ;

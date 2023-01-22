@@ -133,12 +133,12 @@ class Scene
 
     // setup
 #if INIT_JACK_BEFORE_SCENES
-    Scene(Uint32 sceneNum) ;
+    Scene(Uint8 sceneNum) ;
 #else
 #  if SCENE_NFRAMES_EDITABLE
-    Scene(Uint32 sceneNum , Uint32 endFrameN) ;
+    Scene(Uint8 sceneNum , Uint8 endFrameN) ;
 #  else
-    Scene(Uint32 sceneNum , Uint32 bufferSize) ;
+    Scene(Uint8 sceneNum , Uint32 bufferSize) ;
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #endif // #if INIT_JACK_BEFORE_SCENES
 
@@ -158,7 +158,7 @@ class Scene
     /* Scene instance side private varables */
 
     // identity
-    Uint32 sceneN ;
+    Uint8 sceneN ;
 
     // audio data
     std::list<Loop*> loops ;
@@ -210,7 +210,7 @@ class Scene
     /* Scene instance side public functions */
 
     // getters/setters
-    Uint32 getSceneN() ;
+    Uint8  getSceneN() ;
     Uint32 getDoesPulseExist() ;
     Uint32 getNLoops() ;
     Uint32 getCurrentPeakN() ;

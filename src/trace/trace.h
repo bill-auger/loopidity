@@ -238,12 +238,12 @@ class Trace
 
     /* class side public functions */
 
-    static bool SanityCheck(unsigned int sceneN) ;
+    static bool SanityCheck(Uint8 sceneN) ;
     static void Dbg(        std::string msg) ;
     static void Err(        std::string msg) ;
-    static bool TraceEvs(   unsigned int sceneN) ;
-    static bool TraceIn(    unsigned int sceneN) ;
-    static bool TraceOut(   unsigned int sceneN) ;
+    static bool TraceEvs(   Uint8 sceneN) ;
+    static bool TraceIn(    Uint8 sceneN) ;
+    static bool TraceOut(   Uint8 sceneN) ;
     static bool TraceScene( const char* senderTemplate , Scene* scene) ;
     static void TraceState( const char* event       , const char* sender     ,
                             const char* stateFormat , const char* descFormat ,

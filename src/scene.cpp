@@ -78,12 +78,12 @@ Sample Loop::getPeakCourse(Uint32 peakN) { return peaksCourse[peakN] ; }
 
 /* Scene class side private functions */
 #if INIT_JACK_BEFORE_SCENES
-Scene::Scene(Uint32 sceneNum)
+Scene::Scene(Uint8 sceneNum)
 #else
 #  if SCENE_NFRAMES_EDITABLE
-Scene::Scene(Uint32 sceneNum , Uint32 endFrameN)
+Scene::Scene(Uint8 sceneNum , Uint8 endFrameN)
 #  else
-Scene::Scene(Uint32 sceneNum , Uint32 recordBufferSize)
+Scene::Scene(Uint8 sceneNum , Uint32 recordBufferSize)
 #  endif // #if SCENE_NFRAMES_EDITABLE
 #endif // #if INIT_JACK_BEFORE_SCENES
 {
@@ -350,7 +350,7 @@ Loop* Scene::getLoop(Uint32 loopN)
 
 /* Scene instance side public functions */
 
-Uint32 Scene::getSceneN() { return sceneN ; }
+Uint8 Scene::getSceneN() { return sceneN ; }
 
 Uint32 Scene::getDoesPulseExist() { return doesPulseExist ; }
 

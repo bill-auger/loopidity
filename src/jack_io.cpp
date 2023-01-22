@@ -59,8 +59,8 @@ jack_port_t*   JackIO::OutputPort2 = 0 ; // Init()
 // app state
 Scene*       JackIO::CurrentScene  = 0 ; // Reset()
 Scene*       JackIO::NextScene     = 0 ; // Reset()
-//Uint8 JackIO::CurrentSceneN = 0 ;
-//Uint8 JackIO::NextSceneN    = 0 ;
+//Uint32 JackIO::CurrentSceneN = 0 ;
+//Uint32 JackIO::NextSceneN    = 0 ;
 
 // audio data
 Uint32       JackIO::RecordBufferSize = 0 ; // Init()

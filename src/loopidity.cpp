@@ -177,7 +177,7 @@ bool Loopidity::GetIsRolling() { return IsRolling ; }
 
 // view helpers
 
-void Loopidity::UpdateView(Uint32 sceneN) { SdlScenes[sceneN]->updateState(CurrentSceneN , IsRolling) ; }
+void Loopidity::UpdateView(Uint8 sceneN) { SdlScenes[sceneN]->updateState(CurrentSceneN , IsRolling) ; }
 
 void Loopidity::OOM() { DEBUG_TRACE_LOOPIDITY_OOM_IN LoopiditySdl::SetStatusC(OUT_OF_MEMORY_MSG) ; }
 
@@ -230,7 +230,7 @@ bool Loopidity::Init(bool   shouldMonitorInputs , bool shouldAutoSceneChange ,
   Sample*              peaksVuOut = JackIO::GetPeaksVuOut() ;
 
   // instantiate Scenes (models) and SdlScenes (views)
-  for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
+  for (Uint8 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN)
   {
     try
     {
@@ -348,8 +348,8 @@ void Loopidity::HandleMouseEvent(SDL_Event* event)
       y < MOUSE_SCENES_T || y > MOUSE_SCENES_B  ) return ;
 
 #if HANDLE_MOUSE_EVENTS
-  Uint32 sceneN = (y - MOUSE_SCENES_T) / SCENE_H ;
-  Uint32 loopN  = (x - MOUSE_SCENES_L) / LOOP_W ;
+  Uint8 sceneN = (y - MOUSE_SCENES_T) / SCENE_H ;
+  Uint8 loopN  = (x - MOUSE_SCENES_L) / LOOP_W ;
   switch (event->button.button)
   {
     case SDL_BUTTON_LEFT:      ToggleLoopIsMuted(sceneN , loopN) ;  break ;
@@ -368,19 +368,19 @@ void Loopidity::HandleUserEvent(SDL_Event* event)
   void* data1 = event->user.data1 ; void* data2 = event->user.data2 ;
   switch (event->user.code)
   {
-    case EVT_NEW_LOOP:      OnLoopCreation((Uint32*)data1 , (Loop**)data2) ; break ;
-    case EVT_SCENE_CHANGED: OnSceneChange((Uint32*)data1) ;                  break ;
-    default:                                                                 break ;
+    case EVT_NEW_LOOP:      OnLoopCreation((Uint8*)data1 , (Loop**)data2) ; break ;
+    case EVT_SCENE_CHANGED: OnSceneChange((Uint8*)data1) ;                  break ;
+    default:                                                                break ;
   }
 #endif // #if HANDLE_USER_EVENTS
 }
 
-void Loopidity::OnLoopCreation(Uint32* sceneNum , Loop** newLoop)
+void Loopidity::OnLoopCreation(Uint8* sceneNum , Loop** newLoop)
 {
 DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_IN
 
-  Uint32 sceneN = *sceneNum ;      Loop*     aLoop    = *newLoop ;
-  Scene* scene  = Scenes[sceneN] ; SceneSdl* sdlScene = SdlScenes[sceneN] ;
+  Uint8 sceneN = *sceneNum ;      Loop*     aLoop    = *newLoop ;
+  Scene* scene = Scenes[sceneN] ; SceneSdl* sdlScene = SdlScenes[sceneN] ;
   if (scene->addLoop(aLoop)) sdlScene->addLoop(aLoop , scene->loops.size() - 1) ;
 
   UpdateView(sceneN) ;
@@ -388,14 +388,14 @@ DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_IN
 DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_OUT
 }
 
-void Loopidity::OnSceneChange(Uint32* nextSceneN)
+void Loopidity::OnSceneChange(Uint8* nextSceneN)
 {
 DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN
 
 //  if (!Scenes[CurrentSceneN]->isRolling) { Scenes[CurrentSceneN]->reset() ; }
 //else { Scenes[CurrentSceneN]->startRolling() ; SdlScenes[CurrentSceneN]->startRolling() ; }
 
-  Uint32    prevSceneN   = CurrentSceneN ; CurrentSceneN = NextSceneN = *nextSceneN ;
+  Uint8     prevSceneN   = CurrentSceneN ; CurrentSceneN = NextSceneN = *nextSceneN ;
   SceneSdl* prevSdlScene = SdlScenes[prevSceneN] ;
   Scene*    nextScene    = Scenes   [NextSceneN] ;
   prevSdlScene->drawScene(prevSdlScene->inactiveSceneSurface , 0 , 0) ;
@@ -426,7 +426,7 @@ void Loopidity::ToggleNextScene()
 {
 DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_IN
 
-  Uint32 prevSceneN = NextSceneN ; NextSceneN = (NextSceneN + 1) % N_SCENES ;
+  Uint8 prevSceneN = NextSceneN ; NextSceneN = (NextSceneN + 1) % N_SCENES ;
   UpdateView(prevSceneN) ; UpdateView(NextSceneN) ;
   JackIO::SetNextScene(Scenes[NextSceneN]) ;
 
@@ -441,7 +441,7 @@ DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_IN
 DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_OUT
 }
 
-void Loopidity::DeleteLoop(Uint32 sceneN , Uint32 loopN)
+void Loopidity::DeleteLoop(Uint8 sceneN , Uint8 loopN)
 {
 DEBUG_TRACE_LOOPIDITY_DELETELOOP_IN
 
@@ -460,7 +460,7 @@ DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_IN
 DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_OUT
 }
 
-void Loopidity::IncLoopVol(Uint32 sceneN , Uint32 loopN , bool isInc)
+void Loopidity::IncLoopVol(Uint8 sceneN , Uint8 loopN , bool isInc)
 {
 DEBUG_TRACE_LOOPIDITY_INCLOOPVOL_IN
 
@@ -473,7 +473,7 @@ DEBUG_TRACE_LOOPIDITY_INCLOOPVOL_IN
 DEBUG_TRACE_LOOPIDITY_INCLOOPVOL_OUT
 }
 
-void Loopidity::ToggleLoopIsMuted(Uint32 sceneN , Uint32 loopN)
+void Loopidity::ToggleLoopIsMuted(Uint8 sceneN , Uint8 loopN)
 {
 DEBUG_TRACE_LOOPIDITY_TOGGLELOOPISMUTED_IN
 
@@ -489,7 +489,7 @@ void Loopidity::ToggleSceneIsMuted()
 
 void Loopidity::ToggleEditMode() { IsEditMode = !IsEditMode ; }
 
-void Loopidity::ResetScene(Uint32 sceneN)
+void Loopidity::ResetScene(Uint8 sceneN)
 {
 DEBUG_TRACE_LOOPIDITY_RESETSCENE_IN
 
@@ -513,7 +513,7 @@ void Loopidity::Reset()
 {
 DEBUG_TRACE_LOOPIDITY_RESET_IN
 
-  for (Uint32 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN) ResetScene(sceneN) ;
+  for (Uint8 sceneN = 0 ; sceneN < N_SCENES ; ++sceneN) ResetScene(sceneN) ;
   IsRolling = false ; CurrentSceneN = NextSceneN = 0 ; JackIO::Reset(Scenes[0]) ;
 
 DEBUG_TRACE_LOOPIDITY_RESET_OUT

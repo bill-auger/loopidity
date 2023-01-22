@@ -134,11 +134,11 @@ class LoopiditySdl
     static       Sample*  PeaksVuOut ;
 
     // DrawScenes() 'local' variables
-    static Uint16       CurrentSceneN ;
-    static Uint16       NextSceneN ;
+    static Uint8        CurrentSceneN ;
+    static Uint8        NextSceneN ;
     static Uint32       CurrentPeakN ;
     static Uint16       SceneProgress ;
-    static Uint16       SceneN ;
+    static Uint8        SceneN ;
     static SceneSdl*    SdlScene ;
     static SDL_Surface* SceneSurface ;
     static SDL_Rect*    SceneRect ;

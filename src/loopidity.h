@@ -106,7 +106,7 @@ class Loopidity
 //    static bool         GetIsEditMode(         void) ;
 
     // view helpers
-    static void UpdateView(Uint32 sceneN) ;
+    static void UpdateView(Uint8 sceneN) ;
     static void OOM(       void) ;
 
 
@@ -136,20 +136,20 @@ private:
     static void HandleKeyEvent(  SDL_Event* event) ;
     static void HandleMouseEvent(SDL_Event* event) ;
     static void HandleUserEvent( SDL_Event* event) ;
-    static void OnLoopCreation(  Uint32* sceneNum , Loop** newLoop) ;
-    static void OnSceneChange(   Uint32* sceneNum) ;
+    static void OnLoopCreation(  Uint8* sceneNum , Loop** newLoop) ;
+    static void OnSceneChange(   Uint8* sceneNum) ;
 
     // user actions
     static void ToggleAutoSceneChange(void) ;
     static void ToggleRecordingState( void) ;
     static void ToggleNextScene(      void) ;
-    static void DeleteLoop(           Uint32 sceneN , Uint32 loopN) ;
+    static void DeleteLoop(           Uint8 sceneN , Uint8 loopN) ;
     static void DeleteLastLoop(       void) ;
-    static void IncLoopVol(           Uint32 sceneN , Uint32 loopN , bool IsInc) ;
-    static void ToggleLoopIsMuted(    Uint32 sceneN , Uint32 loopN) ;
+    static void IncLoopVol(           Uint8 sceneN , Uint8 loopN , bool IsInc) ;
+    static void ToggleLoopIsMuted(    Uint8 sceneN , Uint8 loopN) ;
     static void ToggleSceneIsMuted(   void) ;
     static void ToggleEditMode(       void) ;
-    static void ResetScene(           Uint32 sceneN) ;
+    static void ResetScene(           Uint8 sceneN) ;
     static void ResetCurrentScene(    void) ;
     static void Reset(                void) ;
 } ;

@@ -94,10 +94,10 @@ const Uint8  SceneSdl::SECONDS_PER_MINUTE = N_SECONDS_PER_MINUTE ;
 
 SceneSdl::SceneSdl(Scene* a_scene , std::vector<Sample>* peaks_in) :
   // constants
-  sceneT(      SCENE_T) ,
+  sceneT(      (Uint16)SCENE_T) ,
   sceneFrameT( SCENE_FRAME_T) ,
   sceneFrameB( SCENE_FRAME_B) ,
-  sceneRect(   { 0 , SCENE_T , LoopiditySdl::WinRect.w , SceneH })
+  sceneRect(   { 0 , sceneT , LoopiditySdl::WinRect.w , SceneH })
 {
   // model
   scene   = a_scene ;
