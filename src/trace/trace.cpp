@@ -39,8 +39,8 @@ const char* Trace::MODEL_STATE_FMT = DEBUG_TRACE_MODEL_STATE_FORMAT ;
 const char* Trace::VIEW_STATE_FMT  = DEBUG_TRACE_VIEW_STATE_FORMAT ;
 const char* Trace::MODEL_DESC_FMT  = DEBUG_TRACE_MODEL_DESC_FORMAT ;
 const char* Trace::VIEW_DESC_FMT   = DEBUG_TRACE_VIEW_DESC_FORMAT ;
-const char* Trace::MODEL_ERR_FMT   = DEBUG_TRACE_MODEL_ERROR_FORMAT ;
-const char* Trace::VIEW_ERR_FMT    = DEBUG_TRACE_VIEW_ERROR_FORMAT ;
+const char* Trace::MODEL_ERR_FMT   = DEBUG_TRACE_MODEL_DESC_FORMAT DEBUG_TRACE_MODEL_ERROR_FORMAT ;
+const char* Trace::VIEW_ERR_FMT    = DEBUG_TRACE_VIEW_DESC_FORMAT DEBUG_TRACE_VIEW_ERROR_FORMAT ;
 
 
 /* Trace class side private variables */
@@ -94,13 +94,23 @@ bool Trace::TraceScene(const char* senderTemplate , Scene* scene)
   if (isEq)
   {
     modelEvent = MODEL ; modelDescFormat = MODEL_DESC_FMT ;
-    viewEvent = VIEW ;   viewDescFormat  = VIEW_DESC_FMT ;
+    viewEvent  = VIEW ;  viewDescFormat  = VIEW_DESC_FMT ;
   }
   else
   {
     modelEvent = MODEL_ERR ; modelDescFormat = MODEL_ERR_FMT ;
     viewEvent  = VIEW_ERR ;  viewDescFormat  = VIEW_ERR_FMT ;
   }
+
+
+#if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN
+std::cout << "Trace::TraceScene()<-" << sender                         <<
+             " loops.size="          << scene   ->loops        .size() <<
+             " histogramImgs.size="  << sdlScene->histogramImgs.size() <<
+             " loopImgs.size="       << sdlScene->loopImgs     .size() <<
+             " isEq="                << isEq                           << std::endl ;
+#endif // #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN
+
 
   // model state dump
   TraceState(modelEvent , sender , MODEL_STATE_FMT , modelDescFormat ,
@@ -118,11 +128,11 @@ void Trace::TraceState(const char* event       , const char* sender     ,
                        bool bool0 , bool bool1 , bool bool2 , bool /*isEq*/ )
 {
 #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN
-std::cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" << bool1 << "bool2=" << bool2 << std::endl ;
+std::cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" << bool1 << " bool2=" << bool2 << std::endl ;
 #endif // #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN
 
-#if DEBUG_TRACE
 
+#if DEBUG_TRACE
   memset(Event , ' ' , EVENT_LEN) ; memset(State , ' ' , STATE_LEN) ; memset(Desc , ' ' , DESC_LEN) ;
 
   EventLen = strlen(event) ; if (EventLen > EVENT_LEN) EventLen = EVENT_LEN ;
@@ -142,8 +152,8 @@ std::cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool
 
   Event[EVENT_LEN] = State[STATE_LEN] = Desc[DESC_LEN] = '\0' ;
   std::cout << Event << " " << State << " " << Desc << std::endl ;
-
 #endif // #if DEBUG_TRACE
+
 
 #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_OUT
 std::cout << "Trace::TraceState(): Event(" << strlen(Event) << ")='" << Event << "'" << std::endl ; // for (int i=0 ; i < strlen(Event) ; ++i) printf("Event[%d]=%c\n" , i , Event[i]) ;

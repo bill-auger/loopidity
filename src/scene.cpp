@@ -237,6 +237,7 @@ DEBUG_TRACE_SCENE_ADDLOOP_OUT
 
 void Scene::deleteLoop(Uint32 loopN)
 {
+if (loopN >= loops.size()) Trace::Dbg("Scene::deleteLoop() - bailing") ; else Trace::Dbg("Scene::deleteLoop()") ;
 DEBUG_TRACE_SCENE_DELETELOOP_IN
 
   if (loopN >= loops.size()) return ;
@@ -244,7 +245,7 @@ DEBUG_TRACE_SCENE_DELETELOOP_IN
   std::list<Loop*>::iterator loopIter = loops.begin() ; while (loopN--) ++loopIter ;
   loops.erase(loopIter) ; rescanPeaks() ;
 
-DEBUG_TRACE_SCENE_DELETELOOP_IN
+DEBUG_TRACE_SCENE_DELETELOOP_OUT
 }
 
 void Scene::reset()

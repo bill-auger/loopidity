@@ -63,8 +63,8 @@
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_IN       if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_KP0 --> Loopidity::ToggleNextScene(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ToggleNextScene(%d)  IN" , Scenes[CurrentSceneN])) return ;
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_OUT      if (TRACE_OUT(CurrentSceneN)) TRACE_SCENE("Loopidity::ToggleNextScene(%d) OUT" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_IN        if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_ESCAPE --> Loopidity::DeleteLastLoop(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::DeleteLastLoop(%d)  IN" , Scenes[CurrentSceneN])) return ;
-#  define DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_OUT       if (TRACE_OUT(CurrentSceneN)) TRACE_SCENE("Loopidity::DeleteLoop(%d) OUT" , Scenes[CurrentSceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_DELETELOOP_IN            if (TRACE_EVS(sceneN))        printf("\nUSER: SDL_BUTTON_MIDDLE --> Loopidity::DeleteLoop(%d)\n\n" , sceneN) ; if (TRACE_IN(sceneN) && !TRACE_SCENE("Loopidity::DeleteLoop(%d)  IN" , Scenes[sceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_OUT       if (TRACE_OUT(CurrentSceneN)) TRACE_SCENE("Loopidity::DeleteLastLoop(%d) OUT" , Scenes[CurrentSceneN]) ;
+#  define DEBUG_TRACE_LOOPIDITY_DELETELOOP_IN            if (TRACE_EVS(sceneN))        printf("\nUSER: SDL_BUTTON_MIDDLE --> Loopidity::DeleteLoop(%d)\n\n" , sceneN) ; if (TRACE_IN(sceneN) && !TRACE_SCENE("Loopidity::DeleteLoop(%d)  IN" , Scenes[sceneN])) {;}
 #  define DEBUG_TRACE_LOOPIDITY_DELETELOOP_OUT           if (TRACE_OUT(sceneN))        TRACE_SCENE("Loopidity::DeleteLoop(%d) OUT" , Scenes[sceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_INCLOOPVOL_IN            if (TRACE_EVS(sceneN))        printf("\nUSER: %s --> Loopidity::IncLoopVol(%d)  IN vol=%f\n\n" , (isInc)? "SDL_BUTTON_WHEELUP" : "SDL_BUTTON_WHEELDOWN" , sceneN , Scenes[sceneN]->getLoop(loopN)->vol) ;
 #  define DEBUG_TRACE_LOOPIDITY_INCLOOPVOL_OUT           if (DEBUG_TRACE_OUT)          { char event[128] ; sprintf(event , "%s OUT vol=%3.1f\n\n" , "Loopidity::IncLoopVol(%d)" , *vol) ; TRACE_SCENE(event , Scenes[sceneN]) ; }
@@ -192,10 +192,10 @@
 #define DEBUG_TRACE_MODEL_STATE_FORMAT "%d%d%d   "
 #define DEBUG_TRACE_VIEW_STATE_FORMAT  "   %d%d%d"
 
-#define DEBUG_TRACE_MODEL_DESC_FORMAT  "isRecording=%d shouldSaveLoop=%d doesPulseExist=%d"
-#define DEBUG_TRACE_VIEW_DESC_FORMAT   "nLoops=%d nHistogramImgs=%d nLoopImgs=%d"
-#define DEBUG_TRACE_MODEL_ERROR_FORMAT "MODEL: Scene::mvc inconsistent"
-#define DEBUG_TRACE_VIEW_ERROR_FORMAT  "VIEW:  SceneSdl::mvc inconsistent"
+#define DEBUG_TRACE_MODEL_DESC_FORMAT  "isRecording=%d doesPulseExist=%d shouldSaveLoop=%d"
+#define DEBUG_TRACE_VIEW_DESC_FORMAT   "nLoops=%d nLoopImgs=%d nHistogramImgs=%d"
+#define DEBUG_TRACE_MODEL_ERROR_FORMAT " (Scene MVC inconsistent)"
+#define DEBUG_TRACE_VIEW_ERROR_FORMAT  "           (SceneSdl MVC inconsistent)"
 
 #define DEBUG_TRACE_EVENT_LEN        36
 #define DEBUG_TRACE_STATE_LEN        6
