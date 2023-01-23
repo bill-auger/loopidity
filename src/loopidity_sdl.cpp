@@ -246,8 +246,9 @@ void LoopiditySdl::DrawHeader() { DrawText(HEADER_TEXT , Screen , HeaderFont , &
 
 void LoopiditySdl::DrawScenes(Uint8 currentSceneN , Uint8 nextSceneN)
 {
-#if DRAW_SCENES
   CurrentSceneN = currentSceneN ; NextSceneN = nextSceneN ;
+
+#if DRAW_SCENES
   for (SceneN = 0 ; SceneN < N_SCENES ; ++SceneN)
   {
     SdlScene = SdlScenes[SceneN] ; SceneRect = const_cast<SDL_Rect*>(&SdlScene->sceneRect) ;
@@ -271,8 +272,9 @@ void LoopiditySdl::DrawScenes(Uint8 currentSceneN , Uint8 nextSceneN)
   }
 
 //SDL_FillRect(Screen , SceneRect , WINDOW_BG_COLOR) ;
-DRAW_DEBUG_TEXT_L
 #endif // #if DRAW_SCENES
+
+DRAW_DEBUG_TEXT_L
 }
 
 #if SCENE_NFRAMES_EDITABLE

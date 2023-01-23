@@ -294,7 +294,9 @@ void SceneSdl::drawRecordingLoop(SDL_Surface* aSurface , Uint16 sceneProgress)
 
   loopC = loopL + PEAK_RADIUS ; ringR = (*peaksIn)[0] * (float)PEAK_RADIUS ;
   circleColor(aSurface , loopC , Loops0 , ringR , PEAK_CURRENT_COLOR) ;
-#endif
+#else // #if DRAW_RECORDING_LOOP
+  vlineColor(aSurface , 0 * sceneProgress , HistogramsT , HistogramsB , PEAK_CURRENT_COLOR) ;
+#endif // #if DRAW_RECORDING_LOOP
 }
 
 void SceneSdl::drawSceneStateIndicator(SDL_Surface* aSurface , Uint8 nextSceneN)

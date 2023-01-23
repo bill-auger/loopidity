@@ -152,7 +152,12 @@ std::cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool
 
   Event[EVENT_LEN] = State[STATE_LEN] = Desc[DESC_LEN] = '\0' ;
   std::cout << Event << " " << State << " " << Desc << std::endl ;
+#else // #if DEBUG_TRACE
+  event = "" ; sender = event ; stateFormat = sender ; descFormat = stateFormat ; event = descFormat ; // suppress warnings
 #endif // #if DEBUG_TRACE
+#if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN && ! DEBUG_TRACE
+  bool0 = 0 ; bool1 = bool0 ; bool2 = bool1 ; bool0 = bool2 = *sender ; // suppress warnings
+#endif // #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN && ! DEBUG_TRACE
 
 
 #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_OUT
