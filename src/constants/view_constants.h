@@ -70,17 +70,20 @@
 #define VU_RECT       { 0 , 0 , 0    , 0 } ;
 
 // status magnitudes
-#define STATUS_FONT_SIZE 12
-#define STATUS_H         20  // STATUS_FONT_SIZE 12
+// #define STATUS_FONT_SIZE 12
+// #define STATUS_H         20  // STATUS_FONT_SIZE 12
+#define STATUS_FONT_SIZE 18
+#define STATUS_H         30  // STATUS_FONT_SIZE 18
+// #define STATUS_H         40  // STATUS_FONT_SIZE 24
 #define STATUS_W         256 // approx 36 chars @ STATUS_FONT_SIZE 12
 #define STATUS_Y         (WinRect.h - STATUS_H)
-#define STATUS_L         0
+#define STATUS_L         GUI_PAD
 #define STATUS_C         ((WinRect.w / 2) - (STATUS_W / 2))
-#define STATUS_R         (WinRect.w - STATUS_W)
+#define STATUS_R         (WinRect.w - GUI_PAD - STATUS_W)
 #define STATUS_RECT_DIM  { 0 , 0 , STATUS_W , STATUS_H }
-#define STATUS_RECT_L    { (Sint16)STATUS_L , (Sint16)STATUS_Y , 0 , 0 }
-#define STATUS_RECT_C    { (Sint16)STATUS_C , (Sint16)STATUS_Y , 0 , 0 }
-#define STATUS_RECT_R    { (Sint16)STATUS_R , (Sint16)STATUS_Y , 0 , 0 }
+#define STATUS_RECT_L    { (Sint16)STATUS_L , (Sint16)STATUS_Y , STATUS_W , STATUS_H }
+#define STATUS_RECT_C    { (Sint16)STATUS_C , (Sint16)STATUS_Y , STATUS_W , STATUS_H }
+#define STATUS_RECT_R    { (Sint16)STATUS_R , (Sint16)STATUS_Y , STATUS_W , STATUS_H }
 
 // mouse magnitudes
 #define MOUSE_SCENES_L (LOOPS_L - BORDER_PAD)
