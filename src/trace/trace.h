@@ -248,7 +248,7 @@ class Trace
     static bool TraceScene( const char* senderTemplate , Scene* scene) ;
     static void TraceState( const char* event       , const char* sender     ,
                             const char* stateFormat , const char* descFormat ,
-                            bool bool0 , bool bool1 , bool bool2 , bool isEq ) ;
+                            Uint8 int0 , Uint8 int1 , Uint8 int2             ) ;
 
 #if DRAW_DEBUG_TEXT
     static void SetDbgTextC() ; public: static void SetDbgTextR() ;

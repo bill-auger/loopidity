@@ -134,10 +134,10 @@ std::cout << "Trace::TraceScene()<-" << sender                         <<
 
 void Trace::TraceState(const char* event       , const char* sender     ,
                        const char* stateFormat , const char* descFormat ,
-                       bool bool0 , bool bool1 , bool bool2 , bool /*isEq*/ )
+                       Uint8 int0 , Uint8 int1 , Uint8 int2             )
 {
 #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN
-std::cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool1=" << bool1 << " bool2=" << bool2 << std::endl ;
+printf("Trace::TraceState(): %s int0=%d int1=%d int2=%d\n" , sender , int0  , int1 , int2) ;
 #endif // #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN
 
 
@@ -150,12 +150,12 @@ std::cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool
   memcpy(Event + EventLen , sender , SenderLen) ;
 
   char state[STATE_LEN + 1] ; memset(state , ' ' , STATE_LEN) ; // state[STATE_LEN] = '\0' ;
-  snprintf(state , STATE_LEN + 1 , stateFormat , bool0 , bool1 , bool2) ;
+  snprintf(state , STATE_LEN + 1 , stateFormat , int0 , int1 , int2) ;
   StateLen = strlen(state) ; if (StateLen > STATE_LEN) StateLen = STATE_LEN ;
   memcpy(State , state , StateLen) ;
 
   char desc[DESC_LEN + 1] ; memset(desc , ' ' , DESC_LEN) ; desc[DESC_LEN] = '\0' ;
-  snprintf(desc , DESC_LEN , descFormat , bool0 , bool1 , bool2) ;
+  snprintf(desc , DESC_LEN , descFormat , int0 , int1 , int2) ;
   DescLen = strlen(desc) ; if (DescLen > DESC_LEN) DescLen = DESC_LEN ;
   memcpy(Desc , desc , DescLen + 1) ;
 
@@ -165,7 +165,7 @@ std::cout << "Trace::TraceState(): '" << sender << "' bool0=" << bool0 << " bool
   event = "" ; sender = event ; stateFormat = sender ; descFormat = stateFormat ; event = descFormat ; // suppress warnings
 #endif // #if DEBUG_TRACE
 #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN && ! DEBUG_TRACE
-  bool0 = 0 ; bool1 = bool0 ; bool2 = bool1 ; bool0 = bool2 = *sender ; // suppress warnings
+  int0 = 0 ; int1 = int0 ; int2 = int1 ; int0 = int2 = *sender ; // suppress warnings
 #endif // #if DEBUG_TRACE_TRACECLASS && DEBUG_TRACE_IN && ! DEBUG_TRACE
 
 
@@ -177,6 +177,6 @@ std::cout << "Trace::TraceState(): Desc("  << strlen(Desc)  << ")='" << Desc  <<
 }
 
 #if DRAW_DEBUG_TEXT
-void Trace::SetDbgTextC() { char dbg[TRACE_STATE_LEN] ; Uint8 sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "NextSceneN=%d SceneN=%d PeakN=%d" , Loopidity::NextSceneN , sceneN , Loopidity::Scenes[sceneN]->getCurrentPeakN()) ; LoopiditySdl::SetStatusC(dbg) ; }
-void Trace::SetDbgTextR() { char dbg[TRACE_STATE_LEN] ; Uint8 sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "%d%d%d %u%u%u" , Loopidity::GetIsRolling() , Loopidity::Scenes[sceneN]->shouldSaveLoop , Loopidity::Scenes[sceneN]->doesPulseExist , (unsigned int)Loopidity::Scenes[sceneN]->loops.size() , (unsigned int)Loopidity::SdlScenes[sceneN]->histogramImgs.size() , (unsigned int)Loopidity::SdlScenes[sceneN]->loopImgs.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
+void Trace::SetDbgTextC() { char dbg[TRACE_STATE_LEN] ; Uint8 sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "NextSceneN=%d PeakN=%d" , Loopidity::NextSceneN , Loopidity::GetIsRolling() * Loopidity::Scenes[sceneN]->getCurrentPeakN()) ; LoopiditySdl::SetStatusC(dbg) ; }
+void Trace::SetDbgTextR() { char dbg[TRACE_STATE_LEN] ; Uint8 sceneN = Loopidity::CurrentSceneN ; snprintf(dbg , TRACE_STATE_LEN , "%d%d%d %u%u%u" , Loopidity::GetIsRolling() , Loopidity::Scenes[sceneN]->doesPulseExist , Loopidity::Scenes[sceneN]->shouldSaveLoop , (unsigned int)Loopidity::Scenes[sceneN]->loops.size() , (unsigned int)Loopidity::SdlScenes[sceneN]->loopImgs.size() , (unsigned int)Loopidity::SdlScenes[sceneN]->histogramImgs.size()) ; LoopiditySdl::SetStatusR(dbg) ; }
 #endif // #if DRAW_DEBUG_TEXT
