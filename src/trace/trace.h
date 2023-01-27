@@ -58,25 +58,25 @@
 #if DEBUG_TRACE_LOOPIDITY
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_MID                 if (DEBUG_TRACE_EVS) printf("%s\n" , INIT_SUCCESS_MSG) ;
 #  define DEBUG_TRACE_LOOPIDITY_MAIN_OUT                 if (DEBUG_TRACE_EVS) printf("%s\n" , EXIT_SUCCESS_MSG) ;
-#  define DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN  if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_SPACE --> Loopidity::ToggleRecordingState(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ToggleRecordingState(%d)  IN" , Scenes[CurrentSceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_IN  if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_SPACE --> Loopidity::ToggleRecordingState(%d)\n\n" , CurrentSceneN) ; TRACE_IN(CurrentSceneN) && TRACE_SCENE("Loopidity::ToggleRecordingState(%d)  IN" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLERECORDINGSTATE_OUT if (TRACE_OUT(CurrentSceneN)) TRACE_SCENE("Loopidity::ToggleRecordingState(%d) OUT" , Scenes[CurrentSceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_IN       if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_KP0 --> Loopidity::ToggleNextScene(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ToggleNextScene(%d)  IN" , Scenes[CurrentSceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_IN       if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_KP0 --> Loopidity::ToggleNextScene(%d)\n\n" , CurrentSceneN) ; TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ToggleNextScene(%d)  IN" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLENEXTSCENE_OUT      if (TRACE_OUT(CurrentSceneN)) TRACE_SCENE("Loopidity::ToggleNextScene(%d) OUT" , Scenes[CurrentSceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_IN        if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_ESCAPE --> Loopidity::DeleteLastLoop(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::DeleteLastLoop(%d)  IN" , Scenes[CurrentSceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_IN        if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: SDLK_ESCAPE --> Loopidity::DeleteLastLoop(%d)\n\n" , CurrentSceneN) ; TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::DeleteLastLoop(%d)  IN" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_DELETELASTLOOP_OUT       if (TRACE_OUT(CurrentSceneN)) TRACE_SCENE("Loopidity::DeleteLastLoop(%d) OUT" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_DELETELOOP_IN            if (TRACE_EVS(sceneN))        printf("\nUSER: SDL_BUTTON_MIDDLE --> Loopidity::DeleteLoop(%d)\n\n" , sceneN) ; if (TRACE_IN(sceneN) && !TRACE_SCENE("Loopidity::DeleteLoop(%d)  IN" , Scenes[sceneN])) {;}
 #  define DEBUG_TRACE_LOOPIDITY_DELETELOOP_OUT           if (TRACE_OUT(sceneN))        TRACE_SCENE("Loopidity::DeleteLoop(%d) OUT" , Scenes[sceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_INCLOOPVOL_IN            if (TRACE_EVS(sceneN))        printf("\nUSER: %s --> Loopidity::IncLoopVol(%d)  IN vol=%f\n\n" , (isInc)? "SDL_BUTTON_WHEELUP" : "SDL_BUTTON_WHEELDOWN" , sceneN , Scenes[sceneN]->getLoop(loopN)->vol) ;
 #  define DEBUG_TRACE_LOOPIDITY_INCLOOPVOL_OUT           if (DEBUG_TRACE_OUT)          { char event[128] ; sprintf(event , "%s OUT vol=%3.1f\n\n" , "Loopidity::IncLoopVol(%d)" , *vol) ; TRACE_SCENE(event , Scenes[sceneN]) ; }
-#  define DEBUG_TRACE_LOOPIDITY_TOGGLELOOPISMUTED_IN     if (TRACE_EVS(sceneN))        { printf("\nUSER: SDLK_KP_ENTER --> Loopidity::ToggleLoopIsMuted(%d)\n\n" , sceneN) ; printf("\nUSER: SDL_BUTTON_LEFT --> Loopidity::ToggleLoopIsMuted(%d)\n\n" , sceneN) ; } if (TRACE_IN(sceneN) && !TRACE_SCENE("Loopidity::ToggleLoopIsMuted(%d)  IN" , Scenes[sceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_TOGGLELOOPISMUTED_IN     if (TRACE_EVS(sceneN))        { printf("\nUSER: SDLK_KP_ENTER --> Loopidity::ToggleLoopIsMuted(%d)\n\n" , sceneN) ; printf("\nUSER: SDL_BUTTON_LEFT --> Loopidity::ToggleLoopIsMuted(%d)\n\n" , sceneN) ; } TRACE_IN(sceneN) && !TRACE_SCENE("Loopidity::ToggleLoopIsMuted(%d)  IN" , Scenes[sceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_TOGGLELOOPISMUTED_OUT    if (TRACE_OUT(sceneN))        TRACE_SCENE("Loopidity::ToggleLoopIsMuted(%d) OUT" , Scenes[sceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_RESETSCENE_IN            if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: KMOD_RSHIFT+SDLK_ESCAPE --> Loopidity::ResetScene(%d)\n\n" , sceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ResetCurrentScene(%d)  IN" , Scenes[CurrentSceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_RESETSCENE_IN            if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: KMOD_RSHIFT+SDLK_ESCAPE --> Loopidity::ResetScene(%d)\n\n" , sceneN) ; TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::ResetCurrentScene(%d)  IN" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_RESETSCENE_OUT           if (DEBUG_TRACE_OUT)          TRACE_SCENE("Loopidity::ResetScene(%d) OUT" , Scenes[sceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_RESET_IN                 if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: KMOD_RCTRL+SDLK_ESCAPE --> Loopidity::Reset(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::Reset(%d)  IN" , Scenes[CurrentSceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_RESET_IN                 if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: KMOD_RCTRL+SDLK_ESCAPE --> Loopidity::Reset(%d)\n\n" , CurrentSceneN) ; TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::Reset(%d)  IN" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_RESET_OUT                if (TRACE_OUT(CurrentSceneN)) TRACE_SCENE("Loopidity::Reset(%d) OUT" , Scenes[CurrentSceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_IN        if (TRACE_EVS(*sceneNum))     printf("\nUSER: EVT_NEW_LOOP --> Loopidity::OnLoopCreation(%d)\n\n" , *sceneNum) ; if (TRACE_IN(*sceneNum) && !TRACE_SCENE("Loopidity::OnLoopCreation(%d)  IN" , Scenes[*sceneNum])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_IN        if (TRACE_EVS(*sceneNum))     printf("\nUSER: EVT_NEW_LOOP --> Loopidity::OnLoopCreation(%d)\n\n" , *sceneNum) ; TRACE_IN(*sceneNum) && !TRACE_SCENE("Loopidity::OnLoopCreation(%d)  IN" , Scenes[*sceneNum]) ;
 #  define DEBUG_TRACE_LOOPIDITY_ONLOOPCREATION_OUT       if (TRACE_OUT(sceneN))        TRACE_SCENE("Loopidity::OnLoopCreation(%d) OUT" , Scenes[sceneN]) ;
-#  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN         if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: EVT_SCENE_CHANGED --> Loopidity::OnSceneChange(%d)\n\n" , CurrentSceneN) ; if (TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::OnSceneChange(%d)  IN" , Scenes[CurrentSceneN])) return ;
+#  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_IN         if (TRACE_EVS(CurrentSceneN)) printf("\nUSER: EVT_SCENE_CHANGED --> Loopidity::OnSceneChange(%d)\n\n" , CurrentSceneN) ; TRACE_IN(CurrentSceneN) && !TRACE_SCENE("Loopidity::OnSceneChange(%d)  IN" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_ONSCENECHANGE_OUT        if (TRACE_OUT(NextSceneN))    TRACE_SCENE("Loopidity::OnSceneChange(%d)  OUT" , nextScene) ;
 #  define DEBUG_TRACE_LOOPIDITY_OOM_IN                                                 TRACE_SCENE("Loopidity::OOM(%d)   IN" , Scenes[CurrentSceneN]) ;
 #  define DEBUG_TRACE_LOOPIDITY_CLEANUP                  if (DEBUG_TRACE_EVS)          std::cout << "Loopidity::Cleanup()" << std::endl ;
@@ -130,19 +130,19 @@
 #endif // #if DEBUG_TRACE_LOOPIDITYSDL
 
 #if DEBUG_TRACE_SCENE
-#  define DEBUG_TRACE_SCENE_BEGINRECORDING_IN        if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::beginRecording(%d)     IN" , this)) return ; ;
-#  define DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_IN  if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::toggleRecordingState(%d)      IN" , this)) return ;
-#  define DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_OUT if (TRACE_OUT(sceneN))   TRACE_SCENE("Scene::toggleRecordingState(%d)     OUT" , this) ;
-#  define DEBUG_TRACE_SCENE_ADDLOOP_IN               if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::addLoop(%d)  IN" , this)) return false ;
-#  define DEBUG_TRACE_SCENE_ADDLOOP_OUT              if (TRACE_OUT(sceneN))   TRACE_SCENE("Scene::addLoop(%d) OUT" , this) ;
-#  define DEBUG_TRACE_SCENE_DELETELOOP_IN            if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::deleteLoop(%d)     IN" , this)) return ;
-#  define DEBUG_TRACE_SCENE_DELETELOOP_OUT           if (TRACE_OUT(sceneN))   TRACE_SCENE("Scene::deleteLoop(%d)    OUT" , this) ;
-#  define DEBUG_TRACE_SCENE_RESET_IN                 if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::reset(%d)  IN" , this)) return ; ;
-#  define DEBUG_TRACE_SCENE_RESET_OUT                if (TRACE_OUT(sceneN))   TRACE_SCENE("Scene::reset(%d) OUT" , this) ;
-#  define DEBUG_TRACE_SCENE_SCANPEAKS_IN             if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::scanPeaks(%d)  IN" , this)) return ;
-#  define DEBUG_TRACE_SCENE_SCANPEAKS_OUT            if (TRACE_OUT(sceneN))   TRACE_SCENE("Scene::scanPeaks(%d) OUT" , this) ;
-#  define DEBUG_TRACE_SCENE_RESCANPEAKS_IN           if (TRACE_IN(sceneN) && !TRACE_SCENE("Scene::rescanPeaks(%d)  IN" , this)) return ;
-#  define DEBUG_TRACE_SCENE_RESCANPEAKS_OUT          if (TRACE_OUT(sceneN))   TRACE_SCENE("Scene::rescanPeaks(%d) OUT" , this) ;
+#  define DEBUG_TRACE_SCENE_BEGINRECORDING_IN        if (TRACE_IN (sceneN)) TRACE_SCENE("Scene::beginRecording(%d)     IN"        , this) ;
+#  define DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_IN  if (TRACE_IN (sceneN)) TRACE_SCENE("Scene::toggleRecordingState(%d)      IN" , this) ;
+#  define DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_OUT if (TRACE_OUT(sceneN)) TRACE_SCENE("Scene::toggleRecordingState(%d)     OUT" , this) ;
+#  define DEBUG_TRACE_SCENE_ADDLOOP_IN               if (TRACE_IN (sceneN)) TRACE_SCENE("Scene::addLoop(%d)  IN"                  , this) ; // ?? return false ;
+#  define DEBUG_TRACE_SCENE_ADDLOOP_OUT              if (TRACE_OUT(sceneN)) TRACE_SCENE("Scene::addLoop(%d) OUT"                  , this) ;
+#  define DEBUG_TRACE_SCENE_DELETELOOP_IN            if (TRACE_IN (sceneN)) TRACE_SCENE("Scene::deleteLoop(%d)     IN"            , this) ;
+#  define DEBUG_TRACE_SCENE_DELETELOOP_OUT           if (TRACE_OUT(sceneN)) TRACE_SCENE("Scene::deleteLoop(%d)    OUT"            , this) ;
+#  define DEBUG_TRACE_SCENE_RESET_IN                 if (TRACE_IN (sceneN)) TRACE_SCENE("Scene::reset(%d)  IN"                    , this) ;
+#  define DEBUG_TRACE_SCENE_RESET_OUT                if (TRACE_OUT(sceneN)) TRACE_SCENE("Scene::reset(%d) OUT"                    , this) ;
+#  define DEBUG_TRACE_SCENE_SCANPEAKS_IN             if (TRACE_IN (sceneN)) TRACE_SCENE("Scene::scanPeaks(%d)  IN"                , this) ;
+#  define DEBUG_TRACE_SCENE_SCANPEAKS_OUT            if (TRACE_OUT(sceneN)) TRACE_SCENE("Scene::scanPeaks(%d) OUT"                , this) ;
+#  define DEBUG_TRACE_SCENE_RESCANPEAKS_IN           if (TRACE_IN (sceneN)) TRACE_SCENE("Scene::rescanPeaks(%d)  IN"              , this) ;
+#  define DEBUG_TRACE_SCENE_RESCANPEAKS_OUT          if (TRACE_OUT(sceneN)) TRACE_SCENE("Scene::rescanPeaks(%d) OUT"              , this) ;
 #else
 #  define DEBUG_TRACE_SCENE_BEGINRECORDING_IN        ;
 #  define DEBUG_TRACE_SCENE_TOGGLERECORDINGSTATE_IN  ;
@@ -160,12 +160,13 @@
 #endif // #if DEBUG_TRACE_SCENE
 
 #if DEBUG_TRACE_SCENESDL
-#  define DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN  if (TRACE_IN(scene->sceneN))    TRACE_SCENE("SceneSdl::updateState(%d)   IN" , scene) ;
-#  define DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT if (TRACE_OUT(scene->sceneN))   TRACE_SCENE("SceneSdl::updateState(%d)  OUT" , scene) ;
-#  define DEBUG_TRACE_SCENESDL_ADDLOOP_IN       if (TRACE_IN(scene->sceneN) && (loopImgs.size() != scene->loops.size() - 1) && !TRACE_SCENE("SceneSdl::addLoop(%d) ERR" , scene)) return ;
-#  define DEBUG_TRACE_SCENESDL_ADDLOOP_OUT      if (TRACE_OUT(scene->sceneN))   TRACE_SCENE("SceneSdl::addLoop(%d) OUT" , scene) ;
-#  define DEBUG_TRACE_SCENESDL_DELETELOOP_IN    if (TRACE_IN(scene->sceneN) && !TRACE_SCENE("SceneSdl::deleteLoop(%d)   IN" , scene)) return ;
-#  define DEBUG_TRACE_SCENESDL_DELETELOOP_OUT   if (TRACE_OUT(scene->sceneN))   TRACE_SCENE("SceneSdl::deleteLoop(%d)  OUT" , scene) ;
+#  define DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN  if (TRACE_IN (scene->sceneN)) TRACE_SCENE("SceneSdl::updateState(%d)   IN" , scene) ;
+#  define DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT if (TRACE_OUT(scene->sceneN)) TRACE_SCENE("SceneSdl::updateState(%d)  OUT" , scene) ;
+#  define DEBUG_TRACE_SCENESDL_ADDLOOP_IN       if (loopImgs.size() != scene->loops.size() - 1)                                                               \
+                                                if (TRACE_IN (scene->sceneN)) TRACE_SCENE("SceneSdl::addLoop(%d) ERR" , scene) ;
+#  define DEBUG_TRACE_SCENESDL_ADDLOOP_OUT      if (TRACE_OUT(scene->sceneN)) TRACE_SCENE("SceneSdl::addLoop(%d) OUT"      , scene) ;
+#  define DEBUG_TRACE_SCENESDL_DELETELOOP_IN    if (TRACE_IN (scene->sceneN)) TRACE_SCENE("SceneSdl::deleteLoop(%d)   IN"  , scene) ;
+#  define DEBUG_TRACE_SCENESDL_DELETELOOP_OUT   if (TRACE_OUT(scene->sceneN)) TRACE_SCENE("SceneSdl::deleteLoop(%d)  OUT"  , scene) ;
 #else
 #  define DEBUG_TRACE_SCENESDL_UPDATESTATUS_IN  ;
 #  define DEBUG_TRACE_SCENESDL_UPDATESTATUS_OUT ;
