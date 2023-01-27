@@ -266,7 +266,7 @@ void SceneSdl::drawScene(SDL_Surface* surface , Uint32 currentPeakN , Uint16 sce
 #endif // #if DRAW_LOOPS
 
 #if DRAW_PEAK_RINGS
-// TODO: for efficiency these ringR could be computed and stored upon aLoopSdl creation
+    // TODO: for efficiency, these ringR could be computed and stored upon aLoopSdl creation
 
     // draw the current and loudest peaks in this loop as rings
     ringR = (Sint16)(scene->hiLoopPeaks[loopN] * (float)PEAK_RADIUS) ;

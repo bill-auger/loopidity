@@ -157,25 +157,25 @@ class LoopiditySdl
     static void         Cleanup      (void) ;
 
     // drawing
-    static void DrawHeader(         void) ;
-    static void BlankScreen(        void) ;
-    static void DrawScenes(         Uint8 currentSceneN , Uint8 nextSceneN) ;
+    static void DrawHeader(    void) ;
+    static void BlankScreen(   void) ;
+    static void DrawScenes(    Uint8 currentSceneN , Uint8 nextSceneN) ;
 #if SCENE_NFRAMES_EDITABLE
-    static void DrawEditor(         Uint8 currentSceneN) ;
+    static void DrawEditor(    Uint8 currentSceneN) ;
 #endif // #if SCENE_NFRAMES_EDITABLE
-    static void DrawScopes(         void) ;
-    static void DrawScope (         std::vector<Sample>* peaks , Uint16 peaks_x , Uint16 peak_n) ;
-    static void DrawVUs(            void) ;
-    static void DrawVU(             Sample* peaks , Uint16 vu_x , Uint8 channel_n) ;
-    static void DrawText(           std::string text     , SDL_Surface* surface    ,
-                                    TTF_Font*   font     , SDL_Rect*    screenRect ,
-                                    SDL_Rect*   cropRect , SDL_Color    fgColor    ) ;
-    static void DrawStatusArea(     void) ;
-    static void FlipScreen(         void) ;
-    static void DrawBorder(         SDL_Surface* a_surface , Uint16 l , Uint16 t    ,
-                                    Uint16       r         , Uint16 b , Uint32 color) ;
-    static void DrawBorder(         SDL_Surface* a_surface , SDL_Rect a_rect , Uint32 color) ;
-    static void Alert(              std::string message) ;
+    static void DrawScopes(    void) ;
+    static void DrawScope (    std::vector<Sample>* peaks , Uint16 peaks_x , Uint16 peak_n) ;
+    static void DrawVUs(       void) ;
+    static void DrawVU(        Sample* peaks , Uint16 vu_x , Uint8 channel_n) ;
+    static void DrawText(      std::string text     , SDL_Surface* surface    ,
+                               TTF_Font*   font     , SDL_Rect*    screenRect ,
+                               SDL_Rect*   cropRect , SDL_Color    fgColor    ) ;
+    static void DrawStatusArea(void) ;
+    static void FlipScreen(    void) ;
+    static void DrawBorder(    SDL_Surface* a_surface , Uint16 l , Uint16 t    ,
+                               Uint16       r         , Uint16 b , Uint32 color) ;
+    static void DrawBorder(    SDL_Surface* a_surface , SDL_Rect a_rect , Uint32 color) ;
+    static void Alert(         std::string message) ;
 
     // getters/settters
     static void SetStatusL(std::string msg) ;

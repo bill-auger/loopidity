@@ -366,7 +366,6 @@ ERROR: NYI // TODO:
 #    endif // FIXED_N_AUDIO_PORTS
 
   // index into the record buffers
-//   std::list<Loop*>::iterator loopIter , loopsBeginIter , loopsEndIter ; Loop* aLoop ; float vol ;
   Uint32 mixFrameN   = CurrentScene->currentFrameN ; // + BufferMarginSize ;
   Uint32 sceneFrameN = CurrentScene->currentFrameN ;
   Uint32 frameN ;

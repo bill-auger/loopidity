@@ -260,10 +260,10 @@ void LoopiditySdl::DrawScenes(Uint8 currentSceneN , Uint8 nextSceneN)
       SceneProgress = ((float)CurrentPeakN / (float)N_PEAKS_FINE) * (PEAK_RADIUS * 2) ;
       SdlScene->drawScene(SceneSurface , CurrentPeakN , SceneProgress) ;
 
-#if DRAW_RECORDING_LOOP
+#  if DRAW_RECORDING_LOOP
       if (SdlScene->scene->loops.size() < N_LOOPS)
         SdlScene->drawRecordingLoop(SceneSurface , SceneProgress) ;
-#endif
+#  endif // if DRAW_RECORDING_LOOP
     }
     else SceneSurface = SdlScene->inactiveSceneSurface ;
 

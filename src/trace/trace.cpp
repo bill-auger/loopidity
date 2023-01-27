@@ -85,8 +85,9 @@ bool Trace::TraceOut(Uint8 sceneN) { return ((DEBUG_TRACE_OUT) || !SanityCheck(s
 
 bool Trace::TraceScene(const char* senderTemplate , Scene* scene)
 {
-  Uint8 sceneN = scene->sceneN ; SceneSdl* sdlScene = Loopidity::SdlScenes[sceneN] ;
-  char sender[EVENT_LEN] ; snprintf(sender , EVENT_LEN , senderTemplate , sceneN) ;
+  Uint8     sceneN   = scene->sceneN ;
+  SceneSdl* sdlScene = Loopidity::SdlScenes[sceneN] ;
+  char      sender[EVENT_LEN] ; snprintf(sender , EVENT_LEN , senderTemplate , sceneN) ;
 
   // mvc sanity checks
   bool isEq = SanityCheck(sceneN) ;
@@ -113,11 +114,19 @@ std::cout << "Trace::TraceScene()<-" << sender                         <<
 
 
   // model state dump
-  TraceState(modelEvent , sender , MODEL_STATE_FMT , modelDescFormat ,
-      Loopidity::GetIsRolling() , scene->shouldSaveLoop , scene->doesPulseExist , isEq) ;
+  bool isRolling      = Loopidity::GetIsRolling() ;
+  bool doesPulseExist = scene->doesPulseExist ;
+  bool shouldSaveLoop = scene->shouldSaveLoop ;
+  TraceState(modelEvent , sender         , MODEL_STATE_FMT , modelDescFormat ,
+             isRolling  , doesPulseExist , shouldSaveLoop                    ) ;
+
   // view state dump
-  TraceState(viewEvent , sender , VIEW_STATE_FMT , viewDescFormat ,
-      scene->loops.size() , sdlScene->histogramImgs.size() , sdlScene->loopImgs.size() , isEq) ;
+  Uint8 nLoops         = scene   ->loops        .size() ;
+  Uint8 nLoopImgs      = sdlScene->loopImgs     .size() ;
+  Uint8 nHistogramImgs = sdlScene->histogramImgs.size() ;
+  TraceState(viewEvent , sender    , VIEW_STATE_FMT , viewDescFormat ,
+             nLoops    , nLoopImgs , nHistogramImgs                  ) ;
+
   std::cout << std::endl ;
 
   return isEq ;
