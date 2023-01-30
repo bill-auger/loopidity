@@ -398,6 +398,11 @@ void LoopiditySdl::DrawText(std::string text       , SDL_Surface* surface  , TTF
 void LoopiditySdl::DrawStatusArea()
 {
 #if DRAW_STATUS
+  // StatusRectC = { Sint16(StatusRectC.x + GUI_PAD ) , Sint16(StatusRectC.y + GUI_PAD ) ,
+  //                 Uint16(StatusRectC.w - GUI_PAD2) , Uint16(StatusRectC.h - GUI_PAD2) } ;
+  // DrawBorder(Screen , StatusRectL , SCOPE_OUT_BORDER_COLOR) ;
+  // DrawBorder(Screen , StatusRectC , SCOPE_OUT_BORDER_COLOR) ;
+  // DrawBorder(Screen , StatusRectR , SCOPE_OUT_BORDER_COLOR) ;
   DrawText(StatusTextL , Screen , StatusFont , &StatusRectL , &StatusRectDim , StatusColor) ;
   DrawText(StatusTextC , Screen , StatusFont , &StatusRectC , &StatusRectDim , StatusColor) ;
   DrawText(StatusTextR , Screen , StatusFont , &StatusRectR , &StatusRectDim , StatusColor) ;
