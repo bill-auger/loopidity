@@ -8,11 +8,11 @@ All files in the Loopidity code-base are distributed as
 the [Crerative Commons licenses](https://creativecommons.org/share-your-work/licensing-types-examples/)
 and the [Free Art License](http://artlibre.org/licence/lal/en/)
 allow re-use and sharing of specific binary artifacts as long as attribution is preserved;
-but they neglect ensuring of the freedom to study, experiment, and customize.
+but they neglect to ensure the freedom to study, experiment, and customize.
 Experimentation implies de-composition; and as any artist or software developer knows:
 non-trivial modifications require access to the original sources used by the author.
-Without these sources, even the project maintainers are prevented from customizing blobs
-beyond the most trivial operations such as trimming and scaling;
+Without those sources, even the project maintainers are prevented from customizing those
+multimedia files, beyond the most trivial operations such as trimming and scaling;
 which is very much mis-aligned with the spirit of "Free Software".
 
 Because they do not require the availability of the underlying sources which compose the artifacts,
@@ -23,11 +23,12 @@ and is, itself, the natural companion license for the artwork files of a GPL-lic
 provided that the relevant source materials are well-defined.
 
 
-### Loopidity Blobs License
+### Loopidity Multimedia License
 
-The original audio, video, image and font files in the Loopidity blobs/ directory
+The original audio, video, image, and font files in the Loopidity data/ directory
+(and their counterparts in the Loopidity src/data/ directory)
 are licensed under [version 3 of the GNU General Public License](../COPYING) (GPLv3).
-See [blobs/LICENSES](LICENSES) for details. The terminology in section 1 of the GPLv3 (namely: "source code", "preferred form", and "object code")
+See [data/LICENSES.data](LICENSES.data) for details. The terminology in section 1 of the GPLv3 (namely: "source code", "preferred form", and "object code")
 as it relates to the artwork files of this project is explicitly defined below.
 
 The "object code" is explicitly defined here to be the binary audio, video, image and font files

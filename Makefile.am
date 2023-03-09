@@ -1,8 +1,8 @@
 loopiditydir = $(pkgdatadir)
-doc_DATA     = COPYING             \
-               LICENSES            \
-               blobs/COPYING.fonts \
-               blobs/LICENSES.blobs
+doc_DATA     = COPYING            \
+               LICENSES           \
+               data/COPYING.fonts \
+               data/LICENSES.data
 man1_MANS    = doc/loopidity.1
 EXTRA_DIST   = $(man_MANS)
 
@@ -16,7 +16,7 @@ installcheck-local:
 	stat --printf='' $(docdir)/COPYING
 	stat --printf='' $(docdir)/LICENSES
 	stat --printf='' $(docdir)/COPYING.fonts
-	stat --printf='' $(docdir)/LICENSES.blobs
+	stat --printf='' $(docdir)/LICENSES.data
 	stat --printf='' $(man1dir)/loopidity.1
 
 

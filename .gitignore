@@ -26,16 +26,16 @@ build-aux/*
 !build-aux/missing
 !src/Makefile.am
 
-# blobs
-!blobs/
-blobs/*
-!blobs/COPYING.fonts
-!blobs/histogram_gradient.bmp
-!blobs/LICENSES.blobs
-!blobs/loop_gradient.argb.bmp
-!blobs/Purisa.ttf
-!blobs/README.md
-!blobs/scope_gradient.bmp
+# multimedia
+!data/
+data/*
+!data/COPYING.fonts
+!data/histogram_gradient.bmp
+!data/LICENSES.data
+!data/loop_gradient.argb.bmp
+!data/Purisa.ttf
+!data/README.md
+!data/scope_gradient.bmp
 
 # debian packaging
 !debian/
@@ -80,16 +80,16 @@ obs/*
 # sources
 !src/
 src/*
-!src/blobs/
-src/blobs/*
-!src/blobs/fonts.cpp
-!src/blobs/fonts.h
-!src/blobs/histogram_gradient.h
-!src/blobs/images.cpp
-!src/blobs/images.h
-!src/blobs/loop_gradient.h
-!src/blobs/purisa.h
-!src/blobs/scope_gradient.h
+!src/data/
+src/data/*
+!src/data/fonts.cpp
+!src/data/fonts.h
+!src/data/histogram_gradient.h
+!src/data/images.cpp
+!src/data/images.h
+!src/data/loop_gradient.h
+!src/data/purisa.h
+!src/data/scope_gradient.h
 !src/constants/
 src/constants/*
 !src/constants/controller_constants.h

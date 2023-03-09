@@ -18,7 +18,7 @@
 \*/
 
 
-#include "blobs/images.h"
+#include "data/images.h"
 #include "constants/view_constants.h"
 #include "loopidity_sdl.h"
 #include "trace/trace.h"
