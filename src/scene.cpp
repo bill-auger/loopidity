@@ -1,6 +1,6 @@
 /*\
 |*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
-|*|  Copyright 2012-2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
+|*|  Copyright 2013,2015,2017,2023 bill-auger <https://github.com/bill-auger/loopidity/issues>
 |*|
 |*|  This file is part of the Loopidity program.
 |*|

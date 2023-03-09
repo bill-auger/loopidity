@@ -1,3 +1,22 @@
+/*\
+|*|  Loopidity - multi-track multi-channel audio looper designed for live handsfree use
+|*|  Copyright 2017 bill-auger <https://github.com/bill-auger/loopidity/issues>
+|*|
+|*|  This file is part of the Loopidity program.
+|*|
+|*|  Loopidity is free software: you can redistribute it and/or modify
+|*|  it under the terms of the GNU General Public License version 3
+|*|  as published by the Free Software Foundation.
+|*|
+|*|  Loopidity is distributed in the hope that it will be useful,
+|*|  but WITHOUT ANY WARRANTY; without even the implied warranty of
+|*|  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+|*|  GNU General Public License for more details.
+|*|
+|*|  You should have received a copy of the GNU General Public License
+|*|  along with Loopidity.  If not, see <http://www.gnu.org/licenses/>.
+\*/
+
 
 // quantities
 #define DEFAULT_AUDIO_BUFFER_SIZE 33554432 // 2^25 (approx 3 min @ 48k)

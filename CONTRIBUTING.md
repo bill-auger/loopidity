@@ -24,9 +24,9 @@ For multimedia and other binaries, the GPL licensing terms are explicitly define
 Note that branches other than 'master' tend to be rebased often; so you may need to force pull those. Please rebase all pull requests onto the latest 'development' or 'design' HEAD, and squash trivial commits; but try to retain commits representing significant or related changes (see example below). Ideally in this way, all upstream branches should be a fast-forward from 'master' and so re-sync should be simple.
 
 
-### Repo Mirrors
+### Source Mirrors
 
-Pull requests and issues are accepted at any of the following mirrors:
+Bug reports, pull requests, and feature requests are accepted at any of the following mirrors:
 
 * [https://github.com/bill-auger/loopidity/][github]
 * [https://notabug.org/bill-auger/loopidity/][notabug]

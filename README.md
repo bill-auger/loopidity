@@ -3,28 +3,20 @@
 | ------------- | ------------------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------- |
 
 #### build
-* binaries coming soon - bake yer own for now
-* build requires libsdl1.2 , libSDL_gfx , libSDL_ttf and libjack2 (also X11 on *nix)
-* compiler must support c++11 features
-* windows builds refer to [README-MINGW.md][README-MINGW]
-* build with gnu toolchain
+build dependencies:
+* libsdl1.2
+* libSDL_gfx
+* libSDL_ttf
+* libjack2
+* (also libx11 for *nix targets)
+
+build recipe:
+* windows builds: refer to [README-MINGW.md][README-MINGW]
+* *nix builds:
 ```bash
-  $ cd build
-  $ make release
-  $ make debug
-  $ make         # [ all ]
-```
-* or compile, run/debug, and/or clean via helper script
-```bash
-  $ ./mk debug
-  $ ./mk release
-  $ ./mk debug   clean
-  $ ./mk release clean
-```
-* build with code::blocks
-```bash
-    $  cd build
-    $  codeblocks loopidity.cbp
+  $ ./configure
+  $ make
+  # make install
 ```
 
 
